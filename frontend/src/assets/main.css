@@ -1,0 +1,87 @@
+@import "@vue-flow/core/dist/style.css";
+@import '@vue-flow/core/dist/theme-default.css';
+@import '@vue-flow/controls/dist/style.css';
+@import '@vue-flow/minimap/dist/style.css';
+@import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
+
+:root {
+  --font-sans-serif: -apple-system, BlinkMacSystemFont, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Segoe UI', 'PingFang SC', HarmonyOS_Regular, 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, 'Source Han Sans SC', 'Noto Sans CJK SC',
+    'WenQuanYi Micro Hei', Arial, sans-serif;
+  --font-serif: STZhongsong, STSong, 'Noto Serif CJK', 'Noto Serif SC', PMingLiu, SimSun,
+    'WenQuanYi Bitmap Song', 'Times New Roman', Times, serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Code', 'Segoe UI Mono',
+    'Source Code Pro', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#app {
+  font-family: var(--font-sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.vue-flow__node {
+  border: 2px solid rgb(52, 52, 56);
+  background-color: rgb(52, 52, 56, 0.4);
+  border-radius: 8px;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vue-flow__node.selected,
+.vue-flow__node:hover {
+  --color: rgb(138, 203, 236);
+  border: 2px solid var(--color);
+  box-shadow:
+    0 0 10px var(--color),
+    inset 0 0 3px 1px var(--color);
+  transition:
+    box-shadow 0.2s ease,
+    border 0.2s ease;
+}
+
+.vue-flow__handle-input {
+  background-color: #63e2b7;
+  border: 0;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+}
+
+.vue-flow__handle-output {
+  background-color: #70c0e8;
+  border: 0px;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+}
+
+.vue-flow__handle-callbackUser {
+  background-color: #f2c97d;
+  border: 0px;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+}
+
+.vue-flow__handle-callbackFunc {
+  background-color: #e88080;
+  border: 0px;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+}

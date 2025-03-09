@@ -1,0 +1,14 @@
+{
+  "provider": "Exam Provider",
+  "version": "1.0.0",
+  "description": "Exam plugin for FlowA",
+  "author": "FlowA Team",
+  "plugins": [
+    {
+      "type": "Node",
+      "name": "ExamNode",
+      "description": "Example node for FlowA",
+      "path": "examnode.py"
+    }
+  ]
+}

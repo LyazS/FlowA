@@ -1,0 +1,43 @@
+base_url: "https://api.siliconflow.cn/v1" # 后端服务的API地址，必填
+api_key: sk-skewlrrchcjpbvboqcfnrojwbabdgmascyidxboudlhrhmfn # 提供商的API Key，必填
+models:
+  - name: deepseek-ai/DeepSeek-V2.5
+    max_input_tokens: 32000
+    max_output_tokens: 4096
+    prompt: 0.001
+    complete: 0.002
+    rate: 1.33
+    capability:
+      - Function calling
+      - FIM completion
+  - name: deepseek-ai/deepseek-vl2
+    max_input_tokens: 4096
+    max_output_tokens: 4096
+    prompt: 0.001
+    complete: 0.002
+    rate: 0.99
+    capability:
+      - Vision input
+  - name: Qwen/Qwen2.5-Coder-32B-Instruct
+    max_input_tokens: 32000
+    max_output_tokens: 4096
+    prompt: 0.001
+    complete: 0.002
+    rate: 1.26
+    capability:
+      - FIM completion
+  - name: Qwen/QwQ-32B-Preview
+    max_input_tokens: 32000
+    max_output_tokens: 4096
+    prompt: 0.001
+    complete: 0.002
+    rate: 1.26
+    capability: []
+  - name: Qwen/QVQ-72B-Preview
+    max_input_tokens: 32000
+    max_output_tokens: 4096
+    prompt: 0.001
+    complete: 0.002
+    rate: 9.9
+    capability:
+      - Vision input
