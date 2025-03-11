@@ -11,3 +11,19 @@ class ExamNode(FABaseNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         pass
+
+    @staticmethod
+    def getNodeConfig():
+        return {}
+
+    @staticmethod
+    def getNodeCreateInfo():
+        return {}
+
+    @staticmethod
+    def getNodeAttributesUIInfo():
+        return {}
+
+    @staticmethod
+    def getNodeSettingsUIInfo():
+        return {}

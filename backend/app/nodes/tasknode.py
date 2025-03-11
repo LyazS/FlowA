@@ -30,7 +30,6 @@ from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.basenode import FABaseNode
 
 if TYPE_CHECKING:
-    from app.nodes import FANode_iter_run,FANode_iter_retry_run
     from app.services.FARunner import FARunner
 
 
@@ -64,11 +63,11 @@ class FATaskNode(FABaseNode):
 
     async def invoke(self):
         try:
-            logger.debug(f"invoke {self.data.label} {self.id}")
+            logger.debug(f"invoke {self.data.Label} {self.id}")
 
             runner = self.runner()
             if runner is None:
-                logger.error(f"runner is None {self.data.label} {self.id}")
+                logger.error(f"runner is None {self.data.Label} {self.id}")
                 raise NodeCancelException("runner is None")
 
             all_events_task = asyncio.gather(
@@ -85,7 +84,7 @@ class FATaskNode(FABaseNode):
             )
             if cancel_task in done:
                 raise NodeCancelException("cancel event")
-            logger.debug(f"wait done {self.data.label} {self.id}")
+            logger.debug(f"wait done {self.data.Label} {self.id}")
 
             if len(self.waitStatus) > 0:
                 # 如果是AND，要求不能出现任何error或cancel状态
@@ -104,18 +103,18 @@ class FATaskNode(FABaseNode):
                         thenode = runner.getNode(thiswstatus.nid)
                         thisowstatus = thenode.outputStatus[thiswstatus.output]
                         logger.debug(
-                            f"pre node error or cancel {self.data.label} {self.id} due to {thiswstatus.nid} {thiswstatus.output} {thisowstatus}"
+                            f"pre node error or cancel {self.data.Label} {self.id} due to {thiswstatus.nid} {thiswstatus.output} {thisowstatus}"
                         )
 
                     raise NodeCancelException("前置节点出错或取消，本节点取消运行")
-            logger.debug(f"can run {self.data.label} {self.id}")
+            logger.debug(f"can run {self.data.Label} {self.id}")
             self.setAllOutputStatus(FARunStatus.Running)
             self.putNodeStatus(FARunStatus.Running)
 
             # 前置节点全部成功，本节点开始运行
             updateDatas = await self.run()
             # 运行成功
-            logger.debug(f"run success {self.data.label} {self.id}")
+            logger.debug(f"run success {self.data.Label} {self.id}")
             # self.setAllOutputStatus(FANodeStatus.Success)
             # 各个输出handle的成功需要由子类函数来设置
             self.putNodeStatus(FARunStatus.Success)
@@ -138,18 +137,18 @@ class FATaskNode(FABaseNode):
         except asyncio.CancelledError as e:
             if isinstance(e, NodeCancelException):
                 logger.debug(
-                    f"node cancel {self.data.label} {self.id} due to {e.message}"
+                    f"node cancel {self.data.Label} {self.id} due to {e.message}"
                 )
             else:
                 logger.debug(
-                    f"node cancel {self.data.label} {self.id} due to runner cancel"
+                    f"node cancel {self.data.Label} {self.id} due to runner cancel"
                 )
             self.setAllOutputStatus(FARunStatus.Canceled)
             self.putNodeStatus(FARunStatus.Canceled)
             pass
         except Exception as e:
             error_message = traceback.format_exc()
-            logger.error(f"node error {self.data.label} {error_message} {self.id}")
+            logger.error(f"node error {self.data.Label} {error_message} {self.id}")
             self.setAllOutputStatus(FARunStatus.Error)
             self.putNodeStatus(FARunStatus.Error)
         finally:
@@ -269,6 +268,3 @@ class FATaskNode(FABaseNode):
     ) -> Optional[FAWorkflowOperationResponse]:
         return None
 
-    @staticmethod
-    def getNodeConfig():
-        return {}

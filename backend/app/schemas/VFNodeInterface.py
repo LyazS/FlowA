@@ -1,6 +1,6 @@
-from enum import Enum, StrEnum,IntEnum
+from enum import Enum, StrEnum, IntEnum
 from typing import Dict, List, Optional, Union, Literal, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 
 class VFNodeConnectionDataType(str, Enum):
@@ -29,6 +29,7 @@ class VFNodeConnectionType(StrEnum):
 
 
 class VFNodeFlag(IntEnum):
+    IsNone = 0x00
     IsNested = 0x01
     IsAttached = 0x02
     IsTask = 0x04
@@ -148,7 +149,7 @@ class VFNodeConfig(BaseModel):
     OutputsUiType: str
 
 
-class BaseVFNodeData(BaseModel):
+class VFNodeData(BaseModel):
     NType: str
     VType: str
     Flag: int
@@ -160,23 +161,16 @@ class BaseVFNodeData(BaseModel):
     Results: VFNodeContents
     State: VFNodeState
     Config: VFNodeConfig
+    MinSize: Optional[VFNodeSize] = None  # 所有节点都可能有的字段
+    Attaching: Optional[VFNodeAttaching] = None  # 所有节点都可能有的字段
+    Nesting: Optional[VFNodeNesting] = None  # 所有节点都可能有的字段
+    pass
 
-
-class AttachedVFNodeData(BaseVFNodeData):
-    Attaching: VFNodeAttaching
-
-
-class NestedVFNodeData(BaseVFNodeData):
-    MinSize: VFNodeSize
-    Nesting: VFNodeNesting
-
-
-VFNodeData = Union[BaseVFNodeData, AttachedVFNodeData, NestedVFNodeData]
-
-
-def is_attached_node(node: VFNodeData) -> bool:
-    return bool(node.Flag & VFNodeFlag.IsAttached)
-
-
-def is_nested_node(node: VFNodeData) -> bool:
-    return bool(node.Flag & VFNodeFlag.IsNested)
+    # 自定义校验器（确保Flag和字段一致性）
+    @model_validator(mode="after")
+    def check_flag_consistency(self):
+        if self.Flag & VFNodeFlag.IsAttached and not self.Attaching:
+            raise ValueError("Attached节点必须包含Attaching字段")
+        if self.Flag & VFNodeFlag.IsNested and (not self.MinSize or not self.Nesting):
+            raise ValueError("Nested节点必须包含MinSize和Nesting字段")
+        return self

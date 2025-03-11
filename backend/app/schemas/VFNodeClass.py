@@ -3,13 +3,13 @@ from app.schemas.VFNodeInterface import *
 from app.utils.tools import getUuid
 
 
-class VFNode(BaseVFNodeData):
+class VFNode(VFNodeData):
     # 初始化方法 ====================================================
     def __init__(self, n_type: str, v_type: str, label: str):
         super().__init__(
             NType=n_type,
             VType=v_type,
-            Flag=0,
+            Flag=VFNodeFlag.IsNone,
             Label=label,
             PlaceholderLabel=label,
             Size=VFNodeSize(Width=-1, Height=-1),
@@ -57,7 +57,6 @@ class VFNode(BaseVFNodeData):
 
     # 类型初始化方法 ================================================
     def init_as_nested_node(self, tag: Optional[str]) -> "VFNode":
-        self.Flag |= VFNodeFlag.IsNested
         self.MinSize = VFNodeSize(Width=200, Height=200)
         self.Nesting = VFNodeNesting(
             Tag=tag,
@@ -65,13 +64,14 @@ class VFNode(BaseVFNodeData):
             APad=VFNodePadding(Top=30, Bottom=25, Left=17, Right=17, Gap=20),
             ANodes={},
         )
+        self.Flag |= VFNodeFlag.IsNested
         return self
 
     def init_as_attached_node(
         self, a_type: VFNodeAttachingType, pos: VFNodeAttachingPos, label: str
     ) -> "VFNode":
-        self.Flag |= VFNodeFlag.IsAttached
         self.Attaching = VFNodeAttaching(Type=a_type, Pos=pos, Label=label)
+        self.Flag |= VFNodeFlag.IsAttached
         return self
 
     # 类型守卫 ======================================================
@@ -260,7 +260,7 @@ class VFNode(BaseVFNodeData):
 
 # 辅助函数 ========================================================
 def create_vf_node_from_data(
-    data: Union[BaseVFNodeData, AttachedVFNodeData, NestedVFNodeData],
+    data: VFNodeData,
 ) -> VFNode:
     node = VFNode(data.NType, data.VType, data.Label)
 
@@ -272,14 +272,5 @@ def create_vf_node_from_data(
 
     # 初始化空白状态
     node.State = node._create_default_state()
-
-    # 处理附属节点特性
-    if is_attached_node(data):
-        node.Attaching = data.Attaching
-
-    # 处理嵌套节点特性
-    if is_nested_node(data):
-        node.MinSize = data.MinSize
-        node.Nesting = data.Nesting
 
     return node
