@@ -1,9 +1,9 @@
 from typing import List, Optional, Any
 from pydantic import BaseModel
-from enum import Enum
+from enum import StrEnum
 
 
-class FARunStatus(Enum):
+class FARunStatus(StrEnum):
     Default = "Default"
     Pending = "Pending"
     Running = "Running"
@@ -14,13 +14,13 @@ class FARunStatus(Enum):
     pass
 
 
-class FANodeWaitType(Enum):
+class FANodeWaitType(StrEnum):
     AND = "AND"
     OR = "OR"
     pass
 
 
-class FANodeValidateNeed(Enum):
+class FANodeValidateNeed(StrEnum):
     Self = "Self"
     AttachOutput = "AttachOutput"
     InputNodes = "InputNodes"

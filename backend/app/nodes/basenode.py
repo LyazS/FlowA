@@ -18,6 +18,7 @@ from app.schemas.farequest import (
     FAWorkflow,
     FAWorkflowOperationResponse,
 )
+
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
@@ -99,12 +100,4 @@ class FABaseNode(ABC):
 
     @staticmethod
     def getNodeCreateInfo():
-        return {}
-
-    @staticmethod
-    def getNodeAttributesUIInfo():
-        return {}
-
-    @staticmethod
-    def getNodeSettingsUIInfo():
         return {}

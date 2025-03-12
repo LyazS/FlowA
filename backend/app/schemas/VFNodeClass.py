@@ -96,6 +96,10 @@ class VFNode(VFNodeData):
         )
         return self
 
+    def set_flag(self, flag: int) -> "VFNode":
+        self.Flag = flag
+        return self
+
     def set_outputs_ui_type(self, ui_type: str) -> "VFNode":
         self.Config.OutputsUiType = ui_type
         return self
