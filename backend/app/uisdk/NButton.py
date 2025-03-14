@@ -1,59 +1,49 @@
-from typing import List, Dict
-from app.uisdk.baseComponent import (
+from typing import List, Dict, Optional
+from app.schemas.VFUIComponent import (
     BaseComponent,
-    ComponentVariable,
-    ComponentVariableType,
+    PropVar,
+    PropVarType,
 )
 
 
 class NButton(BaseComponent):
     def __init__(
         self,
-        block: bool,
-        bordered: bool,
-        circle: bool,
-        color: str,
-        dashed: bool,
-        ghost: bool,
-        round: bool,
-        size: str,
-        strong: bool,
-        text: bool,
-        text_color: str,
-        type: str,
-        level: str,
-        slots: Dict,
+        block: bool | PropVar,
+        bordered: bool | PropVar,
+        circle: bool | PropVar,
+        color: str | PropVar,
+        dashed: bool | PropVar,
+        ghost: bool | PropVar,
+        round: bool | PropVar,
+        size: str | PropVar,
+        strong: bool | PropVar,
+        text: bool | PropVar,
+        text_color: str | PropVar,
+        type: str | PropVar,
+        level: str = "",
+        slots: Optional[Dict] = None,
     ):
         Props = {
-            "block": ComponentVariable(Type=ComponentVariableType.Value, Value=block),
-            "bordered": ComponentVariable(
-                Type=ComponentVariableType.Value, Value=bordered
-            ),
-            "circle": ComponentVariable(Type=ComponentVariableType.Value, Value=circle),
-            "color": ComponentVariable(Type=ComponentVariableType.Value, Value=color),
-            "dashed": ComponentVariable(Type=ComponentVariableType.Value, Value=dashed),
-            "ghost": ComponentVariable(Type=ComponentVariableType.Value, Value=ghost),
-            "round": ComponentVariable(Type=ComponentVariableType.Value, Value=round),
-            "size": ComponentVariable(Type=ComponentVariableType.Value, Value=size),
-            "strong": ComponentVariable(Type=ComponentVariableType.Value, Value=strong),
-            "text": ComponentVariable(Type=ComponentVariableType.Value, Value=text),
-            "text-color": ComponentVariable(
-                Type=ComponentVariableType.Value, Value=text_color
-            ),
-            "type": ComponentVariable(Type=ComponentVariableType.Value, Value=type),
+            "block": block,
+            "bordered": bordered,
+            "circle": circle,
+            "color": color,
+            "dashed": dashed,
+            "ghost": ghost,
+            "round": round,
+            "size": size,
+            "strong": strong,
+            "text": text,
+            "text_color": text_color,
+            "type": type,
         }
         if level == "secondary":
-            Props["secondary"] = ComponentVariable(
-                Type=ComponentVariableType.Value, Value=True
-            )
+            Props["secondary"] = True
         elif level == "tertiary":
-            Props["tertiary"] = ComponentVariable(
-                Type=ComponentVariableType.Value, Value=True
-            )
+            Props["tertiary"] = True
         elif level == "quaternary":
-            Props["quaternary"] = ComponentVariable(
-                Type=ComponentVariableType.Value, Value=True
-            )
+            Props["quaternary"] = True
 
         super().__init__(
             Type="NButton",

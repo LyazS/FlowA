@@ -1,43 +1,33 @@
-from typing import List, Dict
-from app.uisdk.baseComponent import (
+from typing import List, Dict, Optional
+from app.schemas.VFUIComponent import (
     BaseComponent,
-    ComponentVariable,
-    ComponentVariableType,
+    PropVar,
+    PropVarType,
 )
 
 
 class NText(BaseComponent):
     def __init__(
         self,
-        type: str,
-        strong: bool,
-        italic: bool,
-        underline: bool,
-        delete: bool,
-        code: bool,
-        depth: int,
-        slots: Dict,
+        type: str | PropVar,
+        strong: bool | PropVar,
+        italic: bool | PropVar,
+        underline: bool | PropVar,
+        delete: bool | PropVar,
+        code: bool | PropVar,
+        depth: int | PropVar,
+        slots: Optional[Dict] = None,
     ):
         super().__init__(
             Type="NText",
             Props={
-                "type": ComponentVariable(Type=ComponentVariableType.Value, Value=type),
-                "strong": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=strong
-                ),
-                "italic": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=italic
-                ),
-                "underline": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=underline
-                ),
-                "delete": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=delete
-                ),
-                "code": ComponentVariable(Type=ComponentVariableType.Value, Value=code),
-                "depth": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=depth
-                ),
+                "type": type,
+                "strong": strong,
+                "italic": italic,
+                "underline": underline,
+                "delete": delete,
+                "code": code,
+                "depth": depth,
             },
             Slots=slots,
         )

@@ -50,7 +50,7 @@ class ExamNode(FABaseNode):
             "output",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromInner,
-                Path=["Payloads", "ById", "D_EXAM_TEXT"],
+                Path=["Payloads", "ById", "D_EXAM_TEXT", "Data"],
             ),
         )
         return thisnode.model_dump_json()

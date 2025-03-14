@@ -1,33 +1,27 @@
-from typing import List, Dict
-from app.uisdk.baseComponent import (
+from typing import List, Dict, Optional
+from app.schemas.VFUIComponent import (
     BaseComponent,
-    ComponentVariable,
-    ComponentVariableType,
+    PropVar,
+    PropVarType,
 )
 
 
 class NFlex(BaseComponent):
     def __init__(
         self,
-        align: str,
-        justify: str,
-        vertical: bool,
-        wrap: bool,
-        slots: Dict,
+        align: str | PropVar,
+        justify: str | PropVar,
+        vertical: bool | PropVar,
+        wrap: bool | PropVar,
+        slots: Optional[Dict] = None,
     ):
         super().__init__(
             Type="NFlex",
             Props={
-                "align": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=align
-                ),
-                "justify": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=justify
-                ),
-                "vertical": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=vertical
-                ),
-                "wrap": ComponentVariable(Type=ComponentVariableType.Value, Value=wrap),
+                "align": align,
+                "justify": justify,
+                "vertical": vertical,
+                "wrap": wrap,
             },
             Slots=slots,
         )

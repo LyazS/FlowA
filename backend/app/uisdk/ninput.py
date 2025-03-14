@@ -1,29 +1,27 @@
-from typing import List, Dict
-from app.uisdk.baseComponent import (
+from typing import List, Dict, Optional
+from app.schemas.VFUIComponent import (
     BaseComponent,
-    ComponentVariable,
-    ComponentVariableType,
+    PropVar,
+    PropVarType,
 )
 
 
 class NInput(BaseComponent):
     def __init__(
         self,
-        type: str,
-        value: str,
-        size: str,
-        clearable: bool,
-        slots: Dict,
+        type: str | PropVar,
+        value: str | PropVar,
+        size: str | PropVar,
+        clearable: bool | PropVar,
+        slots: Optional[Dict] = None,
     ):
         super().__init__(
             Type="NInput",
             Props={
-                "type": ComponentVariable(Type=ComponentVariableType.Value, Value=type),
-                "value": ComponentVariable(Type=ComponentVariableType.Ref, Value=value),
-                "size": ComponentVariable(Type=ComponentVariableType.Value, Value=size),
-                "clearable": ComponentVariable(
-                    Type=ComponentVariableType.Value, Value=clearable
-                ),
+                "type": type,
+                "value": value,
+                "size": size,
+                "clearable": clearable,
             },
             Slots=slots,
         )

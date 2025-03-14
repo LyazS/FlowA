@@ -4,20 +4,21 @@
   "Description": "Exam plugin for FlowA",
   "Author": "FlowA Team",
   "Icon": "exam.png",
-  "ProviderSetting":"exam_provider_setting.py",
+  "ProviderSetting": { "Execute": "exam_provider_setting.py" },
   "Plugins": [
     {
       "Type": "FANode",
       "Name": "ExamNode",
       "Description": "Example node for FlowA",
       "Execute": "examnode.py",
-      "Setting": "examnode_setting.py"
+      "Setting": { "Execute": "examnode_setting.py" }
     }
   ],
   "UIPlugins": [
     {
+      "Type": "FANode",
       "Name": "UI_TEXT_INPUT",
-      "Execute": "examui.py"
+      "Component": "examui.py"
     }
   ]
 }

@@ -5,7 +5,16 @@ class ExamUI(NInput):
     def __init__(self):
         super().__init__(
             type="info",
-            value="Hello World",
+            value=PropVar(
+                Type=PropVarType.VModel,
+                Data=[
+                    THIS_NODE_DATA,
+                    "Payloads",
+                    "ById",
+                    PAYLOADS_ID,
+                    "Data",
+                ],
+            ),
             size="small",
             clearable=True,
         )

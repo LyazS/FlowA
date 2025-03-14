@@ -42,11 +42,23 @@ from app.models.fastore import (
 )
 from app.nodes import FANODECOLLECTION
 from app.nodes.basenode import FABaseNode
+from app.nodes.NodeRegister import FANODE_REGISTRY, FLOWA_NODE_REGISTRY
 
 router = APIRouter()
 
 
-@router.get("/nodeconfig")
+@router.get("/initinfo")
+async def get_initinfo():
+    result = {}
+    for pname, pd in FLOWA_NODE_REGISTRY.items():
+        result[pname] = pd.model_dump()
+    return FAWorkflowOperationResponse(
+        type=FAWorkflowOperationType.success,
+        data=result,
+    )
+
+
+@router.get("/config")
 async def nodeconfig(ntype: str):
     if ntype in FANODECOLLECTION:
         node: "FABaseNode" = FANODECOLLECTION[ntype]
