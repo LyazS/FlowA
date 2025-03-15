@@ -51,6 +51,11 @@ def register_plugins():
                 ui_plugin.Component = ui_component()
                 logger.info(f"\tRegister UI [{ui_plugin.Name}].")
             pass
+            # 修正icon路径
+            config.Icon = f"{plugin_dir.name}/{config.Icon}"
+            if not (plugin_dir/config.Icon).exists():
+                logger.warning(f"Icon {config.Icon} not found.")
+            
             FLOWA_NODE_REGISTRY[config.Provider] = config
             logger.info(f"\tRegister provider {config.Provider} Done.")
             pass

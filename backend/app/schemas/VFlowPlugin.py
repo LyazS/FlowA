@@ -27,10 +27,11 @@ class VFProvider(BaseModel):
     Version: str
     Description: str
     Author: str
-    Icon: str
+    Icon: Optional[str]
     ProviderSetting: VFPluginSetting
     Plugins: List[VFPlugin]
     UIPlugins: List[VFUIPlugin]
+
 
 class VFProviders(BaseModel):
     Providers: List[VFProvider]
