@@ -37,8 +37,9 @@ def register_plugins():
                         f"plugins.{plugin_dir.name}.{Path(plugin.Execute).stem}"
                     )
                     module = importlib.import_module(module_path)
-                    node_class = getattr(module, "EXPORT_NODE")
+                    node_class: FABaseNode = getattr(module, "EXPORT_NODE")
                     FANODE_REGISTRY[f"@{config.Provider}@{plugin.Name}"] = node_class
+                    plugin.CreateInfo = node_class.getNodeCreateInfo()
                     logger.info(f"\tRegister NODE [{plugin.Name}].")
             pass
             # 注册UI组件
@@ -53,9 +54,9 @@ def register_plugins():
             pass
             # 修正icon路径
             config.Icon = f"{plugin_dir.name}/{config.Icon}"
-            if not (plugin_dir/config.Icon).exists():
+            if not (plugin_dir / config.Icon).exists():
                 logger.warning(f"Icon {config.Icon} not found.")
-            
+
             FLOWA_NODE_REGISTRY[config.Provider] = config
             logger.info(f"\tRegister provider {config.Provider} Done.")
             pass

@@ -3,6 +3,7 @@ from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.fanode import FANodeValidateNeed
 from app.nodes.basenode import FABaseNode
+from app.nodes.tasknode import FATaskNode
 from app.uisdk import *
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFNodeInterface import (
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
 
-class ExamNode(FABaseNode):
+class ExamNode(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         self.validateNeededs: List[FANodeValidateNeed] = [FANodeValidateNeed.Self]
@@ -53,7 +54,7 @@ class ExamNode(FABaseNode):
                 Path=["Payloads", "ById", "D_EXAM_TEXT", "Data"],
             ),
         )
-        return thisnode.model_dump_json()
+        return thisnode
 
 
 # 必须存在

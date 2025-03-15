@@ -13,6 +13,7 @@ class VFPlugin(BaseModel):
     Description: str
     Execute: str
     Setting: VFPluginSetting
+    CreateInfo: Optional[Any] = None
     pass
 
 
