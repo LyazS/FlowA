@@ -34,40 +34,43 @@ class ExamNode(FATaskNode):
     @staticmethod
     def getNodeCreateInfo():
         thisnode = VFNode("exam_nest_node", "basenode", "Exam Nest Node")
-        thisnode.set_flag(VFNodeFlag.IsTask)
+        thisnode.set_flag(VFNodeFlag.IsTask | VFNodeFlag.IsNested)
         thisnode.set_size(200, 200)
+
+        thisnode.add_attached_node("ainput", "attached_node_input")
+        thisnode.add_attached_node("aoutput", "attached_node_output")
+
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
+        thisnode.add_handle(VFNodeConnectionType.Self, "Self")
+        thisnode.add_handle(VFNodeConnectionType.Self, "AttachOutput")
+        thisnode.add_handle(VFNodeConnectionType.Attach, "Attach")
 
-        thisnode.add_attached_node(
-            "ainput",
-            VFNodeAttachingType.Input,
-            VFNodeAttachingPos(
-                XType=VFNodeAttachingPosType.Left,
-                XOffset=0,
-                YType=VFNodeAttachingPosType.Top,
-                YOffset=0,
-            )
-        )
-
-        thisnode.add_payload(
-            VFNodeContentData(
-                Label="文本内容",
-                Type="String",
-                Key="text",
-                Data="Hello World",
-                UiType="UI_TEXT_INPUT",
+        thisnode.add_handle_data(
+            VFNodeConnectionType.Self,
+            "Self",
+            VFNodeHandleData(
+                Type=VFNodeConnectionDataType.FromOuter,
+                InputKey="input",
             ),
-            payload_id="D_EXAM_TEXT",
         )
         thisnode.add_handle_data(
-            VFNodeConnectionType.Outputs,
-            "output",
+            VFNodeConnectionType.Self,
+            "AttachOutput",
             VFNodeHandleData(
-                Type=VFNodeConnectionDataType.FromInner,
-                Path=["Payloads", "ById", "D_EXAM_TEXT", "Data"],
+                Type=VFNodeConnectionDataType.FromAttached,
+                AName="aoutput",
             ),
         )
+        thisnode.add_handle_data(
+            VFNodeConnectionType.Attach,
+            "Attach",
+            VFNodeHandleData(
+                Type=VFNodeConnectionDataType.FromAttached,
+                AName="aoutput",
+            ),
+        )
+
         return thisnode
 
 

@@ -12,6 +12,13 @@
       "Description": "Example node for FlowA",
       "Execute": "examnode.py",
       "Setting": { "Execute": "examnode_setting.py" }
+    },
+    {
+      "Type": "FANode",
+      "Name": "ExamNestNode",
+      "Description": "Example nest node for FlowA",
+      "Execute": "examnode.py",
+      "Setting": { "Execute": "examnode_setting.py" }
     }
   ],
   "UIPlugins": [

@@ -1,0 +1,60 @@
+from typing import List, Dict, Optional, TYPE_CHECKING, Any
+from app.schemas.VFNodeClass import VFNode
+from app.schemas.vfnode import VFNodeInfo
+from app.schemas.fanode import FANodeValidateNeed
+from app.nodes.basenode import FABaseNode
+from app.nodes.tasknode import FATaskNode
+from app.uisdk import *
+from app.schemas.VFNodeClass import VFNode
+from app.schemas.VFNodeInterface import (
+    VFNodeConnectionType,
+    VFNodeFlag,
+    VFNodeContentData,
+    VFNodeHandleData,
+    VFNodeConnectionDataType,
+    VFNodeAttachingType,
+    VFNodeAttachingPos,
+    VFNodeAttachingPosType,
+)
+
+if TYPE_CHECKING:
+    from app.services.FARunner import FARunner
+
+
+class ExamNode(FATaskNode):
+    def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
+        super().__init__(wid, nodeinfo, runner)
+        self.validateNeededs: List[FANodeValidateNeed] = [FANodeValidateNeed.Self]
+        pass
+
+    @staticmethod
+    def getNodeConfig():
+        return {}
+
+    @staticmethod
+    def getNodeCreateInfo():
+        thisnode = VFNode("attached_node_input", "attached_node", "附属节点")
+        thisnode.set_flag(VFNodeFlag.IsAttached)
+        thisnode.set_size(20, 6)
+        thisnode.init_as_attached_node(
+            VFNodeAttachingType.Input,
+            VFNodeAttachingPos(
+                XType=VFNodeAttachingPosType.Left,
+                XOffset=0,
+                YType=VFNodeAttachingPosType.Top,
+                YOffset=0,
+            ),
+        )
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
+        thisnode.add_handle_data(
+            VFNodeConnectionType.Outputs,
+            "output",
+            VFNodeHandleData(
+                Type=VFNodeConnectionDataType.FromParent,
+            ),
+        )
+        return thisnode
+
+
+# 必须存在
+EXPORT_NODE = ExamNode

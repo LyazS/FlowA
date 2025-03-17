@@ -56,12 +56,18 @@ class VFNode(VFNodeData):
         return VFNodeConfig(OutputsUiType="")
 
     # 类型初始化方法 ================================================
-    def init_as_nested_node(self, tag: Optional[str]) -> "VFNode":
-        self.MinSize = VFNodeSize(Width=200, Height=200)
+    def init_as_nested_node(
+        self,
+        tag: Optional[str],
+        minsize=VFNodeSize(Width=200, Height=200),
+        pad=VFNodePadding(Top=60, Bottom=40, Left=60, Right=60, Gap=0),
+        apad=VFNodePadding(Top=30, Bottom=25, Left=17, Right=17, Gap=20),
+    ) -> "VFNode":
+        self.MinSize = minsize
         self.Nesting = VFNodeNesting(
             Tag=tag,
-            Pad=VFNodePadding(Top=60, Bottom=40, Left=60, Right=60, Gap=0),
-            APad=VFNodePadding(Top=30, Bottom=25, Left=17, Right=17, Gap=20),
+            Pad=pad,
+            APad=apad,
             ANodes={},
         )
         self.Flag |= VFNodeFlag.IsNested
@@ -246,18 +252,20 @@ class VFNode(VFNodeData):
     def add_attached_node(
         self,
         a_name: str,
-        a_type: VFNodeAttachingType,
-        a_pos: VFNodeAttachingPos,
-        a_label: str,
+        a_ntype: str,
+        # a_type: VFNodeAttachingType,
+        # a_pos: VFNodeAttachingPos,
+        # a_label: str,
     ) -> "VFNode":
         if not self.is_nested_node:
             raise ValueError("Cannot add attached node to non-nested node")
 
         self.Nesting.ANodes[a_name] = VFNodeAttachedNode(
             NId=None,
-            Type=a_type,
-            Pos=a_pos,
-            Label=a_label,
+            NType=a_ntype,
+            # Type=a_type,
+            # Pos=a_pos,
+            # Label=a_label,
         )
         return self
 

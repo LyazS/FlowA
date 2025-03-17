@@ -114,9 +114,10 @@ class VFNodeAttaching(BaseModel):
 
 class VFNodeAttachedNode(BaseModel):
     Nid: Optional[str] = None
-    Type: VFNodeAttachingType
-    Pos: VFNodeAttachingPos
-    Label: str
+    NType: str
+    # Type: VFNodeAttachingType
+    # Pos: VFNodeAttachingPos
+    # Label: str
 
 
 class VFNodePadding(BaseModel):
@@ -136,14 +137,8 @@ class VFNodeNesting(BaseModel):
     Tag: Optional[str] = None
     Pad: VFNodePadding
     APad: VFNodePadding
-    ANodes: Dict[str, VFNodeAttachedNode] = {}
-
-    @model_validator(mode="after")
-    def check_unique_anode(self):
-        # 如果有重复的ANode，则抛出异常
-        if len(set(self.ANodes.keys())) != len(self.ANodes.keys()):
-            raise ValueError("ANodes字段中存在重复的ANode")
-        return self
+    ANodes: Dict[str, VFNodeAttachedNode]
+    pass
 
 
 class VFNodeState(BaseModel):
