@@ -5,152 +5,157 @@ enum VFNodeConnectionDataType {
   FromInner = 'FromInner',
 }
 
-enum VFNodeConnectionDataAttachedType {
-  attached_node_input = 'attached_node_input',
-  attached_node_callbackUser = 'attached_node_callbackUser',
-  attached_node_output = 'attached_node_output',
-  attached_node_next = 'attached_node_next',
-  attached_node_callbackFunc = 'attached_node_callbackFunc',
-  attached_node_break = 'attached_node_break',
-}
 enum VFNodeConnectionType {
-  self = 'self',
-  attach = 'attach',
-  next = 'next',
-  inputs = 'inputs',
-  outputs = 'outputs',
-  callbackUsers = 'callbackUsers',
-  callbackFuncs = 'callbackFuncs',
+  Self = 'Self',
+  Attach = 'Attach',
+  Inputs = 'Inputs',
+  Outputs = 'Outputs',
+  CallbackUsers = 'CallbackUsers',
+  CallbackFuncs = 'CallbackFuncs',
 }
 enum VFNodeFlag {
-  isNested = 0x01,
-  isAttached = 0x02,
-  isTask = 0x04,
-  isPassive = 0x08,
+  IsNested = 0x01,
+  IsAttached = 0x02,
+  IsTask = 0x04,
+  IsPassive = 0x08,
 }
 enum VFNodeAttachingType {
-  input = 'input',
-  output = 'output',
-  callbackFunc = 'callbackFunc',
-  callbackUser = 'callbackUser',
-  // next = 'next',
+  Input = 'Input',
+  Output = 'Output',
+  CallbackFunc = 'CallbackFunc',
+  CallbackUser = 'CallbackUser',
 }
-enum VFNodeAttachingPos {
-  top = 'top',
-  bottom = 'bottom',
-  left = 'left',
-  right = 'right',
-  center = 'center',
+enum VFNodeAttachingPosType {
+  Top = 'Top',
+  Bottom = 'Bottom',
+  Left = 'Left',
+  Right = 'Right',
+  Center = 'Center',
 }
 
 type CodeEditorLanguage = 'python' | 'json' | 'django' | 'text'
 
 interface VFNodeContentDataConfig {
-  language?: CodeEditorLanguage
-  ref?: string
+  Language?: CodeEditorLanguage
+  Ref?: string
 }
 interface VFNodeContentData {
-  label: string
-  type: string
-  key: string
-  data: any
-  config?: VFNodeContentDataConfig
-  hid?: string
-  did?: string
-  uitype?: string
+  Label: string
+  Type: string
+  Key: string
+  Data: any
+  Config?: VFNodeContentDataConfig
+  Hid?: string
+  Did?: string
+  Uitype?: string
 }
 
 interface VFNodeContents {
-  byId: Record<string, VFNodeContentData>
-  order: string[]
+  ById: Record<string, VFNodeContentData>
+  Order: string[]
 }
 
 interface VFNodeHandleData {
-  type: VFNodeConnectionDataType
-  inputKey?: string
-  atype?: VFNodeConnectionDataAttachedType
-  path?: (string | number)[]
-  useid?: string[]
+  Type: VFNodeConnectionDataType
+  InputKey?: string
+  AName?: string
+  Path?: (string | number)[]
+  UseIds?: string[]
 }
 
 interface VFNodeHandle {
-  label: string
-  data: Record<string, VFNodeHandleData>
+  Label: string
+  Data: Record<string, VFNodeHandleData>
 }
 
 type VFNodeConnections = {
   // 连接类型：handleID：{handle标签，handle数据}
   [key in VFNodeConnectionType]: Record<string, VFNodeHandle>
+  // Self: Record<string, VFNodeHandle>
+  // Attach: Record<string, VFNodeHandle>
+  // Inputs: Record<string, VFNodeHandle>
+  // Outputs: Record<string, VFNodeHandle>
+  // CallbackUsers: Record<string, VFNodeHandle>
+  // CallbackFuncs: Record<string, VFNodeHandle>
 }
 
+interface VFNodeAttachingPos {
+  XType: VFNodeAttachingPosType
+  XOffset: number
+  YType: VFNodeAttachingPosType
+  YOffset: number
+}
 interface VFNodeAttaching {
-  type: VFNodeAttachingType
-  pos: [VFNodeAttachingPos, number, VFNodeAttachingPos, number]
-  label: string
+  Type: VFNodeAttachingType
+  Pos: VFNodeAttachingPos
+  Label: string
 }
 
 interface VFNodeAttachedNode {
-  nid: string | null
+  Nid: string | null
+  Type: VFNodeAttachingType
+  Pos: VFNodeAttachingPos
+  Label: string
 }
 
 interface VFNodePadding {
-  top: number
-  bottom: number
-  left: number
-  right: number
-  gap: number
+  Top: number
+  Bottom: number
+  Left: number
+  Right: number
+  Gap: number
 }
 
 interface VFNodeSize {
-  width: number
-  height: number
+  Width: number
+  Height: number
 }
 
 interface VFNodeNesting {
-  tag: string | null
-  pad: VFNodePadding
-  attached_pad: VFNodePadding
-  attached_nodes: Partial<Record<VFNodeConnectionDataAttachedType, VFNodeAttachedNode>>
+  Tag: string | null
+  Pad: VFNodePadding
+  APad: VFNodePadding
+  ANodes: Record<string, VFNodeAttachedNode>
 }
 
 interface VFNodeState {
-  status: string
-  copy: Record<string, any>
-  copyCount: {
+  Status: string
+  Copy: Record<string, any>
+  CopyCount: {
     Running: number
     Success: number
     Error: number
   }
-  validation_errors: string[]
+  Errors: string[]
 }
 
 interface VFNodeConfig {
-  outputsUIType: string
+  OutputsUiType: string
 }
 // 基础节点接口（所有节点的共有属性）
 interface BaseVFNodeData {
-  ntype: string
-  vtype: string
-  flag: number
-  label: string
-  placeholderlabel: string
-  size: VFNodeSize
-  connections: VFNodeConnections
-  payloads: VFNodeContents
-  results: VFNodeContents
-  state: VFNodeState
-  config: VFNodeConfig
+  NType: string
+  VType: string
+  Flag: number
+  Label: string
+  PlaceholderLabel: string
+  Size: VFNodeSize
+  Connections: VFNodeConnections
+  Payloads: VFNodeContents
+  Results: VFNodeContents
+  State: VFNodeState
+  Config: VFNodeConfig
 }
 
 // 附属节点接口
 interface AttachedVFNodeData extends BaseVFNodeData {
-  attaching: VFNodeAttaching
+  Attaching: VFNodeAttaching
 }
 
 // 嵌套节点接口
 interface NestedVFNodeData extends BaseVFNodeData {
-  min_size: VFNodeSize
-  nesting: VFNodeNesting
+  MinSize: VFNodeSize
+  Nesting: VFNodeNesting
 }
 
 // 组合成联合类型
@@ -158,11 +163,11 @@ type VFNodeData = BaseVFNodeData | AttachedVFNodeData | NestedVFNodeData
 
 // 类型守卫
 function isAttachedNode(node: VFNodeData): node is AttachedVFNodeData {
-  return (node.flag & VFNodeFlag.isAttached) !== 0
+  return (node.Flag & VFNodeFlag.IsAttached) !== 0
 }
 
 function isNestedNode(node: VFNodeData): node is NestedVFNodeData {
-  return (node.flag & VFNodeFlag.isNested) !== 0
+  return (node.Flag & VFNodeFlag.IsNested) !== 0
 }
 
 export type {
@@ -183,13 +188,13 @@ export type {
   NestedVFNodeData,
   VFNodeData,
   CodeEditorLanguage,
+  VFNodeAttachingPos,
 }
 export {
   VFNodeConnectionDataType,
-  VFNodeConnectionDataAttachedType,
   VFNodeConnectionType,
+  VFNodeAttachingPosType,
   VFNodeFlag,
-  VFNodeAttachingPos,
   VFNodeAttachingType,
   isAttachedNode,
   isNestedNode,

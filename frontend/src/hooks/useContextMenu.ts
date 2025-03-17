@@ -6,6 +6,8 @@ import { useVFlowInitial } from './useVFlowInitial'
 import { useVFlowRequest } from '@/services/useVFlowRequest'
 import { VFNodeFlag } from '@/components/nodes/VFNodeInterface'
 import { VFNode } from '@/components/nodes/VFNodeClass'
+import Logger from '@/utils/Logger'
+
 // 定义菜单项类型
 interface MenuItem {
   label: string
@@ -59,6 +61,9 @@ let instance: ContextMenuInstance | null = null
 
 export const useContextMenu = (): ContextMenuInstance => {
   if (instance) return instance
+
+  const logger = new Logger('ContextMenu')
+
   const { screenToFlowCoordinate, removeEdges } = useVueFlow()
   const { AllTestNodes } = useVFlowInitial()
   const {
@@ -89,13 +94,13 @@ export const useContextMenu = (): ContextMenuInstance => {
     AddNodesInNest.value = Object.entries(AllTestNodes.value)
       .sort((a, b) => a[0].localeCompare(b[0])) // 按key排序
       .map(([key, item]) => item)
-      .filter((item) => !item.isAttachedNode() && !(VFNodeFlag.isPassive & item.flag))
-    // console.debug('AddNodesInPane', AddNodesInPane.value)
-    // console.debug('AddNodesInNest', AddNodesInNest.value)
+      .filter((item) => !item.isAttachedNode() && !(VFNodeFlag.IsPassive & item.Flag))
+    logger.debug('AddNodesInPane', AddNodesInPane.value)
+    logger.debug('AddNodesInNest', AddNodesInNest.value)
   }
 
   const onClickContextMenuRmNode = (event_cm: NodeContextMenuEvent) => {
-    console.debug('删除节点')
+    logger.debug('删除节点')
     const node = event_cm.node
     const parent_id = node.parentNode
 
@@ -112,12 +117,12 @@ export const useContextMenu = (): ContextMenuInstance => {
       }
     }
     return nodelist.map((item) => ({
-      label: item.label,
+      label: item.Label,
       onClick: () => {
-        console.log('add node', item.ntype)
+        logger.log('add node', item.NType)
         const node_info: NodeAddInfo = {
           type: 'client',
-          ntype: item.ntype,
+          ntype: item.NType,
           nid: null,
           parentNodeId: event_cm.node?.id,
           pos: {
@@ -133,7 +138,7 @@ export const useContextMenu = (): ContextMenuInstance => {
   }
 
   const onClickContextMenuRmEdge = (event_cm: EdgeContextMenuEvent) => {
-    console.debug('删除边')
+    logger.debug('删除边')
     removeEdgeFromVFlow([event_cm.edge])
   }
 

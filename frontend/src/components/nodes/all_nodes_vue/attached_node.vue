@@ -12,7 +12,6 @@ import { computed, onMounted } from 'vue'
 import { Position, Handle, useVueFlow, type Node, type HandleType } from '@vue-flow/core'
 import {
   type AttachedVFNodeData,
-  VFNodeAttachingPos,
   VFNodeAttachingType,
 } from '@/components/nodes/VFNodeInterface'
 

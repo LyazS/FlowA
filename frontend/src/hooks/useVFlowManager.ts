@@ -12,12 +12,13 @@ import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { getUuid, setValueByPath } from '@/utils/tools'
 import {
   VFNodeFlag,
-  VFNodeAttachingPos,
-  VFNodeConnectionDataAttachedType,
   type NestedVFNodeData,
   type AttachedVFNodeData,
+  VFNodeAttachingPosType,
 } from '@/components/nodes/VFNodeInterface'
+import type { NodeWithVFData } from '@/schemas/schemas'
 import { type VFNode, createVFNodeFromData } from '@/components/nodes/VFNodeClass'
+import Logger from '@/utils/Logger'
 
 export interface NodeAddInfo {
   type: 'client' | 'attached'
@@ -50,6 +51,9 @@ let instance: NodeManagementInstance | null = null
 
 export const useVFlowManager = (): NodeManagementInstance => {
   if (instance) return instance
+
+  const logger = new Logger('Manager')
+
   const { getNodes, findNode, addNodes, removeNodes, addEdges, removeEdges, fromObject } =
     useVueFlow()
   const { AllTestNodes, createVFNode } = useVFlowInitial()
@@ -88,8 +92,8 @@ export const useVFlowManager = (): NodeManagementInstance => {
         NestedNodeGraph.value[node.parentNode].children.push(nid)
       }
     }
-    // console.debug('getNodes', getNodes.value)
-    // console.debug('buildNestedNodeGraph', NestedNodeGraph.value)
+    // logger.debug('getNodes', getNodes.value)
+    // logger.debug('buildNestedNodeGraph', NestedNodeGraph.value)
   }
 
   const recursiveUpdateNodeSize = (nodeId: string | null | undefined) => {
@@ -98,10 +102,10 @@ export const useVFlowManager = (): NodeManagementInstance => {
     let nested_node = getNestedNodeById(nodeId)
     if (!vf_node || !nested_node) return
     const childnums = nested_node.children.reduce((acc, childId) => {
-      const vf_node_child = findNode(childId)
+      const vf_node_child = findNode(childId) as NodeWithVFData
       // 子节点不计算
       if (!vf_node_child) return acc
-      if (!(VFNodeFlag.isAttached & vf_node_child.data.flag)) acc += 1
+      if (!(VFNodeFlag.IsAttached & vf_node_child.data.Flag)) acc += 1
       return acc
     }, 0)
     if (childnums <= 0) return
@@ -114,34 +118,34 @@ export const useVFlowManager = (): NodeManagementInstance => {
       maxX = -Infinity,
       maxY = -Infinity
     for (const childId of nested_node.children) {
-      const vf_node_child = findNode(childId)
+      const vf_node_child = findNode(childId) as NodeWithVFData
       if (!vf_node_child) continue
       // 固定位置的子节点不计算
-      if (VFNodeFlag.isAttached & vf_node_child.data.flag) continue
+      if (VFNodeFlag.IsAttached & vf_node_child.data.Flag) continue
       minX = Math.min(minX, vf_node_child.position.x + vf_node_pos.x)
       minY = Math.min(minY, vf_node_child.position.y + vf_node_pos.y)
       maxX = Math.max(
         maxX,
-        vf_node_child.position.x + vf_node_pos.x + vf_node_child.data.size.width,
+        vf_node_child.position.x + vf_node_pos.x + vf_node_child.data.Size.Width,
       )
       maxY = Math.max(
         maxY,
-        vf_node_child.position.y + vf_node_pos.y + vf_node_child.data.size.height,
+        vf_node_child.position.y + vf_node_pos.y + vf_node_child.data.Size.Height,
       )
     }
 
     // 按照最小尺寸更新父节点尺寸
     let vf_node_tgt_wd =
-      maxX - minX + vf_node_data.nesting.pad.left + vf_node_data.nesting.pad.right
+      maxX - minX + vf_node_data.Nesting.Pad.Left + vf_node_data.Nesting.Pad.Right
     let vf_node_tgt_ht =
-      maxY - minY + vf_node_data.nesting.pad.top + vf_node_data.nesting.pad.bottom
-    vf_node_data.size.width = Math.max(vf_node_tgt_wd, vf_node_data.min_size.width)
-    vf_node_data.size.height = Math.max(vf_node_tgt_ht, vf_node_data.min_size.height)
+      maxY - minY + vf_node_data.Nesting.Pad.Top + vf_node_data.Nesting.Pad.Bottom
+    vf_node_data.Size.Width = Math.max(vf_node_tgt_wd, vf_node_data.MinSize.Width)
+    vf_node_data.Size.Height = Math.max(vf_node_tgt_ht, vf_node_data.MinSize.Height)
 
     vf_node.style = {
       ...(vf_node.style || {}), // 处理 undefined 情况
-      width: `${vf_node_data.size.width}px`,
-      height: `${vf_node_data.size.height}px`,
+      width: `${vf_node_data.Size.Width}px`,
+      height: `${vf_node_data.Size.Height}px`,
     }
 
     // 更新子节点位置
@@ -151,34 +155,33 @@ export const useVFlowManager = (): NodeManagementInstance => {
       const cdata = vf_node_child.data as VFNode
       // 固定位置的子节点
       if (cdata.isAttachedNode()) {
-        const [yPart, yPos, xPart, xPos] = cdata.attaching.pos
-        if (yPart == VFNodeAttachingPos.bottom) {
-          const yOffset = yPos * vf_node_data.nesting.attached_pad.gap
+        if (cdata.Attaching.Pos.YType == VFNodeAttachingPosType.Bottom) {
+          const yOffset = cdata.Attaching.Pos.YOffset * vf_node_data.Nesting.APad.Gap
           vf_node_child.position.y =
-            vf_node_data.size.height - vf_node_data.nesting.attached_pad.bottom - yOffset
-        } else if (yPart == VFNodeAttachingPos.center) {
+            vf_node_data.Size.Height - vf_node_data.Nesting.APad.Bottom - yOffset
+        } else if (cdata.Attaching.Pos.YType == VFNodeAttachingPosType.Center) {
           vf_node_child.position.y =
-            vf_node_data.size.height / 2 - vf_node_data.nesting.attached_pad.bottom
+            vf_node_data.Size.Height / 2 - vf_node_data.Nesting.APad.Bottom
         }
-        if (xPart == VFNodeAttachingPos.right) {
+        if (cdata.Attaching.Pos.XType == VFNodeAttachingPosType.Right) {
           vf_node_child.position.x =
-            vf_node_data.size.width - vf_node_data.nesting.attached_pad.right
-        } else if (xPart == VFNodeAttachingPos.center) {
+            vf_node_data.Size.Width - vf_node_data.Nesting.APad.Right
+        } else if (cdata.Attaching.Pos.XType == VFNodeAttachingPosType.Center) {
           vf_node_child.position.x =
-            vf_node_data.size.width / 2 - vf_node_data.nesting.attached_pad.right
+            vf_node_data.Size.Width / 2 - vf_node_data.Nesting.APad.Right
         }
-        if (yPart != VFNodeAttachingPos.top) vf_node_child.position.y -= cdata.size.height / 2
-        if (xPart != VFNodeAttachingPos.left) vf_node_child.position.x -= cdata.size.width / 2
+        if (cdata.Attaching.Pos.YType != VFNodeAttachingPosType.Top) vf_node_child.position.y -= cdata.Size.Height / 2
+        if (cdata.Attaching.Pos.XType != VFNodeAttachingPosType.Left) vf_node_child.position.x -= cdata.Size.Width / 2
       } else {
-        vf_node_child.position.x += vf_node_pos.x - (minX - vf_node_data.nesting.pad.left)
-        vf_node_child.position.y += vf_node_pos.y - (minY - vf_node_data.nesting.pad.top)
+        vf_node_child.position.x += vf_node_pos.x - (minX - vf_node_data.Nesting.Pad.Left)
+        vf_node_child.position.y += vf_node_pos.y - (minY - vf_node_data.Nesting.Pad.Top)
       }
     }
 
     // 更新父节点位置
     vf_node.position = {
-      x: minX - vf_node_data.nesting.pad.left,
-      y: minY - vf_node_data.nesting.pad.top,
+      x: minX - vf_node_data.Nesting.Pad.Left,
+      y: minY - vf_node_data.Nesting.Pad.Top,
     }
 
     // 递归更新父节点大小
@@ -186,14 +189,14 @@ export const useVFlowManager = (): NodeManagementInstance => {
   }
 
   const recursiveAddNodeToVFlow = (nodeinfo: NodeAddInfo) => {
-    console.debug('nodeinfo:', nodeinfo)
+    logger.debug('nodeinfo:', nodeinfo)
     const nodetype = nodeinfo.ntype
     const parentNode = findNode(nodeinfo.parentNodeId)
 
     const initnode = createVFNode(nodetype)
     const offset_size = {
-      width: initnode.size.width + 8,
-      height: initnode.size.height + 8,
+      Width: initnode.Size.Width + 8,
+      Height: initnode.Size.Height + 8,
     }
     let new_node_id = nodeinfo.nid || getUuid()
     if (parentNode) {
@@ -201,29 +204,29 @@ export const useVFlowManager = (): NodeManagementInstance => {
       if (pdata.isNestedNode()) {
         const nest_regex = /#(\w+)/g
         const pid_matches = parentNode.id.match(nest_regex) || []
-        console.debug('parentNode id matches', pid_matches)
+        logger.debug('parentNode id matches', pid_matches)
         new_node_id += pid_matches.join('')
-        if (pdata.nesting.tag) {
-          new_node_id += `#${pdata.nesting.tag}`
+        if (pdata.Nesting.Tag) {
+          new_node_id += `#${pdata.Nesting.Tag}`
         }
       }
     }
 
-    initnode.size.width = offset_size.width
-    initnode.size.height = offset_size.height
+    initnode.Size.Width = offset_size.Width
+    initnode.Size.Height = offset_size.Height
     const nodecount = AllNodeCounters.value[nodetype]
-    const new_node_label = nodecount > 0 ? `${initnode.label}${nodecount}` : initnode.label
+    const new_node_label = nodecount > 0 ? `${initnode.Label}${nodecount}` : initnode.Label
     AllNodeCounters.value[nodetype] += 1
-    initnode.placeholderlabel = new_node_label
-    initnode.label = new_node_label
+    initnode.PlaceholderLabel = new_node_label
+    initnode.Label = new_node_label
 
     const new_node = {
       id: new_node_id,
-      type: initnode.vtype,
+      type: initnode.VType,
       data: initnode,
       style: {
-        width: `${offset_size.width}px`,
-        height: `${offset_size.height}px`,
+        width: `${offset_size.Width}px`,
+        height: `${offset_size.Height}px`,
       },
       draggable: undefined as boolean | undefined,
       selectable: undefined as boolean | undefined,
@@ -234,33 +237,32 @@ export const useVFlowManager = (): NodeManagementInstance => {
     // 设置全局position
     if (nodeinfo.type === 'attached' && !!parentNode) {
       const pdata = parentNode.data as VFNode & NestedVFNodeData
-      const [yPart, yPos, xPart, xPos] = initnode.attaching!.pos
-      if (yPart == VFNodeAttachingPos.top) {
-        const yOffset = yPos * pdata.nesting.attached_pad.gap
-        new_node.position.y = parentNode.position.y + pdata.nesting.attached_pad.top + yOffset
-      } else if (yPart == VFNodeAttachingPos.bottom) {
-        const yOffset = yPos * pdata.nesting.attached_pad.gap
+      if (initnode.Attaching!.Pos.YType == VFNodeAttachingPosType.Top) {
+        const yOffset = initnode.Attaching!.Pos.YOffset * pdata.Nesting.APad.Gap
+        new_node.position.y = parentNode.position.y + pdata.Nesting.APad.Top + yOffset
+      } else if (initnode.Attaching!.Pos.YType == VFNodeAttachingPosType.Bottom) {
+        const yOffset = initnode.Attaching!.Pos.YOffset * pdata.Nesting.APad.Gap
         new_node.position.y =
-          parentNode.position.y + pdata.size.height - pdata.nesting.attached_pad.bottom - yOffset
-      } else if (yPart == VFNodeAttachingPos.center) {
+          parentNode.position.y + pdata.Size.Height - pdata.Nesting.APad.Bottom - yOffset
+      } else if (initnode.Attaching!.Pos.YType == VFNodeAttachingPosType.Center) {
         new_node.position.y =
-          parentNode.position.y + pdata.size.height / 2 - pdata.nesting.attached_pad.bottom
+          parentNode.position.y + pdata.Size.Height / 2 - pdata.Nesting.APad.Bottom
       }
-      if (xPart == VFNodeAttachingPos.left) {
-        new_node.position.x = parentNode.position.x + pdata.nesting.attached_pad.left
-      } else if (xPart == VFNodeAttachingPos.right) {
+      if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Left) {
+        new_node.position.x = parentNode.position.x + pdata.Nesting.APad.Left
+      } else if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Right) {
         new_node.position.x =
-          parentNode.position.x + pdata.size.width - pdata.nesting.attached_pad.right
-      } else if (xPart == VFNodeAttachingPos.center) {
+          parentNode.position.x + pdata.Size.Width - pdata.Nesting.APad.Right
+      } else if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Center) {
         new_node.position.x =
-          parentNode.position.x + pdata.size.width / 2 - pdata.nesting.attached_pad.right
+          parentNode.position.x + pdata.Size.Width / 2 - pdata.Nesting.APad.Right
       }
 
       new_node.draggable = false
       new_node.selectable = false
-      new_node.position.x -= offset_size.width / 2
-      new_node.position.y -= offset_size.height / 2
-      console.debug('add attached node in', (initnode as VFNode & AttachedVFNodeData).attaching.pos)
+      new_node.position.x -= offset_size.Width / 2
+      new_node.position.y -= offset_size.Height / 2
+      logger.debug('add attached node in', (initnode as VFNode & AttachedVFNodeData).Attaching.Pos)
     } else if (nodeinfo.type === 'client') {
       new_node.position.x = nodeinfo.pos.x
       new_node.position.y = nodeinfo.pos.y
@@ -281,8 +283,8 @@ export const useVFlowManager = (): NodeManagementInstance => {
     addNodes(new_node)
 
     if (initnode.isNestedNode()) {
-      console.log(`add ${Object.keys(initnode.nesting.attached_nodes).length} fixed nested nodes`)
-      for (const antype of Object.keys(initnode.nesting.attached_nodes)) {
+      logger.log(`add ${Object.keys(initnode.Nesting.ANodes).length} fixed nested nodes`)
+      for (const antype of Object.keys(initnode.Nesting.ANodes)) {
         const anid = recursiveAddNodeToVFlow({
           ntype: antype,
           nid: null,
@@ -290,7 +292,7 @@ export const useVFlowManager = (): NodeManagementInstance => {
           parentNodeId: new_node.id,
           pos: { x: 0, y: 0 },
         })
-        initnode.nesting.attached_nodes[antype as VFNodeConnectionDataAttachedType]!.nid = anid
+        initnode.Nesting.ANodes[antype as VFNodeConnectionDataAttachedType]!.nid = anid
       }
     }
     return new_node_id
@@ -324,7 +326,7 @@ export const useVFlowManager = (): NodeManagementInstance => {
     let is_all_attached =
       (findNode(params.source)?.data as VFNode).isAttachedNode() &&
       (findNode(params.target)?.data as VFNode).isAttachedNode()
-    console.debug(
+    logger.debug(
       'is_match_port',
       is_match_port,
       'is_diff_node',
@@ -335,7 +337,7 @@ export const useVFlowManager = (): NodeManagementInstance => {
       is_all_attached,
     )
     if (is_match_port && is_diff_node && !!is_same_parent && !is_all_attached) {
-      console.debug('add edge')
+      logger.debug('add edge')
       params.type = 'normal'
       addEdges(params)
       autoSaveWorkflow()

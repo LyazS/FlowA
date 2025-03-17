@@ -9,6 +9,10 @@ class Logger {
     console.log(`[${this.name}]`, ...data)
   }
 
+  debug(...data: any[]): void {
+    console.debug(`[${this.name}]`, ...data)
+  }
+
   info(...data: any[]): void {
     console.info(`[${this.name}]`, ...data)
   }

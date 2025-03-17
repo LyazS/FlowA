@@ -23,6 +23,7 @@ export interface VFPlugin {
   Description: string
   Execute: string
   Setting: VFPluginSetting
+  CreateInfo: any
 }
 
 export interface VFUIPlugin {

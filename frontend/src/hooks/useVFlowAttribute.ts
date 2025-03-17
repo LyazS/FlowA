@@ -21,15 +21,15 @@ export const isEditorMode = computed(() => WorkflowMode.value === WorkflowModeTy
 export const WorkflowID = ref<string | null>(null)
 export const WorkflowName = ref<string | null>(null)
 
-const isShowFlowResults_inner = ref(false)
+const _isShowFlowMgr = ref(false)
 export const isShowVFlowMgr = computed({
   get: () => {
-    if (!!WorkflowID.value) return isShowFlowResults_inner.value
+    if (!!WorkflowID.value) return _isShowFlowMgr.value
     else return true
   },
   set: (val) => {
-    if (!!WorkflowID.value) isShowFlowResults_inner.value = val
-    else isShowFlowResults_inner.value = true
+    if (!!WorkflowID.value) _isShowFlowMgr.value = val
+    else _isShowFlowMgr.value = true
   },
 })
 export const isShowJinja2Render = ref(false)
