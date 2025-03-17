@@ -1,0 +1,24 @@
+{
+  "Provider": "Exam Provider2",
+  "Version": "1.0.0",
+  "Description": "Exam plugin for FlowA",
+  "Author": "FlowA Team",
+  "Icon": "exam.png",
+  "ProviderSetting": { "Execute": "exam_provider_setting.py" },
+  "Plugins": [
+    {
+      "Type": "FANode",
+      "Name": "ExamNode",
+      "Description": "Example node for FlowA",
+      "Execute": "exam_nest_node.py",
+      "Setting": { "Execute": "examnode_setting.py" }
+    }
+  ],
+  "UIPlugins": [
+    {
+      "Type": "FANode",
+      "Name": "UI_TEXT_INPUT",
+      "Component": "examui.py"
+    }
+  ]
+}

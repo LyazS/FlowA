@@ -10,15 +10,6 @@ class VFNodeConnectionDataType(str, Enum):
     FromInner = "FromInner"
 
 
-class VFNodeConnectionDataAttachedType(str, Enum):
-    attached_node_input = "attached_node_input"
-    attached_node_callbackUser = "attached_node_callbackUser"
-    attached_node_output = "attached_node_output"
-    attached_node_next = "attached_node_next"
-    attached_node_callbackFunc = "attached_node_callbackFunc"
-    attached_node_break = "attached_node_break"
-
-
 class VFNodeConnectionType(StrEnum):
     Self = "Self"
     Attach = "Attach"
@@ -78,9 +69,19 @@ class VFNodeContents(BaseModel):
 class VFNodeHandleData(BaseModel):
     Type: VFNodeConnectionDataType
     InputKey: Optional[str] = None
-    AType: Optional[VFNodeConnectionDataAttachedType] = None
+    AName: Optional[str] = None
     Path: Optional[List[Union[str, int]]] = None
     UseIds: Optional[List[str]] = None
+
+    @model_validator(mode="after")
+    def check_consistency(self):
+        if self.Type == VFNodeConnectionDataType.FromInner and not self.Path:
+            raise ValueError("FromInner连接类型必须包含Path字段")
+        if self.Type == VFNodeConnectionDataType.FromAttached and not self.AName:
+            raise ValueError("FromAttached连接类型必须包含AName字段")
+        if self.Type == VFNodeConnectionDataType.FromOuter and not self.InputKey:
+            raise ValueError("FromOuter连接类型必须包含InputKey字段")
+        return self
 
 
 class VFNodeHandle(BaseModel):
@@ -135,7 +136,14 @@ class VFNodeNesting(BaseModel):
     Tag: Optional[str] = None
     Pad: VFNodePadding
     APad: VFNodePadding
-    ANodes: Dict[VFNodeConnectionDataAttachedType, VFNodeAttachedNode] = {}
+    ANodes: Dict[str, VFNodeAttachedNode] = {}
+
+    @model_validator(mode="after")
+    def check_unique_anode(self):
+        # 如果有重复的ANode，则抛出异常
+        if len(set(self.ANodes.keys())) != len(self.ANodes.keys()):
+            raise ValueError("ANodes字段中存在重复的ANode")
+        return self
 
 
 class VFNodeState(BaseModel):
