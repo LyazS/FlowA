@@ -47,7 +47,7 @@ interface VFNodeContentData {
   Config?: VFNodeContentDataConfig
   Hid?: string
   Did?: string
-  Uitype?: string
+  UiType?: string
 }
 
 interface VFNodeContents {
