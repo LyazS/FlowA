@@ -30,7 +30,7 @@ enum VFNodeAttachingPosType {
   Bottom = 'Bottom',
   Left = 'Left',
   Right = 'Right',
-  // Center = 'Center',
+  Center = 'Center',
 }
 
 type CodeEditorLanguage = 'python' | 'json' | 'django' | 'text'
