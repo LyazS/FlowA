@@ -256,15 +256,17 @@ class VFNode implements BaseVFNodeData {
   // 嵌套节点操作 ==================================================
   addAttachedNode(
     aname: string,
-    type: VFNodeAttachingType,
-    pos: VFNodeAttachingPos,
-    label: string,
+    antype: string,
+    // type: VFNodeAttachingType,
+    // pos: VFNodeAttachingPos,
+    // label: string,
   ): this {
     if (!this.isNestedNode()) {
       throw new Error('Cannot add attached node to non-nested node')
     }
 
-    this.Nesting!.ANodes[aname] = { Nid: null, Type: type, Pos: pos, Label: label }
+    // this.Nesting!.ANodes[aname] = { Nid: null, Type: type, Pos: pos, Label: label }
+    this.Nesting!.ANodes[aname] = { Nid: null, NType: antype }
     return this
   }
 
