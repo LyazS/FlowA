@@ -96,8 +96,8 @@ class FABaseNode(ABC):
 
     @staticmethod
     def getNodeConfig():
-        return {}
+        return None
 
     @staticmethod
-    def getNodeCreateInfo():
-        return {}
+    def getNodeCreateInfo() -> VFNode:
+        return None

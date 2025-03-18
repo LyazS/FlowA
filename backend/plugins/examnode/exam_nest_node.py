@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
 
-class ExamNode(FATaskNode):
+class ExamNestNode(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         self.validateNeededs: List[FANodeValidateNeed] = [FANodeValidateNeed.Self]
@@ -33,12 +33,13 @@ class ExamNode(FATaskNode):
 
     @staticmethod
     def getNodeCreateInfo():
-        thisnode = VFNode("exam_nest_node", "basenode", "Exam Nest Node")
-        thisnode.set_flag(VFNodeFlag.IsTask | VFNodeFlag.IsNested)
+        thisnode = VFNode("basenode")
+        thisnode.set_flag(VFNodeFlag.IsTask)
+        thisnode.init_as_nested_node("EXAM")
         thisnode.set_size(200, 200)
 
-        thisnode.add_attached_node("ainput", "attached_node_input")
-        thisnode.add_attached_node("aoutput", "attached_node_output")
+        thisnode.add_attached_node("ainput", "@/FlowABuiltin/attach_node_input")
+        thisnode.add_attached_node("aoutput", "@/FlowABuiltin/attach_node_output")
 
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
@@ -75,4 +76,4 @@ class ExamNode(FATaskNode):
 
 
 # 必须存在
-EXPORT_NODE = ExamNode
+EXPORT_NODE = ExamNestNode

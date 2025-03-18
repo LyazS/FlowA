@@ -33,7 +33,7 @@ class ExamNode(FATaskNode):
 
     @staticmethod
     def getNodeCreateInfo():
-        thisnode = VFNode("attached_node_output", "attached_node", "附属节点")
+        thisnode = VFNode("attached_node")
         thisnode.set_flag(VFNodeFlag.IsAttached)
         thisnode.set_size(20, 6)
         thisnode.init_as_attached_node(
@@ -44,8 +44,10 @@ class ExamNode(FATaskNode):
                 YType=VFNodeAttachingPosType.Bottom,
                 YOffset=0,
             ),
+            "OUTPUT"
         )
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
+        thisnode.add_handle(VFNodeConnectionType.Self, "self", "Self")
         thisnode.add_handle_data(
             VFNodeConnectionType.Self,
             "self",

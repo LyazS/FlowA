@@ -1,5 +1,6 @@
 {
   "Provider": "Exam Provider",
+  "Label": "示例供应商",
   "Version": "1.0.0",
   "Description": "Exam plugin for FlowA",
   "Author": "FlowA Team",
@@ -9,6 +10,7 @@
     {
       "Type": "FANode",
       "Name": "ExamNode",
+      "Label": "示例节点",
       "Description": "Example node for FlowA",
       "Execute": "examnode.py",
       "Setting": { "Execute": "examnode_setting.py" }
@@ -16,8 +18,9 @@
     {
       "Type": "FANode",
       "Name": "ExamNestNode",
+      "Label": "示例嵌套节点",
       "Description": "Example nest node for FlowA",
-      "Execute": "examnode.py",
+      "Execute": "exam_nest_node.py",
       "Setting": { "Execute": "examnode_setting.py" }
     }
   ],

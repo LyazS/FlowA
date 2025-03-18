@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import importlib
@@ -8,7 +9,8 @@ from loguru import logger
 from app.nodes.basenode import FABaseNode
 from app.uisdk import BaseComponent
 from app.schemas.VFlowPlugin import VFProvider
-
+from app.schemas.VFNodeClass import VFNode
+from app.schemas.VFNodeInterface import VFNodeFlag
 
 FLOWA_NODE_REGISTRY: Dict[str, VFProvider] = {}
 FANODE_REGISTRY: Dict[str, FABaseNode] = {}  # 节点类型与执行类的映射
@@ -29,7 +31,9 @@ def register_plugins():
             config = VFProvider.model_validate_json(
                 config_path.read_text(encoding="utf-8")
             )
-            logger.info(f"Register plugins from {config.Provider}...")
+            logger.info(
+                "=" * 20 + f" Register plugins from [{config.Provider}] " + "=" * 20
+            )
             # 注册节点
             for plugin in config.Plugins:
                 if plugin.Type == "FANode":
@@ -38,9 +42,13 @@ def register_plugins():
                     )
                     module = importlib.import_module(module_path)
                     node_class: FABaseNode = getattr(module, "EXPORT_NODE")
-                    FANODE_REGISTRY[f"@{config.Provider}@{plugin.Name}"] = node_class
+                    pname = f"@/{config.Provider}/{plugin.Name}"
+                    FANODE_REGISTRY[pname] = node_class
                     plugin.CreateInfo = node_class.getNodeCreateInfo()
-                    logger.info(f"\tRegister NODE [{plugin.Name}].")
+                    plugin.CreateInfo.set_label(plugin.Label)
+                    plugin.CreateInfo.set_node_type(pname)
+
+                    logger.info(f"Register NODE [{pname}].")
             pass
             # 注册UI组件
             for ui_plugin in config.UIPlugins:
@@ -50,7 +58,7 @@ def register_plugins():
                 module = importlib.import_module(module_path)
                 ui_component = getattr(module, "EXPORT_UI")
                 ui_plugin.Component = ui_component()
-                logger.info(f"\tRegister UI [{ui_plugin.Name}].")
+                logger.info(f"Register UI [{ui_plugin.Name}].")
             pass
             # 修正icon路径
             config.Icon = f"{plugin_dir.name}/{config.Icon}"
@@ -58,9 +66,24 @@ def register_plugins():
                 logger.warning(f"Icon {config.Icon} not found.")
 
             FLOWA_NODE_REGISTRY[config.Provider] = config
-            logger.info(f"\tRegister provider {config.Provider} Done.")
+            logger.info("=" * 20 + f" Register Done. " + "=" * 20)
             pass
         except Exception as e:
             errmsg = traceback.format_exc()
-            print(f"Error loading plugin {plugin_dir.name}: {errmsg}")
+            logger.error(f"Error loading plugin [{plugin_dir.name}]: {errmsg}")
             raise e
+    # 最后检查嵌套节点的子节点是否存在
+    for provider in FLOWA_NODE_REGISTRY.values():
+        for plugin in provider.Plugins:
+            if plugin.CreateInfo is not None and (
+                plugin.CreateInfo.Flag & VFNodeFlag.IsNested
+            ):
+                for anode in plugin.CreateInfo.Nesting.ANodes.values():
+                    if anode.NType not in FANODE_REGISTRY:
+                        logger.error(
+                            f"Node [{anode.NType}] of [{plugin.Name}] not found in registry."
+                        )
+                        raise Exception(
+                            f"Node [{anode.NType}] of [{plugin.Name}] not found in registry."
+                        )
+        pass

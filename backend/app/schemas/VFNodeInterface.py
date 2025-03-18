@@ -39,7 +39,7 @@ class VFNodeAttachingPosType(StrEnum):
     Bottom = "Bottom"
     Left = "Left"
     Right = "Right"
-    Center = "Center"
+    # Center = "Center"
 
 
 CodeEditorLanguage = Literal["python", "json", "django", "text"]

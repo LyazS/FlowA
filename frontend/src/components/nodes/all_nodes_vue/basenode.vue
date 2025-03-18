@@ -110,7 +110,7 @@
         transform: `translate(-50%, ${center_text_pos.trfY}%)`,
       }"
     >
-      {{ thisnode.data.label }}
+      {{ thisnodedata.Label }}
     </div>
     <n-flex
       v-if="isShowCopyCount"
@@ -124,14 +124,14 @@
       }"
     >
       <div class="state-text" style="color: #70c0e8">
-        {{ thisnodedata.state!.copyCount.Running }}
+        {{ thisnodedata.State!.CopyCount.Running }}
       </div>
       <div class="state-text" style="color: white">/</div>
       <div class="state-text" style="color: #63e2b7">
-        {{ thisnodedata.state!.copyCount.Success }}
+        {{ thisnodedata.State!.CopyCount.Success }}
       </div>
       <div class="state-text" style="color: white">/</div>
-      <div class="state-text" style="color: #e88080">{{ thisnodedata.state!.copyCount.Error }}</div>
+      <div class="state-text" style="color: #e88080">{{ thisnodedata.State!.CopyCount.Error }}</div>
     </n-flex>
   </div>
 </template>
@@ -141,12 +141,7 @@ import { ref, computed, onMounted, nextTick, watch, type Ref } from 'vue'
 import { debounce } from 'lodash'
 import { NFlex } from 'naive-ui'
 import { Position, Handle, useVueFlow, type Node } from '@vue-flow/core'
-import {
-  type VFNodeData,
-  VFNodeFlag,
-  VFNodeAttachingPos,
-  VFNodeAttachingType,
-} from '@/components/nodes/VFNodeInterface'
+import { VFNodeFlag } from '@/components/nodes/VFNodeInterface'
 import { type VFNode } from '../VFNodeClass'
 
 interface HandleData {
@@ -160,7 +155,7 @@ const props = defineProps<{
 
 const { findNode } = useVueFlow()
 const thisnode = findNode(props.id) as Node
-const thisnodedata = thisnode.data as VFNodeData
+const thisnodedata = thisnode.data as VFNode
 
 const handle_h_pad = 1
 const handle_h_gap = 8
@@ -168,18 +163,18 @@ const handle_text_edge_pad = 6
 const label_gap = 15
 
 const inputHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.connections.inputs)
-    .map(([key, value]) => ({ key, label: value.label }))
+  return Object.entries(thisnodedata.Connections.Inputs)
+    .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 
 const outputHandles = computed<HandleData[]>(() => {
   const pattern = /^\d+\/[^/]*$/
-  const sortedEntries = Object.entries(thisnodedata.connections!.outputs).sort(
+  const sortedEntries = Object.entries(thisnodedata.Connections.Outputs).sort(
     ([aKey, aValue], [bKey, bValue]) => {
-      if (pattern.test(aValue.label) && pattern.test(bValue.label)) {
-        const a_num = parseInt(aValue.label.split('/')[0])
-        const b_num = parseInt(bValue.label.split('/')[0])
+      if (pattern.test(aValue.Label) && pattern.test(bValue.Label)) {
+        const a_num = parseInt(aValue.Label.split('/')[0])
+        const b_num = parseInt(bValue.Label.split('/')[0])
         return b_num - a_num
       } else {
         return aKey.localeCompare(bKey)
@@ -189,19 +184,19 @@ const outputHandles = computed<HandleData[]>(() => {
 
   return sortedEntries.map(([key, value]) => ({
     key,
-    label: pattern.test(value.label) ? value.label.split('/')[1] : value.label,
+    label: pattern.test(value.Label) ? value.Label.split('/')[1] : value.Label,
   }))
 })
 
 const cbfuncHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.connections!.callbackFuncs)
-    .map(([key, value]) => ({ key, label: value.label }))
+  return Object.entries(thisnodedata.Connections.CallbackFuncs)
+    .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 
 const cbuserHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.connections!.callbackUsers)
-    .map(([key, value]) => ({ key, label: value.label }))
+  return Object.entries(thisnodedata.Connections.CallbackUsers)
+    .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 
@@ -214,7 +209,7 @@ const max_handles_bottom = computed(() =>
 )
 
 const center_text_pos = computed(() => {
-  return VFNodeFlag.isNested & thisnodedata.flag
+  return VFNodeFlag.IsNested & thisnodedata.Flag
     ? { top: 0, trfY: 0, copCountY: 50 }
     : {
         top: handle_h_pad + max_handles_top.value * handle_h_gap + 10,
@@ -225,7 +220,7 @@ const center_text_pos = computed(() => {
 
 const hiddenText: Ref<HTMLDivElement | null> = ref(null)
 
-const isShowCopyCount = computed(() => Object.keys(thisnodedata.state.copy).length > 0)
+const isShowCopyCount = computed(() => Object.keys(thisnodedata.State.Copy).length > 0)
 
 const countCopy = (statecopy: Record<string, { status: string }>) => {
   let copyRunning = 0
@@ -242,37 +237,35 @@ const countCopy = (statecopy: Record<string, { status: string }>) => {
     }
   })
 
-  thisnode.data.state.copyCount = {
+  thisnodedata.State.CopyCount = {
     Running: copyRunning,
     Success: copySuccess,
     Error: copyError,
   }
 
   if (copyRunning > 0) {
-    thisnode.data.state!.status = 'Running'
+    thisnodedata.State.Status = 'Running'
   } else if (copyError > 0) {
-    thisnode.data.state!.status = 'Error'
+    thisnodedata.State.Status = 'Error'
   } else if (copySuccess > 0) {
-    thisnode.data.state!.status = 'Success'
+    thisnodedata.State.Status = 'Success'
   } else {
-    thisnode.data.state!.status = 'Default'
+    thisnodedata.State.Status = 'Default'
   }
 }
 
 const debouncedCountCopy = debounce(countCopy, 500)
 
 onMounted(() => {
-  // console.debug('onMounted node')
   watch(
-    () => thisnode.data.state.copy,
+    () => thisnodedata.State.Copy,
     (newValue) => {
       debouncedCountCopy(newValue)
     },
     { deep: true },
   )
 
-  if (!(thisnode.data as VFNode).isNestedNode()) {
-    // console.debug("add node's size watcher")
+  if (!thisnodedata.isNestedNode()) {
     watch(
       [max_handles_top, max_handles_bottom],
       ([newtop, newbottom]) => {
@@ -281,13 +274,13 @@ onMounted(() => {
           ...thisnode.style,
           height: `${node_ht}px`,
         }
-        thisnode.data.size.height = node_ht
+        thisnodedata.Size.Height = node_ht
       },
       { immediate: true },
     )
 
     watch(
-      () => thisnode.data.label,
+      () => thisnodedata.Label,
       async (newLabel) => {
         await nextTick(() => {
           if (hiddenText.value && newLabel !== '') {
@@ -296,7 +289,7 @@ onMounted(() => {
               ...thisnode.style,
               width: `${node_wd}px`,
             }
-            thisnode.data.size.width = node_wd
+            thisnodedata.Size.Width = node_wd
           }
         })
       },
@@ -304,10 +297,10 @@ onMounted(() => {
     )
 
     watch(
-      () => thisnode.data.state.status,
+      () => thisnodedata.State.Status,
       (newStatus) => {
         if (newStatus === 'Default') {
-          if (thisnode.data.state.validation_errors.length > 0) {
+          if (thisnodedata.State.Errors.length > 0) {
             thisnode.class = 'node-status-invalid'
           } else {
             thisnode.class = 'node-status-default'
@@ -330,9 +323,9 @@ onMounted(() => {
     )
 
     watch(
-      () => thisnode.data.state.validation_errors,
+      () => thisnodedata.State.Errors,
       (newErrors) => {
-        if (thisnode.data.state.status === 'Default') {
+        if (thisnodedata.State.Status === 'Default') {
           if (newErrors.length > 0) {
             thisnode.class = 'node-status-invalid'
           } else {

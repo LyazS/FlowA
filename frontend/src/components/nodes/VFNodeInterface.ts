@@ -30,7 +30,7 @@ enum VFNodeAttachingPosType {
   Bottom = 'Bottom',
   Left = 'Left',
   Right = 'Right',
-  Center = 'Center',
+  // Center = 'Center',
 }
 
 type CodeEditorLanguage = 'python' | 'json' | 'django' | 'text'
@@ -70,13 +70,13 @@ interface VFNodeHandle {
 
 type VFNodeConnections = {
   // 连接类型：handleID：{handle标签，handle数据}
-  [key in VFNodeConnectionType]: Record<string, VFNodeHandle>
-  // Self: Record<string, VFNodeHandle>
-  // Attach: Record<string, VFNodeHandle>
-  // Inputs: Record<string, VFNodeHandle>
-  // Outputs: Record<string, VFNodeHandle>
-  // CallbackUsers: Record<string, VFNodeHandle>
-  // CallbackFuncs: Record<string, VFNodeHandle>
+  // [key in VFNodeConnectionType]: Record<string, VFNodeHandle>
+  Self: Record<string, VFNodeHandle>
+  Attach: Record<string, VFNodeHandle>
+  Inputs: Record<string, VFNodeHandle>
+  Outputs: Record<string, VFNodeHandle>
+  CallbackUsers: Record<string, VFNodeHandle>
+  CallbackFuncs: Record<string, VFNodeHandle>
 }
 
 interface VFNodeAttachingPos {
@@ -93,9 +93,10 @@ interface VFNodeAttaching {
 
 interface VFNodeAttachedNode {
   Nid: string | null
-  Type: VFNodeAttachingType
-  Pos: VFNodeAttachingPos
-  Label: string
+  NType: string
+  // Type: VFNodeAttachingType
+  // Pos: VFNodeAttachingPos
+  // Label: string
 }
 
 interface VFNodePadding {

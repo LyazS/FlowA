@@ -20,6 +20,7 @@ export interface VFPluginSetting {
 export interface VFPlugin {
   Type: string
   Name: string
+  Label: string
   Description: string
   Execute: string
   Setting: VFPluginSetting
@@ -34,6 +35,7 @@ export interface VFUIPlugin {
 
 export interface VFProvider {
   Provider: string
+  Label: string
   Version: string
   Description: string
   Author: string

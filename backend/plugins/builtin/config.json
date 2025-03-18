@@ -1,0 +1,28 @@
+{
+  "Provider": "FlowABuiltin",
+  "Label": "内置节点",
+  "Version": "1.0.0",
+  "Description": "This is a built-in provider for FlowA",
+  "Author": "FlowA Team",
+  "Icon": "flowa.png",
+  "ProviderSetting": { "Execute": "flowa_provider_setting.py" },
+  "Plugins": [
+    {
+      "Type": "FANode",
+      "Name": "attach_node_input",
+      "Label": "附属节点（输入）",
+      "Description": "attach node (input)",
+      "Execute": "attach_node_input.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "attach_node_output",
+      "Label": "附属节点（输出）",
+      "Description": "attach node (output)",
+      "Execute": "attach_node_output.py",
+      "Setting": null
+    }
+  ],
+  "UIPlugins": []
+}

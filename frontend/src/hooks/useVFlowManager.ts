@@ -160,18 +160,17 @@ export const useVFlowManager = (): NodeManagementInstance => {
           vf_node_child.position.y =
             vf_node_data.Size.Height - vf_node_data.Nesting.APad.Bottom - yOffset
         } else if (cdata.Attaching.Pos.YType == VFNodeAttachingPosType.Center) {
-          vf_node_child.position.y =
-            vf_node_data.Size.Height / 2 - vf_node_data.Nesting.APad.Bottom
+          vf_node_child.position.y = vf_node_data.Size.Height / 2 - vf_node_data.Nesting.APad.Bottom
         }
         if (cdata.Attaching.Pos.XType == VFNodeAttachingPosType.Right) {
-          vf_node_child.position.x =
-            vf_node_data.Size.Width - vf_node_data.Nesting.APad.Right
+          vf_node_child.position.x = vf_node_data.Size.Width - vf_node_data.Nesting.APad.Right
         } else if (cdata.Attaching.Pos.XType == VFNodeAttachingPosType.Center) {
-          vf_node_child.position.x =
-            vf_node_data.Size.Width / 2 - vf_node_data.Nesting.APad.Right
+          vf_node_child.position.x = vf_node_data.Size.Width / 2 - vf_node_data.Nesting.APad.Right
         }
-        if (cdata.Attaching.Pos.YType != VFNodeAttachingPosType.Top) vf_node_child.position.y -= cdata.Size.Height / 2
-        if (cdata.Attaching.Pos.XType != VFNodeAttachingPosType.Left) vf_node_child.position.x -= cdata.Size.Width / 2
+        if (cdata.Attaching.Pos.YType != VFNodeAttachingPosType.Top)
+          vf_node_child.position.y -= cdata.Size.Height / 2
+        if (cdata.Attaching.Pos.XType != VFNodeAttachingPosType.Left)
+          vf_node_child.position.x -= cdata.Size.Width / 2
       } else {
         vf_node_child.position.x += vf_node_pos.x - (minX - vf_node_data.Nesting.Pad.Left)
         vf_node_child.position.y += vf_node_pos.y - (minY - vf_node_data.Nesting.Pad.Top)
@@ -251,8 +250,7 @@ export const useVFlowManager = (): NodeManagementInstance => {
       if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Left) {
         new_node.position.x = parentNode.position.x + pdata.Nesting.APad.Left
       } else if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Right) {
-        new_node.position.x =
-          parentNode.position.x + pdata.Size.Width - pdata.Nesting.APad.Right
+        new_node.position.x = parentNode.position.x + pdata.Size.Width - pdata.Nesting.APad.Right
       } else if (initnode.Attaching!.Pos.XType == VFNodeAttachingPosType.Center) {
         new_node.position.x =
           parentNode.position.x + pdata.Size.Width / 2 - pdata.Nesting.APad.Right
@@ -284,15 +282,15 @@ export const useVFlowManager = (): NodeManagementInstance => {
 
     if (initnode.isNestedNode()) {
       logger.log(`add ${Object.keys(initnode.Nesting.ANodes).length} fixed nested nodes`)
-      for (const antype of Object.keys(initnode.Nesting.ANodes)) {
+      for (const [aname, anode] of Object.entries(initnode.Nesting.ANodes)) {
         const anid = recursiveAddNodeToVFlow({
-          ntype: antype,
+          ntype: anode.NType,
           nid: null,
           type: 'attached',
           parentNodeId: new_node.id,
           pos: { x: 0, y: 0 },
         })
-        initnode.Nesting.ANodes[antype as VFNodeConnectionDataAttachedType]!.nid = anid
+        initnode.Nesting.ANodes[aname].Nid = anid
       }
     }
     return new_node_id

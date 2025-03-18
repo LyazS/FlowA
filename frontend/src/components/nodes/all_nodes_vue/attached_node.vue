@@ -11,58 +11,64 @@
 import { computed, onMounted } from 'vue'
 import { Position, Handle, useVueFlow, type Node, type HandleType } from '@vue-flow/core'
 import {
-  type AttachedVFNodeData,
+  type VFNodeAttaching,
+  type VFNodeAttachingPos,
+  VFNodeAttachingPosType,
   VFNodeAttachingType,
 } from '@/components/nodes/VFNodeInterface'
+import { type VFNode } from '../VFNodeClass'
 
 interface Props {
   id: string
-  data: AttachedVFNodeData
 }
 
 const props = defineProps<Props>()
 const { findNode } = useVueFlow()
 const thisnode = findNode(props.id) as Node
+const thisnodedata = thisnode.data as VFNode
 
 // 解构获取位置信息
-const [yPart, yPos, xPart, xPos] = props.data.attaching.pos
+const thisattaching = computed<VFNodeAttaching>(() => thisnodedata.Attaching!)
 
 // 计算属性
-const posLR = computed(() => (xPart === VFNodeAttachingPos.left ? Position.Right : Position.Left))
-const node_text = computed(() => props.data.attaching.label)
-const handle_style = computed(() =>
-  xPart === VFNodeAttachingPos.left ? { right: '2px' } : { left: '2px' },
+const posLR = computed(() =>
+  thisattaching.value.Pos.XType === VFNodeAttachingPosType.Left ? Position.Right : Position.Left,
 )
-const justCont = computed(() => (xPart === VFNodeAttachingPos.left ? 'flex-start' : 'flex-end'))
-
-// 处理 handle 类型
-type HandleId = 'input' | 'output' | 'callbackUser' | 'callbackFunc'
+const node_text = computed(() => thisattaching.value.Label)
+const handle_style = computed(() =>
+  thisattaching.value.Pos.XType === VFNodeAttachingPosType.Left
+    ? { right: '2px' }
+    : { left: '2px' },
+)
+const justCont = computed(() =>
+  thisattaching.value.Pos.XType === VFNodeAttachingPosType.Left ? 'flex-start' : 'flex-end',
+)
 
 const handle_type = computed<HandleType>(() => {
-  switch (props.data.attaching.type) {
-    case VFNodeAttachingType.output:
+  switch (thisattaching.value.Type) {
+    case VFNodeAttachingType.Output:
       return 'target'
-    case VFNodeAttachingType.input:
+    case VFNodeAttachingType.Input:
       return 'source'
-    case VFNodeAttachingType.callbackFunc:
+    case VFNodeAttachingType.CallbackFunc:
       return 'source'
-    case VFNodeAttachingType.callbackUser:
+    case VFNodeAttachingType.CallbackUser:
       return 'target'
     default:
       return 'source'
   }
 })
 
-const handle_id = computed<HandleId>(() => {
-  switch (props.data.attaching.type) {
-    case VFNodeAttachingType.output:
-      return 'input'
-    case VFNodeAttachingType.input:
-      return 'output'
-    case VFNodeAttachingType.callbackFunc:
-      return 'callbackUser'
-    case VFNodeAttachingType.callbackUser:
-      return 'callbackFunc'
+const handle_id = computed<string>(() => {
+  switch (thisattaching.value.Type) {
+    case VFNodeAttachingType.Output:
+      return Object.keys(thisnodedata.Connections.Inputs)[0]
+    case VFNodeAttachingType.Input:
+      return Object.keys(thisnodedata.Connections.Outputs)[0]
+    case VFNodeAttachingType.CallbackFunc:
+      return Object.keys(thisnodedata.Connections.CallbackUsers)[0]
+    case VFNodeAttachingType.CallbackUser:
+      return Object.keys(thisnodedata.Connections.CallbackFuncs)[0]
     default:
       return 'output'
   }

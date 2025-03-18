@@ -5,13 +5,13 @@ from app.utils.tools import getUuid
 
 class VFNode(VFNodeData):
     # 初始化方法 ====================================================
-    def __init__(self, n_type: str, v_type: str, label: str):
+    def __init__(self, v_type: str):
         super().__init__(
-            NType=n_type,
+            NType="",
             VType=v_type,
             Flag=VFNodeFlag.IsNone,
-            Label=label,
-            PlaceholderLabel=label,
+            Label="",
+            PlaceholderLabel="",
             Size=VFNodeSize(Width=-1, Height=-1),
             Connections=self._create_default_connections(),
             Payloads=self._create_default_contents(),
@@ -90,8 +90,13 @@ class VFNode(VFNodeData):
         return (self.Flag & VFNodeFlag.IsNested) != 0
 
     # 属性操作方法 ==================================================
+    def set_node_type(self, n_type: str) -> "VFNode":
+        self.NType = n_type
+        return self
+
     def set_label(self, label: str) -> "VFNode":
         self.Label = label
+        self.PlaceholderLabel = label
         return self
 
     def set_size(self, width: int, height: int) -> "VFNode":

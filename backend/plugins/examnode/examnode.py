@@ -30,7 +30,7 @@ class ExamNode(FATaskNode):
 
     @staticmethod
     def getNodeCreateInfo():
-        thisnode = VFNode("examnode", "examnode", "Exam Node")
+        thisnode = VFNode("basenode")
         thisnode.set_flag(VFNodeFlag.IsTask)
         thisnode.set_size(80, 80)
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
