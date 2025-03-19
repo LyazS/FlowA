@@ -1,7 +1,7 @@
 import unicodedata
 from typing import List, Optional, Any, Union
 from pydantic import BaseModel, field_validator, ValidationInfo
-from app.schemas.VFUIComponent import BaseComponent
+from app.uisdk.VFUIComponent import BaseComponent
 from app.schemas.VFNodeClass import VFNode
 
 

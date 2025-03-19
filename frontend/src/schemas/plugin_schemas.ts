@@ -24,10 +24,10 @@ export interface VModelProp extends PropVarBase {
   Data: (string | number)[]
 }
 
-export type ComponentProp = ValueProp | VBindProp | VModelProp
+export type PropVar = ValueProp | VBindProp | VModelProp
 
-export interface VForProps {
-  items: ComponentProp
+export interface VForProp {
+  items: PropVar
   itemLabel: string
   indexLabel: string
   template: BaseComponent
@@ -35,7 +35,11 @@ export interface VForProps {
 
 export interface BaseComponent {
   Type: string
-  Props?: Record<string, ComponentProp | VForProps>
+  Props?:
+    | Record<string, PropVar>
+    | ({
+        value: VForProp | PropVar
+      } & Record<string, PropVar>)
   Slots?: Record<string, BaseComponent | BaseComponent[]>
   IfCondition?: Condition
 }

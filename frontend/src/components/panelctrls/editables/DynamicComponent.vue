@@ -13,13 +13,13 @@ import type {
   ValueProp,
   VBindProp,
   VModelProp,
-  VForProps,
+  VForProp,
   BaseComponent,
   CompareCondition,
   LogicalCondition,
   ValueCondition,
   VBindCondition,
-  ComponentProp,
+  PropVar,
   Condition,
 } from '@/schemas/plugin_schemas'
 import { PropVarType } from '@/schemas/plugin_schemas'
@@ -64,7 +64,7 @@ const processedProps = computed(() => {
   const eventsObj: Record<string, (value: any) => void> = {}
 
   for (const [propName, propVar] of Object.entries(props.componentData.Props || {})) {
-    const prop = propVar as ComponentProp
+    const prop = propVar as PropVar
     switch (prop.Type) {
       case PropVarType.Value:
         propsObj[propName] = prop.Data
@@ -153,8 +153,8 @@ const renderSlotContent = (
   const slotContent = content as BaseComponent
   if (!slotContent.Type) return null
 
-  if (slotContent.Type === '@DIRECT_CONTENT') {
-    const prop = slotContent.Props?.value as ComponentProp
+  if (slotContent.Type === '@DIRECT_CONTENT@') {
+    const prop = slotContent.Props?.value as PropVar
     switch (prop.Type) {
       case PropVarType.Value:
         return h('span', prop.Data)
@@ -165,8 +165,8 @@ const renderSlotContent = (
     }
   }
 
-  if (slotContent.Type === '@VFor') {
-    const vForProps = slotContent.Props as unknown as VForProps
+  if (slotContent.Type === '@VFOR@') {
+    const vForProps = slotContent.Props?.value as VForProp
     const itemsProp = vForProps.items
     let items: any[] = []
 
