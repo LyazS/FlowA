@@ -1,15 +1,72 @@
 // 基本类型定义
-export type PropVarType = 'Value' | 'Ref' | 'VModel'
+export enum PropVarType {
+  Value = 'Value',
+  VBind = 'VBind',
+  VModel = 'VModel',
+}
 
-export interface PropVar {
+export interface PropVarBase {
   Type: PropVarType
-  Data: any
+}
+
+export interface ValueProp<T = any> extends PropVarBase {
+  Type: PropVarType.Value
+  Data: T
+}
+
+export interface VBindProp extends PropVarBase {
+  Type: PropVarType.VBind
+  Data: (string | number)[]
+}
+
+export interface VModelProp extends PropVarBase {
+  Type: PropVarType.VModel
+  Data: (string | number)[]
+}
+
+export type ComponentProp = ValueProp | VBindProp | VModelProp
+
+export interface VForProps {
+  items: ComponentProp
+  itemLabel: string
+  indexLabel: string
+  template: BaseComponent
 }
 
 export interface BaseComponent {
   Type: string
-  Props: Record<string, PropVar>
-  Slots?: Record<string, any>
+  Props?: Record<string, ComponentProp | VForProps>
+  Slots?: Record<string, BaseComponent | BaseComponent[]>
+  IfCondition?: Condition
+}
+
+export type Condition =
+  | CompareCondition
+  | LogicalCondition
+  | ValueCondition<boolean>
+  | VBindCondition
+
+export interface CompareCondition {
+  Type: 'Compare'
+  Left: Condition
+  Operator: '==' | '===' | '!=' | '!==' | '>' | '<' | '>=' | '<='
+  Right: Condition
+}
+
+export interface LogicalCondition {
+  Type: 'Logical'
+  Operator: 'AND' | 'OR'
+  Conditions: Condition[]
+}
+
+export interface ValueCondition<T> {
+  Type: 'Value'
+  Data: T
+}
+
+export interface VBindCondition {
+  Type: 'VBind'
+  Data: (string | number)[]
 }
 
 // 插件相关类型

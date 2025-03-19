@@ -1,139 +1,226 @@
+<script setup lang="ts">
+import {
+  h,
+  defineOptions,
+  resolveComponent,
+  computed,
+  Fragment,
+  type VNode,
+  type PropType,
+} from 'vue'
+import type {
+  PropVarBase,
+  ValueProp,
+  VBindProp,
+  VModelProp,
+  VForProps,
+  BaseComponent,
+  CompareCondition,
+  LogicalCondition,
+  ValueCondition,
+  VBindCondition,
+  ComponentProp,
+  Condition,
+} from '@/schemas/plugin_schemas'
+import { PropVarType } from '@/schemas/plugin_schemas'
+
+defineOptions({
+  name: 'DynamicComponent', // 必须定义组件名
+})
+
+const props = defineProps({
+  componentData: {
+    type: Object as PropType<BaseComponent>,
+    required: true,
+  },
+  dataContext: {
+    type: Object as PropType<Record<string, any>>,
+    required: true,
+  },
+})
+
+const resolveValueByPath = (path: (string | number)[]): any => {
+  let current: any = props.dataContext
+  for (const key of path) {
+    current = current?.[key]
+    if (current === undefined) break
+  }
+  return current
+}
+
+const updateValueByPath = (path: (string | number)[], value: any) => {
+  const pathCopy = [...path]
+  const lastKey = pathCopy.pop()!
+  let context: any = props.dataContext
+  for (const key of pathCopy) {
+    if (!context[key]) context[key] = {}
+    context = context[key]
+  }
+  context[lastKey] = value
+}
+
+const processedProps = computed(() => {
+  const propsObj: Record<string, any> = {}
+  const eventsObj: Record<string, (value: any) => void> = {}
+
+  for (const [propName, propVar] of Object.entries(props.componentData.Props || {})) {
+    const prop = propVar as ComponentProp
+    switch (prop.Type) {
+      case PropVarType.Value:
+        propsObj[propName] = prop.Data
+        break
+      case PropVarType.VBind:
+        propsObj[propName] = computed(() => resolveValueByPath(prop.Data))
+        break
+      case PropVarType.VModel: {
+        const modelValue = computed({
+          get: () => resolveValueByPath(prop.Data),
+          set: (value) => updateValueByPath(prop.Data, value),
+        })
+        propsObj[propName] = modelValue.value
+        eventsObj[`onUpdate:${propName}`] = (value: any) => {
+          modelValue.value = value
+        }
+        break
+      }
+    }
+  }
+
+  return { ...propsObj, ...eventsObj }
+})
+
+const resolveCondition = (config?: Condition): any => {
+  if (!config) return true
+
+  switch (config.Type) {
+    case PropVarType.Value:
+      return config.Data
+    case PropVarType.VBind:
+      return resolveValueByPath(config.Data)
+    case 'Compare':
+      return handleCompare(config)
+    case 'Logical':
+      return handleLogical(config)
+    default:
+      console.warn('未知的条件类型:', (config as any).Type)
+      return false
+  }
+}
+
+const handleCompare = (config: CompareCondition): boolean => {
+  const left = resolveCondition(config.Left)
+  const right = resolveCondition(config.Right)
+  const operator = config.Operator
+
+  const comparisons: Record<string, (a: any, b: any) => boolean> = {
+    '==': (a, b) => a == b,
+    '===': (a, b) => a === b,
+    '!=': (a, b) => a != b,
+    '!==': (a, b) => a !== b,
+    '>': (a, b) => a > b,
+    '<': (a, b) => a < b,
+    '>=': (a, b) => a >= b,
+    '<=': (a, b) => a <= b,
+  }
+
+  return comparisons[operator]?.(left, right) ?? false
+}
+
+const handleLogical = (config: LogicalCondition): boolean => {
+  const conditions = config.Conditions.map(resolveCondition)
+
+  return {
+    AND: () => conditions.every(Boolean),
+    OR: () => conditions.some(Boolean),
+  }[config.Operator]?.()
+}
+
+const renderSlotContent = (
+  content: BaseComponent | BaseComponent[] | undefined,
+  depth = 0,
+): VNode | VNode[] | null => {
+  if (depth > 10) return null
+  if (!content) return null
+
+  if (Array.isArray(content)) {
+    return h(
+      Fragment,
+      {},
+      content.map((child) => renderSlotContent(child, depth + 1)),
+    )
+  }
+
+  const slotContent = content as BaseComponent
+  if (!slotContent.Type) return null
+
+  if (slotContent.Type === '@DIRECT_CONTENT') {
+    const prop = slotContent.Props?.value as ComponentProp
+    switch (prop.Type) {
+      case PropVarType.Value:
+        return h('span', prop.Data)
+      case PropVarType.VBind:
+        return h('span', resolveValueByPath(prop.Data))
+      default:
+        return null
+    }
+  }
+
+  if (slotContent.Type === '@VFor') {
+    const vForProps = slotContent.Props as unknown as VForProps
+    const itemsProp = vForProps.items
+    let items: any[] = []
+
+    if (itemsProp.Type === PropVarType.VBind) {
+      items = resolveValueByPath(itemsProp.Data) || []
+    } else if (itemsProp.Type === PropVarType.Value) {
+      items = itemsProp.Data
+    }
+
+    return h(
+      Fragment,
+      {},
+      items.map((item, index) => {
+        const loopContext = {
+          ...props.dataContext,
+          [vForProps.itemLabel]: item,
+          [vForProps.indexLabel]: index,
+        }
+        return h(resolveComponent('DynamicComponent'), {
+          componentData: vForProps.template,
+          dataContext: loopContext,
+        })
+      }),
+    )
+  }
+
+  return h(resolveComponent('DynamicComponent'), {
+    componentData: slotContent,
+    dataContext: props.dataContext,
+  })
+}
+
+const processedSlots = computed(() => {
+  const slots: Record<string, (props: any) => VNode> = {}
+  for (const [slotName, slotContent] of Object.entries(props.componentData.Slots || {})) {
+    const content = renderSlotContent(slotContent)
+    if (content) {
+      slots[slotName] = (props: any) => {
+        return h(Fragment, {}, [content])
+      }
+    }
+  }
+  return slots
+})
+</script>
+
 <template>
-    <component
-      v-if="componentData"
-      :is="componentData.Type"
-      v-bind="processedProps"
-    >
-      <template v-for="(slotContent, slotName) in componentData.Slots" :key="slotName" v-slot:[slotName]>
-        <dynamic-component
-          v-for="(childComponent, index) in slotContent"
-          :key="`${slotName}-${index}`"
-          :component-data="childComponent"
-          :node-data="nodeData"
-        />
-      </template>
-    </component>
-  </template>
-  
-  <script setup lang="ts">
-  import { computed, defineProps, type PropType } from 'vue';
-  import { NInput, NText } from 'naive-ui'; // Import your UI components
-  
-  // Define types to match Python models
-  enum PropVarType {
-    Value = "Value",
-    Ref = "Ref",
-    VModel = "VModel"
-  }
-  
-  interface PropVar {
-    Type: PropVarType;
-    Data: any;
-  }
-  
-  interface ComponentData {
-    Type: string;
-    Props: Record<string, PropVar>;
-    Slots?: Record<string, ComponentData[]>;
-  }
-  
-  // Define props with TypeScript types
-  const props = defineProps({
-    componentData: {
-      type: Object as PropType<ComponentData>,
-      required: true
-    },
-    nodeData: {
-      type: Object as PropType<Record<string, any>>,
-      required: true
-    }
-  });
-  
-  // Keep a registry of available components
-  const componentRegistry: Record<string, any> = {
-    NInput,
-    NText,
-    // Add more components as needed
-  };
-  
-  // Process props based on PropVarType
-  const processedProps = computed(() => {
-    const result: Record<string, any> = {};
-    
-    if (!props.componentData || !props.componentData.Props) {
-      return result;
-    }
-    
-    for (const [key, propVar] of Object.entries(props.componentData.Props)) {
-      if (!propVar || !propVar.Type) continue;
-      
-      switch (propVar.Type) {
-        case PropVarType.Value:
-          // Direct value assignment
-          result[key] = propVar.Data;
-          break;
-          
-        case PropVarType.Ref:
-          // Create computed property for ref
-          result[key] = computed({
-            get: () => getNestedValue(props.nodeData, propVar.Data),
-            set: (value) => setNestedValue(props.nodeData, propVar.Data, value)
-          });
-          break;
-          
-        case PropVarType.VModel:
-          // For v-model, create the value binding and corresponding update event
-          const modelName = key === 'modelValue' ? 'update:modelValue' : `update:${key}`;
-          result[key] = computed({
-            get: () => getNestedValue(props.nodeData, propVar.Data),
-            set: (value) => setNestedValue(props.nodeData, propVar.Data, value)
-          });
-          
-          // Add update event handler
-          result[modelName] = (newValue: any) => {
-            setNestedValue(props.nodeData, propVar.Data, newValue);
-          };
-          break;
-      }
-    }
-    
-    return result;
-  });
-  
-  // Helper function to get nested value from path array
-  function getNestedValue(obj: Record<string, any>, path: string[]): any {
-    if (!path || !Array.isArray(path) || path.length === 0) return undefined;
-    
-    let current = obj;
-    for (const key of path) {
-      if (current === null || current === undefined) return undefined;
-      current = current[key];
-    }
-    
-    return current;
-  }
-  
-  // Helper function to set nested value from path array
-  function setNestedValue(obj: Record<string, any>, path: string[], value: any): void {
-    if (!path || !Array.isArray(path) || path.length === 0) return;
-    
-    let current = obj;
-    for (let i = 0; i < path.length - 1; i++) {
-      const key = path[i];
-      if (current[key] === undefined) {
-        current[key] = typeof path[i + 1] === 'number' ? [] : {};
-      }
-      current = current[key];
-    }
-    
-    const lastKey = path[path.length - 1];
-    current[lastKey] = value;
-  }
-  </script>
-  
-  <script lang="ts">
-  // Component registration for global use
-  export default {
-    name: 'DynamicComponent'
-  }
-  </script>
+  <component
+    v-if="resolveCondition(componentData.IfCondition)"
+    :is="resolveComponent(componentData.Type)"
+    v-bind="processedProps"
+  >
+    <template v-for="(slotFunc, slotName) in processedSlots" #[slotName]="slotProps">
+      <component :is="slotFunc(slotProps)" />
+    </template>
+  </component>
+</template>

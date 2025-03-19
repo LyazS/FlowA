@@ -37,6 +37,7 @@ const { recursiveFindVariables, mapVarItemToSelect } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
 
 const editable_header = defineAsyncComponent(() => import('./editables/common/header.vue'))
+const DynamicComponent = defineAsyncComponent(() => import('./editables/DynamicComponent.vue'))
 // const editable_tagoutputs = defineAsyncComponent(() => import('./editables/tagoutputs.vue'))
 // const editable_packoutputs = defineAsyncComponent(() => import('./editables/packoutputs.vue'))
 // const editable_retryoutputs = defineAsyncComponent(() => import('./editables/retryoutputs.vue'))
@@ -322,6 +323,7 @@ onUnmounted(() => {
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
+        <DynamicComponent :componentData="inputComponent" :dataContext="formData"/>
         <pre>{{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <pre>{{ nodedatatext }}</pre>
