@@ -157,9 +157,9 @@ const renderSlotContent = (
     const prop = slotContent.Props?.value as PropVar
     switch (prop.Type) {
       case PropVarType.Value:
-        return h('span', prop.Data)
+        return prop.Data
       case PropVarType.VBind:
-        return h('span', resolveValueByPath(prop.Data))
+        return resolveValueByPath(prop.Data)
       default:
         return null
     }

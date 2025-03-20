@@ -1,6 +1,7 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pydantic import BaseModel, field_validator
 from app.uisdk.VFUISchemas import PropVar, PropVarType
+
 
 class BaseComponent(BaseModel):
     """
@@ -13,7 +14,8 @@ class BaseComponent(BaseModel):
 
     Type: str
     Props: Dict
-    Slots: Optional[Dict]
+    Slots: Optional[Dict[str, Union["BaseComponent", List["BaseComponent"]]]]
+    IfCondition: Any = None
     pass
 
     @field_validator("Props")

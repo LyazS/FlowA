@@ -163,7 +163,8 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
   curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
     const payload = curSelectedNode.value!.data.Payloads.ById[pid]
     let component: VNode | null = null
-    switch (payload.UiType) {
+    switch (
+      payload.UiType
       // case 'textinput':
       //   component = h(editable_textinput, { pid })
       //   break
@@ -218,6 +219,7 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
       //     selfVarSelections: selfVarSelections.value,
       //     selfVarSelections_aoutput: selfVarSelections_aouput.value,
       //   })
+    ) {
     }
     if (component) components[pid] = component
   })
@@ -263,6 +265,123 @@ onMounted(() => {})
 onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
+
+const formData = ref({
+  user: {
+    name: 'John',
+    hobbies: ['reading', 'running', 'traveling', 'painting', 'photography'],
+  },
+})
+
+const inputComponent = {
+  Type: 'NFlex',
+  Props: {
+    vertical: { Type: 'Value', Data: true },
+  },
+  Slots: {
+    default: [
+      {
+        Type: 'NInput',
+        Props: {
+          size: {
+            Type: 'Value',
+            Data: 'large',
+          },
+          placeholder: {
+            Type: 'Value',
+            Data: 'Please enter your name',
+          },
+          value: {
+            Type: 'VModel',
+            Data: ['user', 'name'],
+          },
+        },
+        // Slots: {}
+      },
+      {
+        Type: 'NText',
+        Props: {
+          size: {
+            Type: 'Value',
+            Data: 'large',
+          },
+        },
+        Slots: {
+          default: {
+            Type: '@DIRECT_CONTENT@',
+            Props: {
+              value: { Type: 'Value', Data: 'hhhhhh' },
+            },
+          },
+        },
+      },
+      {
+        Type: 'NText',
+        Props: {
+          size: {
+            Type: 'Value',
+            Data: 'large',
+          },
+        },
+        Slots: {
+          default: [
+            {
+              Type: '@DIRECT_CONTENT@',
+              Props: {
+                value: { Type: 'Value', Data: 'Hello, ' },
+              },
+            },
+            {
+              Type: '@DIRECT_CONTENT@',
+              Props: {
+                value: { Type: 'VBind', Data: ['user', 'name'] },
+              },
+              Slots: {},
+            },
+          ],
+        },
+      },
+      {
+        Type: '@VFOR@',
+        Props: {
+          items: { Type: 'VBind', Data: ['user', 'hobbies'] },
+          itemLabel: { Type: 'Value', Data: '@ITEM-hobby' },
+          indexLabel: { Type: 'Value', Data: '@INDEX-hobby' },
+        },
+        Slots: {
+          default: {
+            Type: 'NTag',
+            IfCondition: {
+              Type: 'Compare',
+              Left: { Type: 'VBind', Data: ['@INDEX-hobby'] },
+              Operator: '>=',
+              Right: { Type: 'Value', Data: 3 },
+            },
+            Props: {
+              type: { Type: 'Value', Data: 'success' },
+            },
+            Slots: {
+              default: [
+                {
+                  Type: '@DIRECT_CONTENT@',
+                  Props: {
+                    value: { Type: 'VBind', Data: ['@INDEX-hobby'] },
+                  },
+                },
+                {
+                  Type: '@DIRECT_CONTENT@',
+                  Props: {
+                    value: { Type: 'VBind', Data: ['@ITEM-hobby'] },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  },
+}
 </script>
 
 <template>
@@ -323,7 +442,7 @@ onUnmounted(() => {
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <DynamicComponent :componentData="inputComponent" :dataContext="formData"/>
+        <DynamicComponent :componentData="inputComponent" :dataContext="formData" />
         <pre>{{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <pre>{{ nodedatatext }}</pre>
