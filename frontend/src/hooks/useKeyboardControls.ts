@@ -81,11 +81,11 @@ export const useKeyboardControls = () => {
   }
 
   onBeforeMount(async () => {
-    addKBEventListeners()
+    // addKBEventListeners()
   })
 
   onBeforeUnmount(() => {
-    removeKBEventListeners()
+    // removeKBEventListeners()
   })
 
   instance = {

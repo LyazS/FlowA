@@ -26,42 +26,58 @@ export interface VModelProp extends PropVarBase {
 
 export type PropVar = ValueProp | VBindProp | VModelProp
 
-export interface VForProp {
-  items: PropVar
-  itemLabel: string
-  indexLabel: string
-  template: BaseComponent
-}
+export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
 
-export interface BaseComponent {
+// 普通组件类型
+export interface NormalComponent {
   Type: string
-  Props?:
-    | Record<string, PropVar>
-    | ({
-        value: VForProp | PropVar
-      } & Record<string, PropVar>)
+  Props?: Record<string, PropVar>
   Slots?: Record<string, BaseComponent | BaseComponent[]>
   IfCondition?: Condition
 }
 
-export type Condition =
-  | CompareCondition
-  | LogicalCondition
-  | ValueCondition<boolean>
-  | VBindCondition
-
-export interface CompareCondition {
-  Type: 'Compare'
-  Left: Condition
-  Operator: '==' | '===' | '!=' | '!==' | '>' | '<' | '>=' | '<='
-  Right: Condition
+// 特殊绑定组件 (@Value@/@VBind@)
+export interface SpanComponent {
+  Type: '@Value@' | '@VBind@'
+  Data: PropVar
+  IfCondition?: Condition
+  // 特殊绑定组件不允许有子组件
+  Slots?: never
+  Props?: never
+  Items?: never
+  Template?: never
 }
 
+// 循环组件 (@FOR@)
+export interface ForLoopComponent {
+  Type: '@FOR@'
+  Items: PropVar
+  ItemLabel: string
+  IndexLabel: string
+  Template: BaseComponent | BaseComponent[]
+  IfCondition?: Condition
+}
+
+// 条件判断系统
+export type Condition = CompareCondition | LogicalCondition | DirectCondition
+
+// 比较条件
+export interface CompareCondition {
+  Type: 'Compare'
+  Left: PropVar
+  Operator: '==' | '!=' | '>' | '<' | '>=' | '<='
+  Right: PropVar
+}
+
+// 逻辑组合条件
 export interface LogicalCondition {
   Type: 'Logical'
   Operator: 'AND' | 'OR'
   Conditions: Condition[]
 }
+
+// 直接值或绑定
+export type DirectCondition = ValueCondition<any> | VBindCondition
 
 export interface ValueCondition<T> {
   Type: 'Value'
@@ -73,7 +89,7 @@ export interface VBindCondition {
   Data: (string | number)[]
 }
 
-// 插件相关类型
+// 插件系统保持不变
 export interface VFPluginSetting {
   Execute: string
 }
