@@ -266,116 +266,137 @@ onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
 
+import { type BaseComponent, PropVarType } from '@/schemas/plugin_schemas'
 const formData = ref({
   user: {
     name: 'John',
     hobbies: ['reading', 'running', 'traveling', 'painting', 'photography'],
   },
 })
-
-const inputComponent = {
+const inputComponent: BaseComponent = {
   Type: 'NFlex',
   Props: {
-    vertical: { Type: 'Value', Data: true },
+    vertical: {
+      Type: PropVarType.Value,
+      Data: true,
+    },
   },
   Slots: {
     default: [
+      // 输入框组件
       {
         Type: 'NInput',
         Props: {
           size: {
-            Type: 'Value',
+            Type: PropVarType.Value,
             Data: 'large',
           },
           placeholder: {
-            Type: 'Value',
+            Type: PropVarType.Value,
             Data: 'Please enter your name',
           },
           value: {
-            Type: 'VModel',
+            Type: PropVarType.VModel,
             Data: ['user', 'name'],
           },
         },
-        // Slots: {}
       },
+
+      // 直接文本显示
       {
         Type: 'NText',
         Props: {
           size: {
-            Type: 'Value',
+            Type: PropVarType.Value,
             Data: 'large',
           },
         },
         Slots: {
           default: {
-            Type: '@DIRECT_CONTENT@',
-            Props: {
-              value: { Type: 'Value', Data: 'hhhhhh' },
+            Type: '@Value@',
+            Data: {
+              Type: PropVarType.Value,
+              Data: 'hhhhhh',
             },
           },
         },
       },
+
+      // 混合内容显示
       {
         Type: 'NText',
         Props: {
           size: {
-            Type: 'Value',
+            Type: PropVarType.Value,
             Data: 'large',
           },
         },
         Slots: {
           default: [
             {
-              Type: '@DIRECT_CONTENT@',
-              Props: {
-                value: { Type: 'Value', Data: 'Hello, ' },
+              Type: '@Value@',
+              Data: {
+                Type: PropVarType.Value,
+                Data: 'Hello, ',
               },
             },
             {
-              Type: '@DIRECT_CONTENT@',
-              Props: {
-                value: { Type: 'VBind', Data: ['user', 'name'] },
+              Type: '@VBind@',
+              Data: {
+                Type: PropVarType.VBind,
+                Data: ['user', 'name'],
               },
-              Slots: {},
             },
           ],
         },
       },
+
+      // 循环结构
       {
-        Type: '@VFOR@',
-        Props: {
-          items: { Type: 'VBind', Data: ['user', 'hobbies'] },
-          itemLabel: { Type: 'Value', Data: '@ITEM-hobby' },
-          indexLabel: { Type: 'Value', Data: '@INDEX-hobby' },
+        Type: '@FOR@',
+        Items: {
+          Type: PropVarType.VBind,
+          Data: ['user', 'hobbies'],
         },
-        Slots: {
-          default: {
-            Type: 'NTag',
-            IfCondition: {
-              Type: 'Compare',
-              Left: { Type: 'VBind', Data: ['@INDEX-hobby'] },
-              Operator: '>=',
-              Right: { Type: 'Value', Data: 3 },
+        ItemLabel: 'hobby',
+        IndexLabel: 'index',
+        Template: {
+          Type: 'NTag',
+          IfCondition: {
+            Type: 'Compare',
+            Left: {
+              Type: PropVarType.VBind,
+              Data: ['index'],
             },
-            Props: {
-              type: { Type: 'Value', Data: 'success' },
+            Operator: '>=',
+            Right: {
+              Type: PropVarType.Value,
+              Data: 3,
             },
-            Slots: {
-              default: [
-                {
-                  Type: '@DIRECT_CONTENT@',
-                  Props: {
-                    value: { Type: 'VBind', Data: ['@INDEX-hobby'] },
-                  },
+          },
+          Props: {
+            type: {
+              Type: PropVarType.Value,
+              Data: 'success',
+            },
+          },
+          Slots: {
+            default: [
+              {
+                Type: '@VBind@',
+                Data: {
+                  Type: PropVarType.VBind,
+                  Data: ['index'],
                 },
-                {
-                  Type: '@DIRECT_CONTENT@',
-                  Props: {
-                    value: { Type: 'VBind', Data: ['@ITEM-hobby'] },
-                  },
+              },
+              {
+                Type: '@VBind@',
+                Data: {
+                  Type: PropVarType.VBind,
+                  Data: ['hobby'],
                 },
-              ],
-            },
+              },
+            ],
           },
         },
       },
