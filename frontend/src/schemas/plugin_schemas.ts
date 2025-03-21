@@ -3,6 +3,7 @@ export enum PropVarType {
   Value = 'Value',
   VBind = 'VBind',
   VModel = 'VModel',
+  FUNCTION = 'FUNCTION'
 }
 
 export interface PropVarBase {
@@ -24,6 +25,10 @@ export interface VModelProp extends PropVarBase {
   Data: (string | number)[]
 }
 
+export interface FunctionProp extends PropVarBase {
+  Type: PropVarType.FUNCTION
+}
+
 export type PropVar = ValueProp | VBindProp | VModelProp
 
 export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
@@ -39,7 +44,7 @@ export interface NormalComponent {
 // 特殊绑定组件 (@Value@/@VBind@)
 export interface SpanComponent {
   Type: '@Value@' | '@VBind@'
-  Data: PropVar
+  Data: (string | number)[] | any
   IfCondition?: Condition
   // 特殊绑定组件不允许有子组件
   Slots?: never

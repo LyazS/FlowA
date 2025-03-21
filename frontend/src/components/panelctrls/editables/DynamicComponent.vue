@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-  h,
-  defineOptions,
-  resolveComponent,
-  computed,
-  Fragment,
-  type VNode,
-  type PropType,
-} from 'vue'
+import { h, resolveComponent, computed, Fragment, type VNode, type PropType } from 'vue'
 import type {
   BaseComponent,
   NormalComponent,
@@ -37,7 +29,18 @@ const props = defineProps({
 
 // 数据路径解析器
 const resolveValueByPath = (path: (string | number)[]): any => {
-  return path.reduce((acc, key) => acc?.[key], props.dataContext)
+  const resolvePath: (string | number)[] = []
+  for (const pathKey of path) {
+    if (
+      props.dataContext.hasOwnProperty(pathKey) &&
+      typeof props.dataContext[pathKey] === 'function'
+    ) {
+      resolvePath.push(...props.dataContext[pathKey]())
+    } else {
+      resolvePath.push(pathKey)
+    }
+  }
+  return resolvePath.reduce((acc, key) => acc?.[key], props.dataContext)
 }
 
 // 数据更新器
@@ -62,13 +65,10 @@ const processedProps = computed(() => {
         propsObj[propName] = prop.Data
         break
       case PropVarType.VBind:
-        propsObj[propName] = computed(() => resolveValueByPath(prop.Data))
+        propsObj[propName] =  resolveValueByPath(prop.Data)
         break
       case PropVarType.VModel:
-        propsObj[propName] = computed({
-          get: () => resolveValueByPath(prop.Data),
-          set: (val) => updateValueByPath(prop.Data, val),
-        }).value
+        propsObj[propName] =  resolveValueByPath(prop.Data)
         eventsObj[`onUpdate:${propName}`] = (val: any) => {
           updateValueByPath(prop.Data, val)
         }
@@ -123,25 +123,24 @@ const handleLogical = (config: LogicalCondition) => {
 
 // 获取Span组件的值
 const getSpanValue = (config: SpanComponent): any => {
-  return config.Data?.Type === PropVarType.VBind
-    ? resolveValueByPath(config.Data.Data)
-    : config.Data?.Data
+  return config.Type === '@VBind@' ? resolveValueByPath(config.Data) : config.Data
 }
 
 // 循环处理器
 const handleForLoop = (config: ForLoopComponent) => {
   if (config.Type !== '@FOR@') return null
 
-  const items = resolveValueByPath(config.Items?.Data || [])
-  const itemKey = config.ItemLabel || 'item'
-  const indexKey = config.IndexLabel || 'index'
+  const itemPath = config.Items?.Data || []
+  const items = resolveValueByPath(itemPath)
+  const itemKey = config.ItemLabel || '@Item'
+  const indexKey = config.IndexLabel || '@Index'
 
   if (!Array.isArray(items)) return null
 
   const nodes = items.map((item, index) => {
     const loopContext = {
       ...props.dataContext,
-      [itemKey]: item,
+      [itemKey]: () => [...itemPath, index],
       [indexKey]: index,
     }
 
@@ -159,8 +158,8 @@ const handleForLoop = (config: ForLoopComponent) => {
 const processedSlots = computed(() => {
   return Object.entries((props.componentData as NormalComponent).Slots || {}).reduce(
     (acc, [name, content]) => {
-      acc[name] = content;
-      return acc;
+      acc[name] = content
+      return acc
     },
     {} as Record<string, BaseComponent | BaseComponent[]>,
   )
@@ -171,24 +170,18 @@ const processedSlots = computed(() => {
   <!-- 先检查条件是否满足 -->
   <template v-if="resolveCondition(componentData.IfCondition)">
     <!-- 处理@FOR@类型组件 -->
-    <component 
+    <component
       v-if="componentData.Type === '@FOR@'"
-      :is="handleForLoop(componentData as ForLoopComponent)" 
+      :is="handleForLoop(componentData as ForLoopComponent)"
     />
-    
+
     <!-- 处理@Value@或@VBind@类型组件 -->
-    <span 
-      v-else-if="componentData.Type === '@Value@' || componentData.Type === '@VBind@'"
-    >
+    <span v-else-if="componentData.Type === '@Value@' || componentData.Type === '@VBind@'">
       {{ getSpanValue(componentData as SpanComponent) }}
     </span>
-    
+
     <!-- 处理普通组件 -->
-    <component
-      v-else
-      :is="resolveComponent(componentData.Type)"
-      v-bind="processedProps"
-    >
+    <component v-else :is="resolveComponent(componentData.Type)" v-bind="processedProps">
       <!-- 递归渲染每个插槽 -->
       <template v-for="(slotContent, name) in processedSlots" #[name]="slotProps">
         <!-- 处理数组类型插槽内容 -->
@@ -200,13 +193,9 @@ const processedSlots = computed(() => {
             :data-context="dataContext"
           />
         </template>
-        
+
         <!-- 处理单个组件类型插槽内容 -->
-        <DynamicComponent
-          v-else
-          :component-data="slotContent"
-          :data-context="dataContext"
-        />
+        <DynamicComponent v-else :component-data="slotContent" :data-context="dataContext" />
       </template>
     </component>
   </template>
