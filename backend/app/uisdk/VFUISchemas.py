@@ -1,5 +1,5 @@
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, field_validator, ValidationInfo
+from typing import Literal, Union, List, Dict, Any, Optional
+from pydantic import BaseModel, Field, model_validator, ValidationError
 from enum import StrEnum
 
 """
@@ -52,33 +52,141 @@ Type==Logical:
 """
 
 
+# ================= 基础类型定义 =================
 class PropVarType(StrEnum):
-    Value = "Value"  # 对应vue的 :xxx="xxx"
-    VBind = "VBind"  # 对应vue的单向绑定
-    VModel = "VModel"  # 对应vue的双向绑定
+    Value = "Value"
+    VBind = "VBind"
+    VModel = "VModel"
+    FUNCTION = "FUNCTION"
 
 
-class PropVar(BaseModel):
+class PropVarBase(BaseModel):
     Type: PropVarType
-    Data: Any
+
+
+class ValueProp(PropVarBase):
+    Type: Literal[PropVarType.Value]
+    Data: Any = Field(..., description="静态值")
+
+
+class VBindProp(PropVarBase):
+    Type: Literal[PropVarType.VBind]
+    Data: List[Union[str, int]] = Field(
+        ..., description="数据路径数组，如 ['path', 'to', 'data']", min_length=1
+    )
+
+
+class VModelProp(PropVarBase):
+    Type: Literal[PropVarType.VModel]
+    Data: List[Union[str, int]] = Field(
+        ..., description="双向绑定路径数组", min_length=1
+    )
+
+
+class FunctionProp(PropVarBase):
+    Type: Literal[PropVarType.FUNCTION]
     pass
 
-    """
-    当 PropVarType == VBind | VModel 时，PropVar的Data应为路径数组
-    例如：[THIS_NODE_DATA, "Payloads", "ById", "D_EXAM_TEXT", "Data"]
-    """
 
-    @field_validator("Data")
-    @classmethod
-    def check_data_when_ref_or_vmodel(cls, data, values: ValidationInfo):
-        var_type = values.data.get("Type")
+PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
 
-        if var_type in (PropVarType.VBind, PropVarType.VModel):
-            if not isinstance(data, list):
-                raise ValueError("Data must be a list when Type is Ref or VModel")
 
-            if not data:
-                raise ValueError("Data list cannot be empty")
+# ================= 条件系统 =================
+class ConditionType(StrEnum):
+    Compare = "Compare"
+    Logical = "Logical"
+    Value = "Value"
+    VBind = "VBind"
 
-        return data
 
+class CompareCondition(BaseModel):
+    Type: Literal[ConditionType.Compare]
+    Left: PropVar
+    Operator: Literal["==", "!=", ">", "<", ">=", "<="]
+    Right: PropVar
+
+
+class LogicalCondition(BaseModel):
+    Type: Literal[ConditionType.Logical]
+    Operator: Literal["AND", "OR"]
+    Conditions: List["Condition"]
+
+
+class ValueCondition(BaseModel):
+    Type: Literal[ConditionType.Value]
+    Data: Any
+
+
+class VBindCondition(BaseModel):
+    Type: Literal[ConditionType.VBind]
+    Data: List[Union[str, int]] = Field(..., min_length=1)
+
+
+Condition = Union[CompareCondition, LogicalCondition, ValueCondition, VBindCondition]
+
+
+# ================= 组件系统 =================
+class BaseComponent(BaseModel):
+    Type: str
+    IfCondition: Optional[Condition] = None
+
+    @model_validator(mode="after")
+    def validate_special_components(self):
+        comp_type = self.Type
+        error_fields = []
+
+        # 检查特殊组件是否包含非法字段
+        if comp_type in ("@Value@", "@VBind@"):
+            if hasattr(self, "Props") and self.Props is not None:
+                error_fields.append("Props")
+            if hasattr(self, "Slots") and self.Slots is not None:
+                error_fields.append("Slots")
+
+        if comp_type == "@FOR@":
+            if hasattr(self, "Props") and self.Props is not None:
+                error_fields.append("Props")
+            if hasattr(self, "Slots") and self.Slots is not None:
+                error_fields.append("Slots")
+
+        if error_fields:
+            raise ValueError(
+                f"{comp_type} component cannot have {', '.join(error_fields)}"
+            )
+        return self
+
+
+class NormalComponent(BaseComponent):
+    Type: str  # 普通组件类型
+    Props: Optional[Dict[str, PropVar]] = None
+    Slots: Optional[Dict[str, Union["BaseComponent", List["BaseComponent"]]]] = None
+
+
+class SpanComponent(BaseComponent):
+    Type: Literal["@Value@", "@VBind@"]
+    Data: Union[Any, List[Union[str, int]]]  # 联合类型
+
+    # 显式声明禁用字段
+    Props: Optional[Literal[None]] = Field(None, exclude=True)
+    Slots: Optional[Literal[None]] = Field(None, exclude=True)
+
+    @model_validator(mode="after")
+    def validate_span_data(self):
+        if self.Type == "@VBind@" and not isinstance(self.Data, list):
+            raise ValueError("@VBind@ requires list data")
+        return self
+
+
+class ForLoopComponent(BaseComponent):
+    Type: Literal["@FOR@"]
+    Items: PropVar
+    ItemLabel: str
+    IndexLabel: str
+    Template: Union["BaseComponent", List["BaseComponent"]]
+
+    # 显式声明禁用字段
+    Props: Optional[Literal[None]] = Field(None, exclude=True)
+    Slots: Optional[Literal[None]] = Field(None, exclude=True)
+
+
+# 最终联合类型
+BaseComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]

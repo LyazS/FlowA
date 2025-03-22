@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional
-from app.uisdk.VFUIComponent import BaseComponent
-from app.uisdk.VFUISchemas import PropVar, PropVarType
+from app.uisdk.VFUISchemas import PropVar, PropVarType, BaseComponent
 
 
 class NButton(BaseComponent):
