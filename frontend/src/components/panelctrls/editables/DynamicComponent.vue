@@ -29,18 +29,7 @@ const props = defineProps({
 
 // 数据路径解析器
 const resolveValueByPath = (path: (string | number)[]): any => {
-  const resolvePath: (string | number)[] = []
-  for (const pathKey of path) {
-    if (
-      props.dataContext.hasOwnProperty(pathKey) &&
-      typeof props.dataContext[pathKey] === 'function'
-    ) {
-      resolvePath.push(...props.dataContext[pathKey]())
-    } else {
-      resolvePath.push(pathKey)
-    }
-  }
-  return resolvePath.reduce((acc, key) => acc?.[key], props.dataContext)
+  return path.reduce((acc, key) => acc?.[key], props.dataContext)
 }
 
 // 数据更新器
@@ -65,10 +54,10 @@ const processedProps = computed(() => {
         propsObj[propName] = prop.Data
         break
       case PropVarType.VBind:
-        propsObj[propName] =  resolveValueByPath(prop.Data)
+        propsObj[propName] = resolveValueByPath(prop.Data)
         break
       case PropVarType.VModel:
-        propsObj[propName] =  resolveValueByPath(prop.Data)
+        propsObj[propName] = resolveValueByPath(prop.Data)
         eventsObj[`onUpdate:${propName}`] = (val: any) => {
           updateValueByPath(prop.Data, val)
         }
@@ -140,7 +129,7 @@ const handleForLoop = (config: ForLoopComponent) => {
   const nodes = items.map((item, index) => {
     const loopContext = {
       ...props.dataContext,
-      [itemKey]: () => [...itemPath, index],
+      [itemKey]: item,
       [indexKey]: index,
     }
 
