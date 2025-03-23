@@ -3,7 +3,7 @@ export enum PropVarType {
   Value = 'Value',
   VBind = 'VBind',
   VModel = 'VModel',
-  FUNCTION = 'FUNCTION'
+  FUNCTION = 'FUNCTION',
 }
 
 export interface PropVarBase {
@@ -112,7 +112,7 @@ export interface VFPlugin {
 export interface VFUIPlugin {
   Type: string
   Name: string
-  Component: string | BaseComponent
+  Component: BaseComponent
 }
 
 export interface VFProvider {

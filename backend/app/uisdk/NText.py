@@ -1,8 +1,9 @@
 from typing import List, Dict, Optional
-from app.uisdk.VFUISchemas import PropVar, PropVarType, BaseComponent
+from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
+from app.uisdk.VFUIUtils import cvtProps2PropVar
 
 
-class NText(BaseComponent):
+class NText(NormalComponent):
     def __init__(
         self,
         type: str | PropVar,
@@ -16,14 +17,16 @@ class NText(BaseComponent):
     ):
         super().__init__(
             Type="NText",
-            Props={
-                "type": type,
-                "strong": strong,
-                "italic": italic,
-                "underline": underline,
-                "delete": delete,
-                "code": code,
-                "depth": depth,
-            },
+            Props=cvtProps2PropVar(
+                {
+                    "type": type,
+                    "strong": strong,
+                    "italic": italic,
+                    "underline": underline,
+                    "delete": delete,
+                    "code": code,
+                    "depth": depth,
+                }
+            ),
             Slots=slots,
         )

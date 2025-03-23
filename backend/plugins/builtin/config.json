@@ -9,7 +9,7 @@
   "Plugins": [
     {
       "Type": "FANode",
-      "Name": "attach_node_input",
+      "Name": "@/FlowABuiltin/attach_node_input",
       "Label": "附属节点（输入）",
       "Description": "attach node (input)",
       "Execute": "attach_node_input.py",
@@ -17,7 +17,7 @@
     },
     {
       "Type": "FANode",
-      "Name": "attach_node_output",
+      "Name": "@/FlowABuiltin/attach_node_output",
       "Label": "附属节点（输出）",
       "Description": "attach node (output)",
       "Execute": "attach_node_output.py",

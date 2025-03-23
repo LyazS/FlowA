@@ -42,7 +42,7 @@ class ExamNode(FATaskNode):
                 Type="String",
                 Key="text",
                 Data="Hello World",
-                UiType="UI_TEXT_INPUT",
+                UiType="@/Exam Provider/UI_TEXT_INPUT",
             ),
             payload_id="D_EXAM_TEXT",
         )

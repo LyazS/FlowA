@@ -1,5 +1,11 @@
-from app.uisdk.VFUIComponent import BaseComponent
-from app.uisdk.VFUISchemas import PropVar, PropVarType
+from app.uisdk.VFUISchemas import (
+    ValueProp,
+    VBindProp,
+    VModelProp,
+    FunctionProp,
+    PropVarType,
+    BaseComponent,
+)
 from app.uisdk.VFUIDefine import *
 from app.uisdk.NButton import NButton
 from app.uisdk.NInput import NInput

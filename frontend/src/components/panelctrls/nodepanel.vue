@@ -458,6 +458,7 @@ const testComponent: BaseComponent = {
                 },
               },
             },
+           
 
             // 任务输入
             {
@@ -550,6 +551,19 @@ const testComponent: BaseComponent = {
           },
           Slots: {
             default: [
+            {
+              Type: 'NInput',
+              Props: {
+                value: {
+                  Type: PropVarType.VModel,
+                  Data: ['@Project', 'name'],
+                },
+                placeholder: {
+                  Type: PropVarType.Value,
+                  Data: '输入',
+                },
+              },
+            },
               // 项目状态
               {
                 Type: 'NTag',
@@ -570,15 +584,15 @@ const testComponent: BaseComponent = {
               // 任务列表（嵌套循环）
               {
                 Type: '@FOR@',
-                Items: { Type: PropVarType.VBind, Data: ['project', 'tasks'] },
-                ItemLabel: 'task',
-                IndexLabel: 'tIndex',
+                Items: { Type: PropVarType.VBind, Data: ['@Project', 'tasks'] },
+                ItemLabel: '@Task',
+                IndexLabel: '@TIndex',
                 Template: {
                   Type: 'NThing',
                   Props: {
                     description: {
                       Type: PropVarType.VBind,
-                      Data: ['task'],
+                      Data: ['@Task'],
                     },
                   },
                 },
@@ -589,7 +603,7 @@ const testComponent: BaseComponent = {
                 Type: 'NButton',
                 IfCondition: {
                   Type: 'Compare',
-                  Left: { Type: PropVarType.VBind, Data: ['project', 'status'] },
+                  Left: { Type: PropVarType.VBind, Data: ['@Project', 'status'] },
                   Operator: '==',
                   Right: { Type: PropVarType.Value, Data: 'in-progress' },
                 },

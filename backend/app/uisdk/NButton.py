@@ -1,8 +1,9 @@
 from typing import List, Dict, Optional
-from app.uisdk.VFUISchemas import PropVar, PropVarType, BaseComponent
+from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
+from app.uisdk.VFUIUtils import cvtProps2PropVar
 
 
-class NButton(BaseComponent):
+class NButton(NormalComponent):
     def __init__(
         self,
         block: bool | PropVar,
@@ -43,7 +44,7 @@ class NButton(BaseComponent):
 
         super().__init__(
             Type="NButton",
-            Props=Props,
+            Props=cvtProps2PropVar(Props),
             Slots=slots,
         )
         pass
