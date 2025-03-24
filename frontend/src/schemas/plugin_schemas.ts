@@ -1,10 +1,22 @@
-// 基本类型定义
+// 特殊定义
+export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
+export const VFOR_DATA = '@VFOR_DATA@' as const
+export const SELF_OPTIONS = '@SELF_OPTIONS@' as const
+export const TYPE_VFOR = '@VFOR@' as const
+export const TYPE_VALUE = '@VALUE@' as const
+export const TYPE_VBIND = '@VBIND@' as const
+export const TYPE_VMODEL = '@VMODEL@' as const
+export const TYPE_CONDITION_COMPARE = '@CONDITION_COMPARE@' as const
+export const TYPE_CONDITION_LOGICAL = '@CONDITION_LOGICAL@' as const
+export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
+export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
+export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
 export enum PropVarType {
-  Value = 'Value',
-  VBind = 'VBind',
-  VModel = 'VModel',
+  Value = '@VALUE@',
+  VBind = '@VBIND@',
+  VModel = '@VMODEL@',
 }
-
+// 类型定义
 export interface PropVarBase {
   Type: PropVarType
 }
@@ -25,7 +37,7 @@ export interface VModelProp extends PropVarBase {
 }
 
 export type PropVar = ValueProp | VBindProp | VModelProp
-
+export type ReadOnlyPropVar = ValueProp | VBindProp
 export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
 
 // 普通组件类型
@@ -38,8 +50,8 @@ export interface NormalComponent {
 
 // 特殊绑定组件 (@Value@/@VBind@)
 export interface SpanComponent {
-  Type: '@Value@' | '@VBind@'
-  Data: PropVar
+  Type: typeof TYPE_VALUE | typeof TYPE_VBIND
+  Data: ReadOnlyPropVar
   IfCondition?: Condition
   // 特殊绑定组件不允许有子组件
   Slots?: never
@@ -48,10 +60,10 @@ export interface SpanComponent {
   Template?: never
 }
 
-// 循环组件 (@FOR@)
+// 循环组件 (@VFOR@)
 export interface ForLoopComponent {
-  Type: '@FOR@'
-  Items: PropVar
+  Type: typeof TYPE_VFOR
+  Items: ReadOnlyPropVar
   ItemLabel: string
   IndexLabel: string
   Template: BaseComponent | BaseComponent[]
@@ -63,31 +75,21 @@ export type Condition = CompareCondition | LogicalCondition | DirectCondition
 
 // 比较条件
 export interface CompareCondition {
-  Type: 'Compare'
-  Left: PropVar
+  Type: typeof TYPE_CONDITION_COMPARE
+  Left: ReadOnlyPropVar
   Operator: '==' | '!=' | '>' | '<' | '>=' | '<='
-  Right: PropVar
+  Right: ReadOnlyPropVar
 }
 
 // 逻辑组合条件
 export interface LogicalCondition {
-  Type: 'Logical'
+  Type: typeof TYPE_CONDITION_LOGICAL
   Operator: 'AND' | 'OR'
   Conditions: Condition[]
 }
 
 // 直接值或绑定
-export type DirectCondition = ValueCondition<any> | VBindCondition
-
-export interface ValueCondition<T> {
-  Type: 'Value'
-  Data: T
-}
-
-export interface VBindCondition {
-  Type: 'VBind'
-  Data: (string | number)[]
-}
+export type DirectCondition = ValueProp<any> | VBindProp
 
 // 插件系统保持不变
 export interface VFPluginSetting {
