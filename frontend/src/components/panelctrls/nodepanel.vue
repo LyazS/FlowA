@@ -266,23 +266,7 @@ onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
 
-import { type BaseComponent } from '@/schemas/plugin_schemas'
-import {
-  PropVarType,
-  THIS_NODE_DATA,
-  VFOR_DATA,
-  SELF_OPTIONS,
-  TYPE_VFOR,
-  TYPE_VALUE,
-  TYPE_VBIND,
-  TYPE_VMODEL,
-  TYPE_CONDITION_COMPARE,
-  TYPE_CONDITION_LOGICAL,
-  TYPE_CONDITION_DIRECT,
-  TYPE_CONDITION_VBIND,
-  TYPE_CONDITION_VALUE,
-} from '@/schemas/plugin_schemas'
-
+import { type BaseComponent, PropVarType } from '@/schemas/plugin_schemas'
 const formData = ref({
   user: {
     name: 'John',
@@ -313,7 +297,7 @@ const inputComponent: BaseComponent = {
           },
           value: {
             Type: PropVarType.VModel,
-            Data: [THIS_NODE_DATA, 'user', 'name'],
+            Data: ['user', 'name'],
           },
         },
       },
@@ -329,7 +313,7 @@ const inputComponent: BaseComponent = {
         },
         Slots: {
           default: {
-            Type: TYPE_VALUE,
+            Type: '@Value@',
             Data: {
               Type: PropVarType.Value,
               Data: 'hhhhhh',
@@ -350,17 +334,17 @@ const inputComponent: BaseComponent = {
         Slots: {
           default: [
             {
-              Type: TYPE_VALUE,
+              Type: '@Value@',
               Data: {
                 Type: PropVarType.Value,
                 Data: 'Hello, ',
               },
             },
             {
-              Type: TYPE_VBIND,
+              Type: '@VBind@',
               Data: {
                 Type: PropVarType.VBind,
-                Data: [THIS_NODE_DATA, 'user', 'name'],
+                Data: ['user', 'name'],
               },
             },
           ],
@@ -369,71 +353,52 @@ const inputComponent: BaseComponent = {
 
       // 循环结构
       {
-        Type: TYPE_VFOR,
+        Type: '@FOR@',
         Items: {
           Type: PropVarType.VBind,
-          Data: [THIS_NODE_DATA, 'user', 'hobbies'],
+          Data: ['user', 'hobbies'],
         },
         ItemLabel: 'hobby',
         IndexLabel: 'index',
-        Template: [
-          {
-            Type: 'NInput',
-            Props: {
-              size: {
-                Type: PropVarType.Value,
-                Data: 'small',
-              },
-              placeholder: {
-                Type: PropVarType.Value,
-                Data: 'Please enter',
-              },
-              value: {
-                Type: PropVarType.VModel,
-                Data: [THIS_NODE_DATA, 'user', 'hobbies', 'index'],
-              },
+        Template: {
+          Type: 'NTag',
+          IfCondition: {
+            Type: 'Compare',
+            Left: {
+              Type: PropVarType.VBind,
+              Data: ['index'],
+            },
+            Operator: '>=',
+            Right: {
+              Type: PropVarType.Value,
+              Data: 3,
             },
           },
-          {
-            Type: 'NTag',
-            IfCondition: {
-              Type: TYPE_CONDITION_COMPARE,
-              Left: {
-                Type: PropVarType.VBind,
-                Data: [VFOR_DATA, 'index'],
-              },
-              Operator: '>=',
-              Right: {
-                Type: PropVarType.Value,
-                Data: 3,
-              },
-            },
-            Props: {
-              type: {
-                Type: PropVarType.Value,
-                Data: 'success',
-              },
-            },
-            Slots: {
-              default: [
-                {
-                  Type: TYPE_VBIND,
-                  Data: {
-                    Type: PropVarType.VBind,
-                    Data: [VFOR_DATA, 'index'],
-                  },
-                },
-                {
-                  Type: TYPE_VBIND,
-                  Data: {
-                    Type: PropVarType.VBind,
-                    Data: [VFOR_DATA, 'hobby'],
-                  },
-                },
-              ],
+          Props: {
+            type: {
+              Type: PropVarType.Value,
+              Data: 'success',
             },
           },
-        ],
+          Slots: {
+            default: [
+              {
+                Type: '@VBind@',
+                Data: {
+                  Type: PropVarType.VBind,
+                  Data: ['index'],
+                },
+              },
+              {
+                Type: '@VBind@',
+                Data: {
+                  Type: PropVarType.VBind,
+                  Data: ['hobby'],
+                },
+              },
+            ],
+          },
+        },
       },
     ],
   },
