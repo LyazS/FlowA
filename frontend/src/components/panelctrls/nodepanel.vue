@@ -266,7 +266,23 @@ onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
 
-import { type BaseComponent, PropVarType } from '@/schemas/plugin_schemas'
+import { type BaseComponent } from '@/schemas/plugin_schemas'
+import {
+  PropVarType,
+  THIS_NODE_DATA,
+  VFOR_DATA,
+  SELF_OPTIONS,
+  TYPE_VFOR,
+  TYPE_VALUE,
+  TYPE_VBIND,
+  TYPE_VMODEL,
+  TYPE_CONDITION_COMPARE,
+  TYPE_CONDITION_LOGICAL,
+  TYPE_CONDITION_DIRECT,
+  TYPE_CONDITION_VBIND,
+  TYPE_CONDITION_VALUE,
+} from '@/schemas/plugin_schemas'
+
 const formData = ref({
   user: {
     name: 'John',
@@ -297,7 +313,7 @@ const inputComponent: BaseComponent = {
           },
           value: {
             Type: PropVarType.VModel,
-            Data: ['user', 'name'],
+            Data: [THIS_NODE_DATA, 'user', 'name'],
           },
         },
       },
@@ -313,7 +329,7 @@ const inputComponent: BaseComponent = {
         },
         Slots: {
           default: {
-            Type: '@Value@',
+            Type: TYPE_VALUE,
             Data: 'hhhhhh',
           },
         },
@@ -331,12 +347,12 @@ const inputComponent: BaseComponent = {
         Slots: {
           default: [
             {
-              Type: '@Value@',
+              Type: TYPE_VALUE,
               Data: 'Hello, ',
             },
             {
-              Type: '@VBind@',
-              Data: ['user', 'name'],
+              Type: TYPE_VBIND,
+              Data: [THIS_NODE_DATA, 'user', 'name'],
             },
           ],
         },
@@ -344,332 +360,65 @@ const inputComponent: BaseComponent = {
 
       // 循环结构
       {
-        Type: '@FOR@',
+        Type: TYPE_VFOR,
         Items: {
           Type: PropVarType.VBind,
-          Data: ['user', 'hobbies'],
+          Data: [THIS_NODE_DATA, 'user', 'hobbies'],
         },
         ItemLabel: 'hobby',
         IndexLabel: 'index',
-        Template: {
-          Type: 'NTag',
-          IfCondition: {
-            Type: 'Compare',
-            Left: {
-              Type: PropVarType.VBind,
-              Data: ['index'],
-            },
-            Operator: '>=',
-            Right: {
-              Type: PropVarType.Value,
-              Data: 3,
+        Template: [
+          {
+            Type: 'NInput',
+            Props: {
+              size: {
+                Type: PropVarType.Value,
+                Data: 'small',
+              },
+              placeholder: {
+                Type: PropVarType.Value,
+                Data: 'Please enter',
+              },
+              value: {
+                Type: PropVarType.VModel,
+                Data: [THIS_NODE_DATA, 'user', 'hobbies', 'index'],
+              },
             },
           },
-          Props: {
-            type: {
-              Type: PropVarType.Value,
-              Data: 'success',
-            },
-          },
-          Slots: {
-            default: [
-              {
-                Type: '@VBind@',
-                Data: ['index'],
+          {
+            Type: 'NTag',
+            IfCondition: {
+              Type: TYPE_CONDITION_COMPARE,
+              Left: {
+                Type: PropVarType.VBind,
+                Data: [VFOR_DATA, 'index'],
               },
-              {
-                Type: '@VBind@',
-                Data: ['hobby'],
-              },
-            ],
-          },
-        },
-      },
-    ],
-  },
-}
-
-const formData2 = ref({
-  user: {
-    name: 'Alice',
-    age: 28,
-    agerange: 18,
-    active: true,
-    scores: [85, 92, 78],
-    preferences: {
-      theme: 'dark',
-      fontSize: 16,
-    },
-    projects: [
-      {
-        name: 'Project A',
-        status: 'completed',
-        tasks: ['Design', 'Development', 'Testing'],
-      },
-      {
-        name: 'Project B',
-        status: 'in-progress',
-        tasks: ['Planning', 'Implementation'],
-      },
-    ],
-  },
-  system: {
-    notifications: [
-      { id: 1, message: 'New message', read: false },
-      { id: 2, message: 'System update', read: true },
-    ],
-    settings: {
-      autoSave: true,
-      interval: 300,
-    },
-  },
-})
-
-const testComponent: BaseComponent = {
-  Type: 'NCard',
-  Props: {
-    title: {
-      Type: PropVarType.Value,
-      Data: '用户信息面板',
-    },
-  },
-  Slots: {
-    default: [
-      // 基本信息区块
-      {
-        Type: 'NSpace',
-        Props: {
-          vertical: { Type: PropVarType.Value, Data: true },
-          size: { Type: PropVarType.Value, Data: 'large' },
-        },
-        Slots: {
-          default: [
-            // 用户名输入
-            {
-              Type: 'NInput',
-              Props: {
-                value: {
-                  Type: PropVarType.VModel,
-                  Data: ['user', 'name'],
-                },
-                placeholder: {
-                  Type: PropVarType.Value,
-                  Data: '输入用户名',
-                },
+              Operator: '>=',
+              Right: {
+                Type: PropVarType.Value,
+                Data: 3,
               },
             },
-           
-
-            // 任务输入
-            {
-              Type: 'NInputNumber',
-              Props: {
-                value: {
-                  Type: PropVarType.VModel,
-                  Data: ['user', 'agerange'],
-                },
+            Props: {
+              type: {
+                Type: PropVarType.Value,
+                Data: 'success',
               },
             },
-
-            // 年龄显示（带条件）
-            {
-              Type: 'NText',
-              IfCondition: {
-                Type: 'Compare',
-                Left: { Type: PropVarType.VBind, Data: ['user', 'age'] },
-                Operator: '>=',
-                Right: { Type: PropVarType.VBind, Data: ['user', 'agerange'] },
-              },
-              Slots: {
-                default: [
-                  {
-                    Type: '@Value@',
-                    Data: '年龄：',
-                  },
-                  {
-                    Type: '@VBind@',
-                    Data: ['user', 'age'],
-                  },
-                ],
-              },
-            },
-
-            // 主题切换
-            {
-              Type: 'NSwitch',
-              Props: {
-                value: {
-                  Type: PropVarType.VModel,
-                  Data: ['user', 'preferences', 'theme'],
-                },
-                checkedValue: { Type: PropVarType.Value, Data: 'dark' },
-                uncheckedValue: { Type: PropVarType.Value, Data: 'light' },
-              },
-              Slots: {
-                checked: {
-                  Type: '@Value@',
-                  Data: '🌙',
-                },
-                unchecked: {
-                  Type: '@Value@',
-                  Data: '☀️',
-                },
-              },
-            },
-            {
-              Type: 'NText',
-              Slots: {
-                default: [
-                  {
-                    Type: '@Value@',
-                    Data: '主题：',
-                  },
-                  {
-                    Type: '@VBind@',
-                    Data: ['user', 'preferences', 'theme'],
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      },
-
-      // 项目列表（复杂循环）
-      {
-        Type: '@FOR@',
-        Items: { Type: PropVarType.VBind, Data: ['user', 'projects'] },
-        ItemLabel: '@Project',
-        IndexLabel: '@PIndex',
-        Template: {
-          Type: 'NCard',
-          Props: {
-            title: {
-              Type: PropVarType.VBind,
-              Data: ['@Project', 'name'],
-            },
-          },
-          Slots: {
-            default: [
-            {
-              Type: 'NInput',
-              Props: {
-                value: {
-                  Type: PropVarType.VModel,
-                  Data: ['@Project', 'name'],
-                },
-                placeholder: {
-                  Type: PropVarType.Value,
-                  Data: '输入',
-                },
-              },
-            },
-              // 项目状态
-              {
-                Type: 'NTag',
-                Props: {
-                  type: {
-                    Type: PropVarType.Value,
-                    Data: 'success',
-                  },
-                },
-                Slots: {
-                  default: {
-                    Type: '@VBind@',
-                    Data: ['@Project', 'status'],
-                  },
-                },
-              },
-
-              // 任务列表（嵌套循环）
-              {
-                Type: '@FOR@',
-                Items: { Type: PropVarType.VBind, Data: ['@Project', 'tasks'] },
-                ItemLabel: '@Task',
-                IndexLabel: '@TIndex',
-                Template: {
-                  Type: 'NThing',
-                  Props: {
-                    description: {
-                      Type: PropVarType.VBind,
-                      Data: ['@Task'],
-                    },
-                  },
-                },
-              },
-
-              // 进度控制（条件 + 事件）
-              {
-                Type: 'NButton',
-                IfCondition: {
-                  Type: 'Compare',
-                  Left: { Type: PropVarType.VBind, Data: ['@Project', 'status'] },
-                  Operator: '==',
-                  Right: { Type: PropVarType.Value, Data: 'in-progress' },
-                },
-                Props: {
-                  // onClick: {
-                  //   Type: PropVarType.Value,
-                  //   Data: () => {
-                  //     // 这里可以添加实际的更新逻辑
-                  //     formData.value.user.projects[pIndex].status = 'completed'
-                  //   },
-                  // },
-                },
-                Slots: {
-                  default: {
-                    Type: '@Value@',
-                    Data: '标记完成',
-                  },
-                },
-              },
-            ],
-          },
-        },
-      },
-
-      // 复杂条件组合
-      {
-        Type: 'NDivider',
-        IfCondition: {
-          Type: 'Logical',
-          Operator: 'AND',
-          Conditions: [
-            {
-              Type: 'Compare',
-              Left: { Type: PropVarType.VBind, Data: ['user', 'active'] },
-              Operator: '==',
-              Right: { Type: PropVarType.Value, Data: true },
-            },
-            {
-              Type: 'Logical',
-              Operator: 'OR',
-              Conditions: [
+            Slots: {
+              default: [
                 {
-                  Type: 'Compare',
-                  Left: { Type: PropVarType.VBind, Data: ['user', 'scores', 0] },
-                  Operator: '>=',
-                  Right: { Type: PropVarType.Value, Data: 80 },
+                  Type: TYPE_VBIND,
+                  Data: [VFOR_DATA, 'index'],
                 },
                 {
-                  Type: 'Compare',
-                  Left: { Type: PropVarType.VBind, Data: ['user', 'scores', 1] },
-                  Operator: '>=',
-                  Right: { Type: PropVarType.Value, Data: 90 },
+                  Type: TYPE_VBIND,
+                  Data: [VFOR_DATA, 'hobby'],
                 },
               ],
             },
-          ],
-        },
-        Props: {
-          titlePlacement: { Type: PropVarType.Value, Data: 'left' },
-        },
-        Slots: {
-          default: {
-            Type: '@Value@',
-            Data: '高级用户标识',
           },
-        },
+        ],
       },
     ],
   },
@@ -734,7 +483,7 @@ const testComponent: BaseComponent = {
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <DynamicComponent :componentData="testComponent" :dataContext="formData2" />
+        <DynamicComponent :componentData="inputComponent" :dataContext="formData" />
         <pre>{{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <pre>{{ nodedatatext }}</pre>

@@ -8,9 +8,24 @@ import type {
   CompareCondition,
   LogicalCondition,
   PropVar,
+  ReadOnlyPropVar,
   Condition,
 } from '@/schemas/plugin_schemas'
-import { PropVarType } from '@/schemas/plugin_schemas'
+import {
+  PropVarType,
+  THIS_NODE_DATA,
+  VFOR_DATA,
+  SELF_OPTIONS,
+  TYPE_VFOR,
+  TYPE_VALUE,
+  TYPE_VBIND,
+  TYPE_VMODEL,
+  TYPE_CONDITION_COMPARE,
+  TYPE_CONDITION_LOGICAL,
+  TYPE_CONDITION_DIRECT,
+  TYPE_CONDITION_VBIND,
+  TYPE_CONDITION_VALUE,
+} from '@/schemas/plugin_schemas'
 
 defineOptions({
   name: 'DynamicComponent',
@@ -25,19 +40,58 @@ const props = defineProps({
     type: Object as PropType<Record<string, any>>,
     required: true,
   },
+  otherContext: {
+    type: Object as PropType<Record<string, any>>,
+    default: () => ({}),
+  },
 })
 
+// 数据路径解析依赖数组第一个元素来决定使用dataContext还是otherContext
 // 数据路径解析器
 const resolveValueByPath = (path: (string | number)[]): any => {
-  return path.reduce((acc, key) => acc?.[key], props.dataContext)
+  const resolvePath: (string | number)[] = []
+  for (const element of path) {
+    if (
+      resolvePath[0] === THIS_NODE_DATA &&
+      props.dataContext.hasOwnProperty(element) &&
+      typeof props.dataContext[element] === 'function'
+    ) {
+      resolvePath.push(...props.dataContext[element]())
+    } else {
+      resolvePath.push(element)
+    }
+  }
+  if (resolvePath[0] === THIS_NODE_DATA) {
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext)
+  } else if (resolvePath[0] === VFOR_DATA) {
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[VFOR_DATA])
+  } else if (resolvePath[0] === SELF_OPTIONS) {
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[SELF_OPTIONS])
+  }
 }
 
 // 数据更新器
 const updateValueByPath = (path: (string | number)[], value: any) => {
-  const clonePath = [...path]
-  const lastKey = clonePath.pop()!
-  const parent = clonePath.reduce((acc, key) => acc?.[key], props.dataContext)
-  if (parent) parent[lastKey] = value
+  const resolvePath: (string | number)[] = []
+  for (const element of path) {
+    if (
+      resolvePath[0] === THIS_NODE_DATA &&
+      props.dataContext.hasOwnProperty(element) &&
+      typeof props.dataContext[element] === 'function'
+    ) {
+      resolvePath.push(...props.dataContext[element]())
+    } else {
+      resolvePath.push(element)
+    }
+  }
+  const firstKey = resolvePath.shift()!
+  if (firstKey === THIS_NODE_DATA) {
+    const lastKey = resolvePath.pop()!
+    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext)
+    if (parent) parent[lastKey] = value
+  } else {
+    console.error('Unsupported update path')
+  }
 }
 
 // 属性处理器
@@ -73,13 +127,13 @@ const resolveCondition = (condition?: Condition): boolean => {
   if (!condition) return true
 
   switch (condition.Type) {
-    case 'Value':
+    case PropVarType.Value:
       return !!condition.Data
-    case 'VBind':
+    case PropVarType.VBind:
       return !!resolveValueByPath(condition.Data)
-    case 'Compare':
+    case TYPE_CONDITION_COMPARE:
       return handleCompare(condition)
-    case 'Logical':
+    case TYPE_CONDITION_LOGICAL:
       return handleLogical(condition)
     default:
       return false
@@ -87,7 +141,7 @@ const resolveCondition = (condition?: Condition): boolean => {
 }
 
 const handleCompare = (config: CompareCondition): boolean => {
-  const getValue = (source: PropVar) =>
+  const getValue = (source: ReadOnlyPropVar) =>
     source.Type === PropVarType.VBind ? resolveValueByPath(source.Data) : source.Data
 
   const left = getValue(config.Left)
@@ -112,15 +166,19 @@ const handleLogical = (config: LogicalCondition) => {
 
 // 获取Span组件的值
 const getSpanValue = (config: SpanComponent): any => {
-  return config.Type === '@VBind@' ? resolveValueByPath(config.Data) : config.Data
+  return config.Type === PropVarType.VBind ? resolveValueByPath(config.Data) : config.Data
 }
 
 // 循环处理器
 const handleForLoop = (config: ForLoopComponent) => {
-  if (config.Type !== '@FOR@') return null
+  if (config.Type !== TYPE_VFOR) return null
 
-  const itemPath = config.Items?.Data || []
-  const items = resolveValueByPath(itemPath)
+  let items = []
+  if (config.Items.Type === PropVarType.Value) {
+    items = config.Items.Data
+  } else if (config.Items.Type === PropVarType.VBind) {
+    items = resolveValueByPath(config.Items.Data)
+  }
   const itemKey = config.ItemLabel || '@Item'
   const indexKey = config.IndexLabel || '@Index'
 
@@ -129,15 +187,28 @@ const handleForLoop = (config: ForLoopComponent) => {
   const nodes = items.map((item, index) => {
     const loopContext = {
       ...props.dataContext,
-      [itemKey]: item,
-      [indexKey]: index,
+      [indexKey]: () => [index],
     }
 
-    return h(resolveComponent('DynamicComponent'), {
-      key: index,
-      componentData: config.Template,
-      dataContext: loopContext,
-    })
+    const loop_otherContext = {
+      ...props.otherContext,
+      [VFOR_DATA]: {
+        ...props.otherContext[VFOR_DATA],
+        [itemKey]: item,
+        [indexKey]: index,
+      },
+    }
+
+    if (Array.isArray(config.Template)) {
+      return config.Template.map((template) => {
+        return h(resolveComponent('DynamicComponent'), {
+          key: index,
+          componentData: template,
+          dataContext: loopContext,
+          otherContext: loop_otherContext,
+        })
+      })
+    }
   })
 
   return h(Fragment, {}, nodes)
@@ -160,12 +231,12 @@ const processedSlots = computed(() => {
   <template v-if="resolveCondition(componentData.IfCondition)">
     <!-- 处理@FOR@类型组件 -->
     <component
-      v-if="componentData.Type === '@FOR@'"
+      v-if="componentData.Type === TYPE_VFOR"
       :is="handleForLoop(componentData as ForLoopComponent)"
     />
 
     <!-- 处理@Value@或@VBind@类型组件 -->
-    <span v-else-if="componentData.Type === '@Value@' || componentData.Type === '@VBind@'">
+    <span v-else-if="componentData.Type === TYPE_VALUE || componentData.Type === TYPE_VBIND">
       {{ getSpanValue(componentData as SpanComponent) }}
     </span>
 
@@ -180,11 +251,17 @@ const processedSlots = computed(() => {
             :key="idx"
             :component-data="item"
             :data-context="dataContext"
+            :other-context="otherContext"
           />
         </template>
 
         <!-- 处理单个组件类型插槽内容 -->
-        <DynamicComponent v-else :component-data="slotContent" :data-context="dataContext" />
+        <DynamicComponent
+          v-else
+          :component-data="slotContent"
+          :data-context="dataContext"
+          :other-context="otherContext"
+        />
       </template>
     </component>
   </template>
