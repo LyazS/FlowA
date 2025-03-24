@@ -1,8 +1,9 @@
 from typing import List, Dict, Optional
-from app.uisdk.VFUIComponent import BaseComponent
-from app.uisdk.VFUISchemas import PropVar, PropVarType
+from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
+from app.uisdk.VFUIUtils import cvtProps2PropVar
 
-class NInput(BaseComponent):
+
+class NInput(NormalComponent):
     def __init__(
         self,
         type: str | PropVar,
@@ -13,12 +14,14 @@ class NInput(BaseComponent):
     ):
         super().__init__(
             Type="NInput",
-            Props={
-                "type": type,
-                "value": value,
-                "size": size,
-                "clearable": clearable,
-            },
+            Props=cvtProps2PropVar(
+                {
+                    "type": type,
+                    "value": value,
+                    "size": size,
+                    "clearable": clearable,
+                }
+            ),
             Slots=slots,
         )
         pass

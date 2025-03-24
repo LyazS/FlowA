@@ -1,7 +1,7 @@
 import unicodedata
 from typing import List, Optional, Any, Union
 from pydantic import BaseModel, field_validator, ValidationInfo
-from app.uisdk.VFUIComponent import BaseComponent
+from app.uisdk import BaseComponent
 from app.schemas.VFNodeClass import VFNode
 
 
@@ -11,8 +11,8 @@ class VFPluginSetting(BaseModel):
 
 class VFPlugin(BaseModel):
     Type: str
-    Name: str
-    Label: str
+    Name: str  # 独属名字
+    Label: str  # 节点显示名字
     Description: str
     Execute: str
     Setting: Optional[VFPluginSetting]
@@ -22,7 +22,7 @@ class VFPlugin(BaseModel):
 
 class VFUIPlugin(BaseModel):
     Type: str
-    Name: str
+    Name: str # UI独属名字
     Component: Union[str, BaseComponent]
 
 

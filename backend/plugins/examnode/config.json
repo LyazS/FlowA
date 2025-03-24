@@ -9,7 +9,7 @@
   "Plugins": [
     {
       "Type": "FANode",
-      "Name": "ExamNode",
+      "Name": "@/Exam Provider/ExamNode",
       "Label": "示例节点",
       "Description": "Example node for FlowA",
       "Execute": "examnode.py",
@@ -17,7 +17,7 @@
     },
     {
       "Type": "FANode",
-      "Name": "ExamNestNode",
+      "Name": "@/Exam Provider/ExamNestNode",
       "Label": "示例嵌套节点",
       "Description": "Example nest node for FlowA",
       "Execute": "exam_nest_node.py",
@@ -27,7 +27,7 @@
   "UIPlugins": [
     {
       "Type": "FANode",
-      "Name": "UI_TEXT_INPUT",
+      "Name": "@/Exam Provider/UI_TEXT_INPUT",
       "Component": "examui.py"
     }
   ]

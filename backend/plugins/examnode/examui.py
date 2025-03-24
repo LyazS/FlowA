@@ -5,7 +5,7 @@ class ExamUI(NInput):
     def __init__(self):
         super().__init__(
             type="info",
-            value=PropVar(
+            value=VModelProp(
                 Type=PropVarType.VModel,
                 Data=[
                     THIS_NODE_DATA,
