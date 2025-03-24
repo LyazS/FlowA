@@ -16,6 +16,7 @@ interface VFlowInitInstance {
   AllVFNodeTypes: Record<string, Component>
   AllNodeCreateFuncs: Ref<Record<string, () => VFNode>>
   AllTestNodes: Ref<Record<string, VFNode>>
+  AllUIComponents: Ref<Record<string, BaseComponent>>
   importAllNodes: () => Promise<void>
   createVFNode: (ntype: string) => VFNode
 }
@@ -94,6 +95,7 @@ export const useVFlowInitial = (): VFlowInitInstance => {
     AllVFNodeTypes,
     AllNodeCreateFuncs,
     AllTestNodes,
+    AllUIComponents,
     importAllNodes,
     createVFNode,
   }

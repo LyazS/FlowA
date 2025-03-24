@@ -28,6 +28,7 @@ import {
 import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
 import { useNodeUtils } from '@/hooks/useNodeUtils'
+import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode, isEditing } from '@/hooks/useVFlowAttribute'
 import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
@@ -65,7 +66,7 @@ const { findNode, getHandleConnections } = useVueFlow()
 const nodeId = computed(() => selectedNodeId.value as string)
 // 获取节点
 const { curSelectedNode } = useCurSelectedNode()
-
+const { AllUIComponents } = useVFlowInitial()
 watch(
   () => curSelectedNode.value.data,
   () => {

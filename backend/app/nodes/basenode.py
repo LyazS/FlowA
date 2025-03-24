@@ -92,12 +92,21 @@ class FABaseNode(ABC):
         self,
         request: dict,
     ) -> Optional[FAWorkflowOperationResponse]:
+        """
+        用于动态发送请求给节点处理
+        """
         return None
 
     @staticmethod
     def getNodeConfig():
+        """
+        节点的配置信息，例如可以获取LLM的模型列表
+        """
         return None
 
     @staticmethod
     def getNodeCreateInfo() -> VFNode:
+        """
+        节点的创建信息
+        """
         return None
