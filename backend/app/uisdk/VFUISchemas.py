@@ -2,6 +2,7 @@ from typing import Literal, Union, List, Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from enum import StrEnum
 
+
 """
 vue数据结构定义
 =============================
@@ -54,10 +55,9 @@ Type==Logical:
 
 # ================= 基础类型定义 =================
 class PropVarType(StrEnum):
-    Value = "Value"
-    VBind = "VBind"
-    VModel = "VModel"
-    FUNCTION = "FUNCTION"
+    Value = "@VALUE@"
+    VBind = "@VBIND@"
+    VModel = "@VMODEL@"
 
 
 class PropVarBase(BaseModel):
@@ -83,27 +83,22 @@ class VModelProp(PropVarBase):
     )
 
 
-class FunctionProp(PropVarBase):
-    Type: Literal[PropVarType.FUNCTION]
-    pass
-
-
-PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
+PropVar = Union[ValueProp, VBindProp, VModelProp]
+ReadOnlyPropVar = Union[ValueProp, VBindProp]
 
 
 # ================= 条件系统 =================
 class ConditionType(StrEnum):
-    Compare = "Compare"
-    Logical = "Logical"
-    Value = "Value"
-    VBind = "VBind"
+    Compare = "@CONDITION_COMPARE@"
+    Logical = "@CONDITION_LOGICAL@"
+    Direct = "@CONDITION_DIRECT@"
 
 
 class CompareCondition(BaseModel):
     Type: Literal[ConditionType.Compare]
-    Left: PropVar
+    Left: ReadOnlyPropVar
     Operator: Literal["==", "!=", ">", "<", ">=", "<="]
-    Right: PropVar
+    Right: ReadOnlyPropVar
 
 
 class LogicalCondition(BaseModel):
@@ -112,20 +107,21 @@ class LogicalCondition(BaseModel):
     Conditions: List["Condition"]
 
 
-class ValueCondition(BaseModel):
-    Type: Literal[ConditionType.Value]
-    Data: Any
+class DirectCondition(BaseModel):
+    Type: Literal[ConditionType.Direct]
+    Condition: ReadOnlyPropVar
 
 
-class VBindCondition(BaseModel):
-    Type: Literal[ConditionType.VBind]
-    Data: List[Union[str, int]] = Field(..., min_length=1)
-
-
-Condition = Union[CompareCondition, LogicalCondition, ValueCondition, VBindCondition]
+Condition = Union[CompareCondition, LogicalCondition, DirectCondition]
 
 
 # ================= 组件系统 =================
+class ComponentType(StrEnum):
+    VFOR = "@VFOR@"
+    VALUE = "@VALUE@"
+    VBIND = "@VBIND@"
+
+
 class BaseComponent(BaseModel):
     Type: str
     IfCondition: Optional[Condition] = None
@@ -136,13 +132,15 @@ class BaseComponent(BaseModel):
         error_fields = []
 
         # 检查特殊组件是否包含非法字段
-        if comp_type in ("@Value@", "@VBind@"):
+        if comp_type in (ComponentType.VALUE, ComponentType.VBIND):
             if hasattr(self, "Props") and self.Props is not None:
                 error_fields.append("Props")
             if hasattr(self, "Slots") and self.Slots is not None:
                 error_fields.append("Slots")
+            if comp_type == ComponentType.VBIND and not isinstance(self.Data, list):
+                raise ValueError("@VBIND@ requires list path data")
 
-        if comp_type == "@FOR@":
+        if comp_type == ComponentType.VFOR:
             if hasattr(self, "Props") and self.Props is not None:
                 error_fields.append("Props")
             if hasattr(self, "Slots") and self.Slots is not None:
@@ -156,34 +154,23 @@ class BaseComponent(BaseModel):
 
 
 class NormalComponent(BaseComponent):
-    Type: str  # 普通组件类型
     Props: Optional[Dict[str, PropVar]] = None
     Slots: Optional[Dict[str, Union["BaseComponent", List["BaseComponent"]]]] = None
 
 
 class SpanComponent(BaseComponent):
-    Type: Literal["@Value@", "@VBind@"]
+    Type: Literal[ComponentType.VALUE, ComponentType.VBIND]
     Data: Union[Any, List[Union[str, int]]]  # 联合类型
-
-    # 显式声明禁用字段
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
 
-    @model_validator(mode="after")
-    def validate_span_data(self):
-        if self.Type == "@VBind@" and not isinstance(self.Data, list):
-            raise ValueError("@VBind@ requires list data")
-        return self
-
 
 class ForLoopComponent(BaseComponent):
-    Type: Literal["@FOR@"]
-    Items: PropVar
+    Type: Literal[ComponentType.VFOR]
+    Items: ReadOnlyPropVar
     ItemLabel: str
     IndexLabel: str
     Template: Union["BaseComponent", List["BaseComponent"]]
-
-    # 显式声明禁用字段
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
 
