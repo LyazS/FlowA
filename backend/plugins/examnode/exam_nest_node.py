@@ -15,6 +15,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeAttachingType,
     VFNodeAttachingPos,
     VFNodeAttachingPosType,
+    VFNodeHandleDataANode,
 )
 
 if TYPE_CHECKING:
@@ -60,7 +61,12 @@ class ExamNestNode(FATaskNode):
             "AttachOutput",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromAttached,
-                AName="aoutput",
+                ANode={
+                    "aoutput": VFNodeHandleDataANode(
+                        ConnectionType=VFNodeConnectionType.Self,
+                        HandleId="self",
+                    )
+                },
             ),
         )
         thisnode.add_handle_data(
@@ -68,7 +74,12 @@ class ExamNestNode(FATaskNode):
             "Attach",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromAttached,
-                AName="aoutput",
+                ANode={
+                    "aoutput": VFNodeHandleDataANode(
+                        ConnectionType=VFNodeConnectionType.Self,
+                        HandleId="self",
+                    )
+                },
             ),
         )
 

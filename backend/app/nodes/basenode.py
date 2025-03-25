@@ -3,7 +3,13 @@ from abc import ABC, abstractmethod
 from weakref import ref
 import copy
 from loguru import logger
-from app.schemas.fanode import FARunStatus, FANodeWaitType, FANodeValidateNeed
+from app.schemas.fanode import (
+    FARunStatus,
+    FANodeWaitType,
+    FANodeValidateNeed,
+    ConnectOption_Var,
+    ConnectOption_Node,
+)
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
 from app.schemas.farequest import (
@@ -46,6 +52,8 @@ class FABaseNode(ABC):
 
         # 该节点需求的验证内容
         self.validateNeededs: List[FANodeValidateNeed] = []
+        self.Need_ConnctOptions_Var: List[ConnectOption_Var] = []
+        self.Need_ConnctOptions_Node: List[ConnectOption_Node] = []
         pass
 
     def store(self):

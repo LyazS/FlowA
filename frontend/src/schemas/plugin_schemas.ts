@@ -104,6 +104,7 @@ export interface VFPlugin {
   Execute: string
   Setting: VFPluginSetting
   CreateInfo: any
+  NeedOptions: any
 }
 
 export interface VFUIPlugin {

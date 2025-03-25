@@ -6,7 +6,7 @@ import {
 } from '@/components/nodes/VFNodeInterface'
 import { type SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
-import type { VarItem4Selections } from '@/schemas/schemas'
+import type { NodeWithVFData, VarItem4Selections } from '@/schemas/schemas'
 
 interface NodeUtilsInstance {
   findVarFromIO: (
@@ -31,37 +31,40 @@ let instance: NodeUtilsInstance | null = null
 export const useNodeUtils = () => {
   if (instance) return instance
   const { findNode, getHandleConnections } = useVueFlow()
-
+  const resolveValueByPath = (path: (string | number)[], dataContext: any): any => {
+    return path.reduce((acc, key) => acc?.[key], dataContext)
+  }
   const findVarFromIO = (
     nid: string,
     findconnect: VFNodeConnectionType,
     hid: string,
   ): VarItem4Selections[] => {
     const result: VarItem4Selections[] = []
-    const thenode = findNode(nid)
+    const thenode = findNode(nid) as NodeWithVFData
 
-    if (!thenode || !thenode.data.connections[findconnect]?.[hid]) {
+    if (!thenode || !thenode.data.Connections[findconnect]?.[hid]) {
       return result
     }
     const thenodedata = thenode.data as VFNodeData
-    const connection = thenodedata.connections[findconnect][hid].data
+    const connection = thenodedata.Connections[findconnect][hid].Data
 
     for (const c_data of Object.values(connection) as Array<VFNodeHandleData>) {
-      if (c_data.type === VFNodeConnectionDataType.FromInner && c_data.path) {
-        const pathData = thenode.data[c_data.path[0]]?.byId?.[c_data.path[1]]
+      if (c_data.Type === VFNodeConnectionDataType.FromInner && c_data.Path) {
+        const pathData = resolveValueByPath(c_data.Path, thenode.data)
+        // const pathData = thenode.data[c_data.path[0]]?.byId?.[c_data.path[1]]
         if (pathData) {
           result.push({
             nodeId: nid,
-            nlabel: thenode.data.label,
-            dpath: c_data.path,
-            dlabel: pathData.label,
-            dkey: pathData.key,
-            dtype: pathData.type,
+            nlabel: thenodedata.Label,
+            dpath: c_data.Path,
+            dlabel: pathData.Label,
+            dkey: pathData.Key,
+            dtype: pathData.Type,
           })
         }
-      } else if (c_data.type === VFNodeConnectionDataType.FromOuter && c_data.inputKey) {
+      } else if (c_data.Type === VFNodeConnectionDataType.FromOuter && c_data.InputKey) {
         const edges = getHandleConnections({
-          id: c_data.inputKey,
+          id: c_data.InputKey,
           type: 'target',
           nodeId: nid,
         })
@@ -73,27 +76,26 @@ export const useNodeUtils = () => {
             ]),
           )
         }
-      } else if (
-        c_data.type === VFNodeConnectionDataType.FromAttached &&
-        c_data.atype &&
-        thenode.data.nesting?.attached_nodes
-      ) {
-        const attachedNode = thenode.data.nesting.attached_nodes[c_data.atype]
-        if (attachedNode) {
-          result.push(
-            ...recursiveFindVariables(
-              attachedNode.nid,
-              c_data.atype === 'attached_node_output' ? ['self'] : [],
-              [],
-              [],
-              false,
-              [],
-              c_data.atype === 'attached_node_input',
-              [],
-            ),
-          )
+      } else if (c_data.Type === VFNodeConnectionDataType.FromAttached && c_data.ANode) {
+        for (const [aname, hdata] of Object.entries(c_data.ANode)) {
+          const anode = findNode(thenode.data.Nesting?.ANodes?.[aname]?.Nid)
+          if (anode) {
+            const { ConnectionType, HandleId } = hdata
+            result.push(
+              ...recursiveFindVariables(
+                anode.id,
+                c_data.atype === 'attached_node_output' ? ['self'] : [],
+                [],
+                [],
+                false,
+                [],
+                c_data.atype === 'attached_node_input',
+                [],
+              ),
+            )
+          }
         }
-      } else if (c_data.type === VFNodeConnectionDataType.FromParent && thenode.parentNode) {
+      } else if (c_data.Type === VFNodeConnectionDataType.FromParent && thenode.parentNode) {
         result.push(
           ...recursiveFindVariables(thenode.parentNode, [], ['attach'], [], true, [], false, []),
         )

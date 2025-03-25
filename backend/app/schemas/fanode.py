@@ -1,6 +1,7 @@
 from typing import List, Optional, Any
 from pydantic import BaseModel
 from enum import StrEnum
+from app.schemas.VFNodeInterface import VFNodeConnectionType
 
 
 class FARunStatus(StrEnum):
@@ -25,4 +26,14 @@ class FANodeValidateNeed(StrEnum):
     AttachOutput = "AttachOutput"
     InputNodes = "InputNodes"
     InputNodesWVars = "InputNodesWVars"
+    pass
+
+
+class ConnectOption_Var(BaseModel):
+    ConnectionType: VFNodeConnectionType
+    HandleID: str
+    pass
+
+
+class ConnectOption_Node(BaseModel):
     pass

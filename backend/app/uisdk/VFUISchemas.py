@@ -58,6 +58,7 @@ class PropVarType(StrEnum):
     Value = "@VALUE@"
     VBind = "@VBIND@"
     VModel = "@VMODEL@"
+    FUNCTION = "@FUNCTION@"
 
 
 class PropVarBase(BaseModel):
@@ -81,6 +82,10 @@ class VModelProp(PropVarBase):
     Data: List[Union[str, int]] = Field(
         ..., description="双向绑定路径数组", min_length=1
     )
+
+
+class FunctionProp(PropVarBase):
+    Type: Literal[PropVarType.FUNCTION]
 
 
 PropVar = Union[ValueProp, VBindProp, VModelProp]

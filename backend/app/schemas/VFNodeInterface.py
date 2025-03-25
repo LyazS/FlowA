@@ -66,10 +66,16 @@ class VFNodeContents(BaseModel):
     Order: List[str]
 
 
+class VFNodeHandleDataANode(BaseModel):
+    ConnectionType: VFNodeConnectionType
+    HandleId: str
+    pass
+
+
 class VFNodeHandleData(BaseModel):
     Type: VFNodeConnectionDataType
     InputKey: Optional[str] = None
-    AName: Optional[str] = None
+    ANode: Optional[Dict[str, VFNodeHandleDataANode]] = None
     Path: Optional[List[Union[str, int]]] = None
     UseIds: Optional[List[str]] = None
 
@@ -77,8 +83,8 @@ class VFNodeHandleData(BaseModel):
     def check_consistency(self):
         if self.Type == VFNodeConnectionDataType.FromInner and not self.Path:
             raise ValueError("FromInner连接类型必须包含Path字段")
-        if self.Type == VFNodeConnectionDataType.FromAttached and not self.AName:
-            raise ValueError("FromAttached连接类型必须包含AName字段")
+        if self.Type == VFNodeConnectionDataType.FromAttached and not self.ANode:
+            raise ValueError("FromAttached连接类型必须包含ANode字段")
         if self.Type == VFNodeConnectionDataType.FromOuter and not self.InputKey:
             raise ValueError("FromOuter连接类型必须包含InputKey字段")
         return self

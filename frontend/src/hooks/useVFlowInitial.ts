@@ -15,6 +15,7 @@ import attached_node from '@/components/nodes/all_nodes_vue/attached_node.vue'
 interface VFlowInitInstance {
   AllVFNodeTypes: Record<string, Component>
   AllNodeCreateFuncs: Ref<Record<string, () => VFNode>>
+  AllNodeNeedOptions: Ref<Record<string, any>>
   AllTestNodes: Ref<Record<string, VFNode>>
   AllUIComponents: Ref<Record<string, BaseComponent>>
   importAllNodes: () => Promise<void>
@@ -31,6 +32,7 @@ export const useVFlowInitial = (): VFlowInitInstance => {
 
   const AllVFNodeTypes = reactive<Record<string, Component>>({})
   const AllNodeCreateFuncs = ref<Record<string, () => VFNode>>({})
+  const AllNodeNeedOptions = ref<Record<string, any>>({})
   const AllTestNodes = ref<Record<string, VFNode>>({})
   const AllUIComponents = ref<Record<string, BaseComponent>>({})
 
@@ -94,6 +96,7 @@ export const useVFlowInitial = (): VFlowInitInstance => {
   instance = {
     AllVFNodeTypes,
     AllNodeCreateFuncs,
+    AllNodeNeedOptions,
     AllTestNodes,
     AllUIComponents,
     importAllNodes,

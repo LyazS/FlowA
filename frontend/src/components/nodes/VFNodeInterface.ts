@@ -55,10 +55,15 @@ interface VFNodeContents {
   Order: string[]
 }
 
+interface VFNodeHandleDataANode {
+  ConnectionType: VFNodeConnectionType
+  HandleId: string
+}
+
 interface VFNodeHandleData {
   Type: VFNodeConnectionDataType
   InputKey?: string
-  AName?: string
+  ANode?: Record<string, VFNodeHandleDataANode>
   Path?: (string | number)[]
   UseIds?: string[]
 }
