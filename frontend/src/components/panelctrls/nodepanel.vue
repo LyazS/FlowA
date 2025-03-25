@@ -272,7 +272,7 @@ import {
   PropVarType,
   THIS_NODE_DATA,
   VFOR_DATA,
-  SELF_OPTIONS,
+  CONNECT_OPTIONS,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -288,6 +288,13 @@ const formData = ref({
   user: {
     name: 'John',
     hobbies: ['reading', 'running', 'traveling', 'painting', 'photography'],
+    brother: {
+      John: "John's brother",
+      Mary: "Mary's brother",
+      Tom: "Tom's brother",
+      Jerry: "Jerry's brother",
+      Lily: "Lily's brother",
+    },
   },
 })
 const inputComponent: BaseComponent = {
@@ -364,7 +371,7 @@ const inputComponent: BaseComponent = {
         Type: TYPE_VFOR,
         Items: {
           Type: PropVarType.VBind,
-          Data: [THIS_NODE_DATA, 'user', 'hobbies'],
+          Data: [THIS_NODE_DATA, 'user', 'brother'],
         },
         ItemLabel: 'hobby',
         IndexLabel: 'index',
@@ -382,24 +389,24 @@ const inputComponent: BaseComponent = {
               },
               value: {
                 Type: PropVarType.VModel,
-                Data: [THIS_NODE_DATA, 'user', 'hobbies', 'index'],
+                Data: [THIS_NODE_DATA, 'user', 'brother', 'index'],
               },
             },
           },
           {
             Type: 'NTag',
-            IfCondition: {
-              Type: TYPE_CONDITION_COMPARE,
-              Left: {
-                Type: PropVarType.VBind,
-                Data: [VFOR_DATA, 'index'],
-              },
-              Operator: '>=',
-              Right: {
-                Type: PropVarType.Value,
-                Data: 3,
-              },
-            },
+            // IfCondition: {
+            //   Type: TYPE_CONDITION_COMPARE,
+            //   Left: {
+            //     Type: PropVarType.VBind,
+            //     Data: [VFOR_DATA, 'index'],
+            //   },
+            //   Operator: '>=',
+            //   Right: {
+            //     Type: PropVarType.Value,
+            //     Data: 3,
+            //   },
+            // },
             Props: {
               type: {
                 Type: PropVarType.Value,

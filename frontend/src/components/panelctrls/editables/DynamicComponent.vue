@@ -15,7 +15,7 @@ import {
   PropVarType,
   THIS_NODE_DATA,
   VFOR_DATA,
-  SELF_OPTIONS,
+  CONNECT_OPTIONS,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -65,8 +65,10 @@ const resolveValueByPath = (path: (string | number)[]): any => {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext)
   } else if (resolvePath[0] === VFOR_DATA) {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[VFOR_DATA])
-  } else if (resolvePath[0] === SELF_OPTIONS) {
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[SELF_OPTIONS])
+  } else if (resolvePath[0] === CONNECT_OPTIONS) {
+    return resolvePath
+      .slice(1)
+      .reduce((acc, key) => acc?.[key], props.otherContext[CONNECT_OPTIONS])
   }
 }
 
@@ -179,30 +181,35 @@ const handleForLoop = (config: ForLoopComponent) => {
   } else if (config.Items.Type === PropVarType.VBind) {
     items = resolveValueByPath(config.Items.Data)
   }
-  const itemKey = config.ItemLabel || '@Item'
-  const indexKey = config.IndexLabel || '@Index'
+  const itemLabel = config.ItemLabel || '@Item'
+  const indexLabel = config.IndexLabel || '@Index'
 
-  if (!Array.isArray(items)) return null
+  if (typeof items !== 'object' || items === null) return null
 
-  const nodes = items.map((item, index) => {
+  // 统一处理为键值数组格式
+  const entries = Array.isArray(items)
+    ? items.map((item, index) => [index, item])
+    : Object.entries(items)
+
+  const nodes = entries.map(([key, value]) => {
     const loopContext = {
       ...props.dataContext,
-      [indexKey]: () => [index],
+      [indexLabel]: () => [key],
     }
 
     const loop_otherContext = {
       ...props.otherContext,
       [VFOR_DATA]: {
         ...props.otherContext[VFOR_DATA],
-        [itemKey]: item,
-        [indexKey]: index,
+        [itemLabel]: value,
+        [indexLabel]: key,
       },
     }
 
     if (Array.isArray(config.Template)) {
       return config.Template.map((template) => {
         return h(resolveComponent('DynamicComponent'), {
-          key: index,
+          key: key,
           componentData: template,
           dataContext: loopContext,
           otherContext: loop_otherContext,
