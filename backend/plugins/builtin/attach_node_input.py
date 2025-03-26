@@ -52,6 +52,7 @@ class ExamNode(FATaskNode):
             "output",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromParent,
+                HandleId="Attach",
             ),
         )
         return thisnode

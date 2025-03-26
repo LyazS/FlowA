@@ -3,6 +3,8 @@ import {
   type Ref,
   computed,
   ref,
+  provide,
+  reactive,
   watch,
   nextTick,
   inject,
@@ -33,6 +35,24 @@ import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode, isEditing } from '@/hooks/useVFlowAttribute'
 import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
 import { type InputNode } from '@/schemas/schemas'
+import { type BaseComponent } from '@/schemas/plugin_schemas'
+import {
+  PropVarType,
+  THIS_NODE_DATA,
+  VFOR_DATA,
+  CONNECT_OPTIONS,
+  TYPE_VFOR,
+  TYPE_VALUE,
+  TYPE_VBIND,
+  TYPE_VMODEL,
+  TYPE_CONDITION_COMPARE,
+  TYPE_CONDITION_LOGICAL,
+  TYPE_CONDITION_DIRECT,
+  TYPE_CONDITION_VBIND,
+  TYPE_CONDITION_VALUE,
+  PAYLOADS_ID,
+  RESULTS_ID,
+} from '@/schemas/plugin_schemas'
 
 const { recursiveFindVariables, mapVarItemToSelect } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
@@ -105,44 +125,58 @@ const saveTitle = () => {
   }
 }
 
-// 输出变量字典{列表}
-const outputVarSelections = computed(() => {
-  const selections: Record<string, SelectOption[]> = {}
-  if (!curSelectedNode.value) return selections
-  for (const hid of Object.keys(curSelectedNode.value.data.Connections.Outputs)) {
-    selections[hid] = recursiveFindVariables(nodeId.value, [], [], [], false, [], false, [hid]).map(
-      (item) => mapVarItemToSelect(item),
-    )
+const _VarSelection = reactive<Record<string, any>>({})
+const getOrCreateVarSelection = (path: string[]) => {
+  const key = path.join('/')
+  if (!(key in _VarSelection)) {
+    if (path[0] === 'Self') {
+      recursiveFindVariables(nodeId.value, [path[1]], [], false, [], false, []).map((item) =>
+        mapVarItemToSelect(item),
+      )
+    }
   }
-  return selections
-})
+  return _VarSelection[key]
+}
+provide('getOrCreateVarSelection', getOrCreateVarSelection)
 
-// 自身可用变量
-const selfVarSelections = computed(() => {
-  return recursiveFindVariables(nodeId.value, ['self'], [], [], false, [], false, []).map((item) =>
-    mapVarItemToSelect(item),
-  )
-})
+// // 输出变量字典{列表}
+// const outputVarSelections = computed(() => {
+//   const selections: Record<string, SelectOption[]> = {}
+//   if (!curSelectedNode.value) return selections
+//   for (const hid of Object.keys(curSelectedNode.value.data.Connections.Outputs)) {
+//     selections[hid] = recursiveFindVariables(nodeId.value, [], [], false, [], false, [hid]).map(
+//       (item) => mapVarItemToSelect(item),
+//     )
+//   }
+//   return selections
+// })
 
-const selfVarSelections_aouput = computed(() => {
-  return recursiveFindVariables(nodeId.value, ['attach_output'], [], [], false, [], false, []).map(
-    (item) => mapVarItemToSelect(item),
-  )
-})
+// // 自身可用变量
+// const selfVarSelections = computed(() => {
+//   return recursiveFindVariables(nodeId.value, ['self'], [], false, [], false, []).map((item) =>
+//     mapVarItemToSelect(item),
+//   )
+// })
 
-// 输入链接的节点
-const inputNodes = computed<Record<string, InputNode[]>>(() => {
-  const preNodes: Record<string, InputNode[]> = {}
-  if (!curSelectedNode.value) return preNodes
-  for (const hid of Object.keys(curSelectedNode.value.data.Connections.Inputs)) {
-    const edges = getHandleConnections({ id: hid, type: 'target', nodeId: nodeId.value })
-    preNodes[hid] = edges.map((edge) => ({
-      srcid: edge.source,
-      srcohid: edge.sourceHandle,
-    })) as InputNode[]
-  }
-  return preNodes
-})
+// const selfVarSelections_aouput = computed(() => {
+//   return recursiveFindVariables(nodeId.value, ['attach_output'], [], false, [], false, []).map(
+//     (item) => mapVarItemToSelect(item),
+//   )
+// })
+
+// // 输入链接的节点
+// const inputNodes = computed<Record<string, InputNode[]>>(() => {
+//   const preNodes: Record<string, InputNode[]> = {}
+//   if (!curSelectedNode.value) return preNodes
+//   for (const hid of Object.keys(curSelectedNode.value.data.Connections.Inputs)) {
+//     const edges = getHandleConnections({ id: hid, type: 'target', nodeId: nodeId.value })
+//     preNodes[hid] = edges.map((edge) => ({
+//       srcid: edge.source,
+//       srcohid: edge.sourceHandle,
+//     })) as InputNode[]
+//   }
+//   return preNodes
+// })
 
 // 渲染节点payload的内置变量
 const payloadInnerComponents = computed<Record<string, VNode>>(() => {
@@ -161,6 +195,19 @@ const payloadInnerComponents = computed<Record<string, VNode>>(() => {
 const payloadComponents = computed<Record<string, VNode>>(() => {
   const components: Record<string, VNode> = {}
   if (!curSelectedNode.value) return components
+
+  for (const pid in curSelectedNode.value.data.Payloads.Order) {
+    const contextWpid = {
+      ...curSelectedNode.value.data,
+      [PAYLOADS_ID]: () => pid,
+    }
+    const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType!
+    components[pid] = h(DynamicComponent, {
+      componentData: AllUIComponents.value[uitype],
+      dataContext: contextWpid,
+    })
+  }
+
   curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
     const payload = curSelectedNode.value!.data.Payloads.ById[pid]
     let component: VNode | null = null
@@ -267,23 +314,6 @@ onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
 
-import { type BaseComponent } from '@/schemas/plugin_schemas'
-import {
-  PropVarType,
-  THIS_NODE_DATA,
-  VFOR_DATA,
-  CONNECT_OPTIONS,
-  TYPE_VFOR,
-  TYPE_VALUE,
-  TYPE_VBIND,
-  TYPE_VMODEL,
-  TYPE_CONDITION_COMPARE,
-  TYPE_CONDITION_LOGICAL,
-  TYPE_CONDITION_DIRECT,
-  TYPE_CONDITION_VBIND,
-  TYPE_CONDITION_VALUE,
-} from '@/schemas/plugin_schemas'
-
 const formData = ref({
   user: {
     name: 'John',
@@ -337,8 +367,8 @@ const inputComponent: BaseComponent = {
         },
         Slots: {
           default: {
-            Type: TYPE_VALUE,
-            Data: 'hhhhhh',
+            Type: TYPE_VBIND,
+            Data: [CONNECT_OPTIONS, 'Self', 'self'],
           },
         },
       },
@@ -491,7 +521,7 @@ const inputComponent: BaseComponent = {
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <DynamicComponent :componentData="inputComponent" :dataContext="formData" />
+        <!-- <DynamicComponent :componentData="inputComponent" :dataContext="formData" /> -->
         <pre>{{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <pre>{{ nodedatatext }}</pre>

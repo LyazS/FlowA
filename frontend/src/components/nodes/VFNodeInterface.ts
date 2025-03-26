@@ -62,7 +62,7 @@ interface VFNodeHandleDataANode {
 
 interface VFNodeHandleData {
   Type: VFNodeConnectionDataType
-  InputKey?: string
+  HandleId?: string
   ANode?: Record<string, VFNodeHandleDataANode>
   Path?: (string | number)[]
   UseIds?: string[]

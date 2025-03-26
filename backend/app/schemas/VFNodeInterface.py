@@ -74,7 +74,7 @@ class VFNodeHandleDataANode(BaseModel):
 
 class VFNodeHandleData(BaseModel):
     Type: VFNodeConnectionDataType
-    InputKey: Optional[str] = None
+    HandleId: Optional[str] = None
     ANode: Optional[Dict[str, VFNodeHandleDataANode]] = None
     Path: Optional[List[Union[str, int]]] = None
     UseIds: Optional[List[str]] = None
@@ -85,8 +85,10 @@ class VFNodeHandleData(BaseModel):
             raise ValueError("FromInner连接类型必须包含Path字段")
         if self.Type == VFNodeConnectionDataType.FromAttached and not self.ANode:
             raise ValueError("FromAttached连接类型必须包含ANode字段")
-        if self.Type == VFNodeConnectionDataType.FromOuter and not self.InputKey:
-            raise ValueError("FromOuter连接类型必须包含InputKey字段")
+        if self.Type == VFNodeConnectionDataType.FromOuter and not self.HandleId:
+            raise ValueError("FromOuter连接类型必须包含HandleId字段")
+        if self.Type == VFNodeConnectionDataType.FromParent and not self.HandleId:
+            raise ValueError("FromParent连接类型必须包含HandleId字段")
         return self
 
 

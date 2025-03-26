@@ -11,6 +11,8 @@ export const TYPE_CONDITION_LOGICAL = '@CONDITION_LOGICAL@' as const
 export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
 export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
 export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
+export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
+export const RESULTS_ID = '@RESULTS_ID@' as const
 export enum PropVarType {
   Value = '@VALUE@',
   VBind = '@VBIND@',

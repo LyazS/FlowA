@@ -53,7 +53,7 @@ class ExamNestNode(FATaskNode):
             "Self",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromOuter,
-                InputKey="input",
+                HandleId="input",
             ),
         )
         thisnode.add_handle_data(
@@ -69,17 +69,31 @@ class ExamNestNode(FATaskNode):
                 },
             ),
         )
+
+        thisnode.add_payload(
+            VFNodeContentData(
+                Label="文本内容",
+                Type="String",
+                Key="text",
+                Data="Hello World",
+                UiType="@/Exam Provider/UI_TEXT_INPUT",
+            ),
+            payload_id="D_EXAM_TEXT",
+        )
         thisnode.add_handle_data(
             VFNodeConnectionType.Attach,
             "Attach",
             VFNodeHandleData(
-                Type=VFNodeConnectionDataType.FromAttached,
-                ANode={
-                    "aoutput": VFNodeHandleDataANode(
-                        ConnectionType=VFNodeConnectionType.Self,
-                        HandleId="self",
-                    )
-                },
+                Type=VFNodeConnectionDataType.FromInner,
+                Path=["Payloads", "ById", "D_EXAM_TEXT", "Data"],
+            ),
+        )
+        thisnode.add_handle_data(
+            VFNodeConnectionType.Attach,
+            "Attach",
+            VFNodeHandleData(
+                Type=VFNodeConnectionDataType.FromOuter,
+                HandleId="input",
             ),
         )
 

@@ -18,7 +18,6 @@ interface NodeUtilsInstance {
     nid: string,
     findSelf: string[],
     findAttach: string[],
-    findNext: string[],
     findAllInput: boolean,
     findInput: string[],
     findAllOutput: boolean,
@@ -51,7 +50,6 @@ export const useNodeUtils = () => {
     for (const c_data of Object.values(connection) as Array<VFNodeHandleData>) {
       if (c_data.Type === VFNodeConnectionDataType.FromInner && c_data.Path) {
         const pathData = resolveValueByPath(c_data.Path, thenode.data)
-        // const pathData = thenode.data[c_data.path[0]]?.byId?.[c_data.path[1]]
         if (pathData) {
           result.push({
             nodeId: nid,
@@ -62,18 +60,16 @@ export const useNodeUtils = () => {
             dtype: pathData.Type,
           })
         }
-      } else if (c_data.Type === VFNodeConnectionDataType.FromOuter && c_data.InputKey) {
+      } else if (c_data.Type === VFNodeConnectionDataType.FromOuter && c_data.HandleId) {
         const edges = getHandleConnections({
-          id: c_data.InputKey,
+          id: c_data.HandleId,
           type: 'target',
           nodeId: nid,
         })
 
         for (const edge of Object.values(edges)) {
           result.push(
-            ...recursiveFindVariables(edge.source, [], [], [], false, [], false, [
-              edge.sourceHandle!,
-            ]),
+            ...recursiveFindVariables(edge.source, [], [], false, [], false, [edge.sourceHandle!]),
           )
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromAttached && c_data.ANode) {
@@ -84,20 +80,27 @@ export const useNodeUtils = () => {
             result.push(
               ...recursiveFindVariables(
                 anode.id,
-                c_data.atype === 'attached_node_output' ? ['self'] : [],
-                [],
-                [],
+                ConnectionType === VFNodeConnectionType.Self ? [HandleId] : [],
+                ConnectionType === VFNodeConnectionType.Attach ? [HandleId] : [],
                 false,
-                [],
-                c_data.atype === 'attached_node_input',
-                [],
+                ConnectionType === VFNodeConnectionType.Inputs ? [HandleId] : [],
+                false,
+                ConnectionType === VFNodeConnectionType.Outputs ? [HandleId] : [],
               ),
             )
           }
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromParent && thenode.parentNode) {
         result.push(
-          ...recursiveFindVariables(thenode.parentNode, [], ['attach'], [], true, [], false, []),
+          ...recursiveFindVariables(
+            thenode.parentNode,
+            [],
+            [c_data.HandleId!],
+            false,
+            [],
+            false,
+            [],
+          ),
         )
       }
     }
@@ -108,7 +111,6 @@ export const useNodeUtils = () => {
     nid: string,
     findSelf: string[] = [],
     findAttach: string[] = [],
-    findNext: string[] = [],
     findAllInput: boolean = false,
     findInput: string[] = [],
     findAllOutput: boolean = false,
@@ -123,18 +125,17 @@ export const useNodeUtils = () => {
     let processedFindOutput = [...findOutput]
 
     if (findAllInput) {
-      processedFindInput = Object.keys(thenodedata.connections.inputs)
+      processedFindInput = Object.keys(thenodedata.Connections.Inputs)
     }
     if (findAllOutput) {
-      processedFindOutput = Object.keys(thenodedata.connections.outputs)
+      processedFindOutput = Object.keys(thenodedata.Connections.Outputs)
     }
 
     ;[
-      { type: VFNodeConnectionType.self, handles: findSelf },
-      { type: VFNodeConnectionType.attach, handles: findAttach },
-      { type: VFNodeConnectionType.next, handles: findNext },
-      { type: VFNodeConnectionType.inputs, handles: processedFindInput },
-      { type: VFNodeConnectionType.outputs, handles: processedFindOutput },
+      { type: VFNodeConnectionType.Self, handles: findSelf },
+      { type: VFNodeConnectionType.Attach, handles: findAttach },
+      { type: VFNodeConnectionType.Inputs, handles: processedFindInput },
+      { type: VFNodeConnectionType.Outputs, handles: processedFindOutput },
     ].forEach(({ type, handles }) => {
       handles.forEach((hid) => {
         result.push(...findVarFromIO(nid, type, hid))

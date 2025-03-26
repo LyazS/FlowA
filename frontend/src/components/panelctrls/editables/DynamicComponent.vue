@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, resolveComponent, computed, Fragment, type VNode, type PropType } from 'vue'
+import { h, resolveComponent, inject, computed, Fragment, type VNode, type PropType } from 'vue'
 import type {
   BaseComponent,
   NormalComponent,
@@ -45,6 +45,7 @@ const props = defineProps({
     default: () => ({}),
   },
 })
+const getOrCreateVarSelection = inject<(path: string[]) => any>('getOrCreateVarSelection')!
 
 // 数据路径解析依赖数组第一个元素来决定使用dataContext还是otherContext
 // 数据路径解析器
@@ -66,9 +67,7 @@ const resolveValueByPath = (path: (string | number)[]): any => {
   } else if (resolvePath[0] === VFOR_DATA) {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[VFOR_DATA])
   } else if (resolvePath[0] === CONNECT_OPTIONS) {
-    return resolvePath
-      .slice(1)
-      .reduce((acc, key) => acc?.[key], props.otherContext[CONNECT_OPTIONS])
+    return getOrCreateVarSelection(resolvePath.slice(1) as string[])
   }
 }
 

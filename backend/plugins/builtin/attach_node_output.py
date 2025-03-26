@@ -53,7 +53,7 @@ class ExamNode(FATaskNode):
             "self",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromOuter,
-                InputKey="input",
+                HandleId="input",
             ),
         )
         return thisnode
