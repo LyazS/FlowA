@@ -1,5 +1,6 @@
 // 特殊定义
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
+export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
 export const VFOR_DATA = '@VFOR_DATA@' as const
 export const CONNECT_OPTIONS = '@CONNECT_OPTIONS@' as const
 export const TYPE_VFOR = '@VFOR@' as const

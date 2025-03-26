@@ -14,6 +14,7 @@ import type {
 import {
   PropVarType,
   THIS_NODE_DATA,
+  CONTEXT_FUNCTION,
   VFOR_DATA,
   CONNECT_OPTIONS,
   TYPE_VFOR,
@@ -40,32 +41,30 @@ const props = defineProps({
     type: Object as PropType<Record<string, any>>,
     required: true,
   },
-  otherContext: {
-    type: Object as PropType<Record<string, any>>,
-    default: () => ({}),
-  },
 })
 const getOrCreateVarSelection = inject<(path: string[]) => any>('getOrCreateVarSelection')!
 
-// 数据路径解析依赖数组第一个元素来决定使用dataContext还是otherContext
+// 数据路径解析依赖数组第一个元素来决定使用字典
 // 数据路径解析器
 const resolveValueByPath = (path: (string | number)[]): any => {
+  // 解析路径
   const resolvePath: (string | number)[] = []
   for (const element of path) {
     if (
       resolvePath[0] === THIS_NODE_DATA &&
-      props.dataContext.hasOwnProperty(element) &&
-      typeof props.dataContext[element] === 'function'
+      props.dataContext[CONTEXT_FUNCTION].hasOwnProperty(element) &&
+      typeof props.dataContext[CONTEXT_FUNCTION][element] === 'function'
     ) {
-      resolvePath.push(...props.dataContext[element]())
+      resolvePath.push(...props.dataContext[CONTEXT_FUNCTION][element]())
     } else {
       resolvePath.push(element)
     }
   }
+  // 根据路径取值
   if (resolvePath[0] === THIS_NODE_DATA) {
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext)
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
   } else if (resolvePath[0] === VFOR_DATA) {
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.otherContext[VFOR_DATA])
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
   } else if (resolvePath[0] === CONNECT_OPTIONS) {
     return getOrCreateVarSelection(resolvePath.slice(1) as string[])
   }
@@ -73,22 +72,24 @@ const resolveValueByPath = (path: (string | number)[]): any => {
 
 // 数据更新器
 const updateValueByPath = (path: (string | number)[], value: any) => {
+  // 解析路径
   const resolvePath: (string | number)[] = []
   for (const element of path) {
     if (
       resolvePath[0] === THIS_NODE_DATA &&
-      props.dataContext.hasOwnProperty(element) &&
-      typeof props.dataContext[element] === 'function'
+      props.dataContext[CONTEXT_FUNCTION].hasOwnProperty(element) &&
+      typeof props.dataContext[CONTEXT_FUNCTION][element] === 'function'
     ) {
-      resolvePath.push(...props.dataContext[element]())
+      resolvePath.push(...props.dataContext[CONTEXT_FUNCTION][element]())
     } else {
       resolvePath.push(element)
     }
   }
+  // 根据路径更新值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
     const lastKey = resolvePath.pop()!
-    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext)
+    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
     if (parent) parent[lastKey] = value
   } else {
     console.error('Unsupported update path')
@@ -190,17 +191,16 @@ const handleForLoop = (config: ForLoopComponent) => {
     ? items.map((item, index) => [index, item])
     : Object.entries(items)
 
-  const nodes = entries.map(([key, value]) => {
+  const nodes = entries.map(([key, item]) => {
     const loopContext = {
       ...props.dataContext,
-      [indexLabel]: () => [key],
-    }
-
-    const loop_otherContext = {
-      ...props.otherContext,
+      [CONTEXT_FUNCTION]: {
+        ...props.dataContext[CONTEXT_FUNCTION],
+        [indexLabel]: () => [key],
+      },
       [VFOR_DATA]: {
-        ...props.otherContext[VFOR_DATA],
-        [itemLabel]: value,
+        ...props.dataContext[VFOR_DATA],
+        [itemLabel]: item,
         [indexLabel]: key,
       },
     }
@@ -211,8 +211,13 @@ const handleForLoop = (config: ForLoopComponent) => {
           key: key,
           componentData: template,
           dataContext: loopContext,
-          otherContext: loop_otherContext,
         })
+      })
+    } else {
+      return h(resolveComponent('DynamicComponent'), {
+        key: key,
+        componentData: config.Template,
+        dataContext: loopContext,
       })
     }
   })
@@ -257,17 +262,11 @@ const processedSlots = computed(() => {
             :key="idx"
             :component-data="item"
             :data-context="dataContext"
-            :other-context="otherContext"
           />
         </template>
 
         <!-- 处理单个组件类型插槽内容 -->
-        <DynamicComponent
-          v-else
-          :component-data="slotContent"
-          :data-context="dataContext"
-          :other-context="otherContext"
-        />
+        <DynamicComponent v-else :component-data="slotContent" :data-context="dataContext" />
       </template>
     </component>
   </template>

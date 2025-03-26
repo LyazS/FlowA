@@ -1,5 +1,5 @@
 from typing import Literal, Union, List, Dict, Any, Optional
-from pydantic import BaseModel, Field, model_validator, ValidationError
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from enum import StrEnum
 
 
@@ -66,19 +66,19 @@ class PropVarBase(BaseModel):
 
 
 class ValueProp(PropVarBase):
-    Type: Literal[PropVarType.Value]
+    Type: Literal[PropVarType.Value] = PropVarType.Value
     Data: Any = Field(..., description="静态值")
 
 
 class VBindProp(PropVarBase):
-    Type: Literal[PropVarType.VBind]
+    Type: Literal[PropVarType.VBind] = PropVarType.VBind
     Data: List[Union[str, int]] = Field(
         ..., description="数据路径数组，如 ['path', 'to', 'data']", min_length=1
     )
 
 
 class VModelProp(PropVarBase):
-    Type: Literal[PropVarType.VModel]
+    Type: Literal[PropVarType.VModel] = PropVarType.VModel
     Data: List[Union[str, int]] = Field(
         ..., description="双向绑定路径数组", min_length=1
     )
@@ -128,39 +128,27 @@ class ComponentType(StrEnum):
 
 
 class BaseComponent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     Type: str
     IfCondition: Optional[Condition] = None
-
-    @model_validator(mode="after")
-    def validate_special_components(self):
-        comp_type = self.Type
-        error_fields = []
-
-        # 检查特殊组件是否包含非法字段
-        if comp_type in (ComponentType.VALUE, ComponentType.VBIND):
-            if hasattr(self, "Props") and self.Props is not None:
-                error_fields.append("Props")
-            if hasattr(self, "Slots") and self.Slots is not None:
-                error_fields.append("Slots")
-            if comp_type == ComponentType.VBIND and not isinstance(self.Data, list):
-                raise ValueError("@VBIND@ requires list path data")
-
-        if comp_type == ComponentType.VFOR:
-            if hasattr(self, "Props") and self.Props is not None:
-                error_fields.append("Props")
-            if hasattr(self, "Slots") and self.Slots is not None:
-                error_fields.append("Slots")
-
-        if error_fields:
-            raise ValueError(
-                f"{comp_type} component cannot have {', '.join(error_fields)}"
-            )
-        return self
+    pass
 
 
 class NormalComponent(BaseComponent):
+    Type: str  # 任意字符串
     Props: Optional[Dict[str, PropVar]] = None
-    Slots: Optional[Dict[str, Union["BaseComponent", List["BaseComponent"]]]] = None
+    Slots: Optional[Dict[str, Union["UnionComponent", List["UnionComponent"]]]] = None
+
+    @model_validator(mode="after")
+    def check_type_conflict(self):
+        # 确保 Type 不与其他子类的固定值冲突
+        forbidden_types = [ComponentType.VFOR, ComponentType.VBIND, ComponentType.VALUE]
+        if self.Type in forbidden_types:
+            raise ValueError(
+                f"NormalComponent Type cannot be {self.Type}, "
+                "use specific component types instead"
+            )
+        return self
 
 
 class SpanComponent(BaseComponent):
@@ -169,16 +157,32 @@ class SpanComponent(BaseComponent):
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
 
+    @field_validator("Type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        allowed = [ComponentType.VBIND, ComponentType.VALUE]
+        if v not in allowed:
+            raise ValueError(f"Type must be one of {allowed}")
+        return v
+
 
 class ForLoopComponent(BaseComponent):
-    Type: Literal[ComponentType.VFOR]
+    Type: str = Field(default=ComponentType.VFOR, frozen=True)  # 固定值但允许校验
     Items: ReadOnlyPropVar
     ItemLabel: str
     IndexLabel: str
-    Template: Union["BaseComponent", List["BaseComponent"]]
+    Template: Union["UnionComponent", List["UnionComponent"]]
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
 
+    @field_validator("Type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        if v != ComponentType.VFOR:
+            raise ValueError(f"Type must be {ComponentType.VFOR}")
+        return v
 
-# 最终联合类型
-BaseComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]
+
+UnionComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]
+for cls in [ForLoopComponent, SpanComponent, NormalComponent]:
+    cls.model_rebuild()

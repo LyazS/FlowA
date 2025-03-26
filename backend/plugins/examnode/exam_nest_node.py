@@ -72,6 +72,16 @@ class ExamNestNode(FATaskNode):
 
         thisnode.add_payload(
             VFNodeContentData(
+                Label="测试vfor",
+                Type="List",
+                Key="items",
+                Data=[],
+                UiType="@/Exam Provider/TEST_VFOR_ITEMS",
+            ),
+            payload_id="TEST_VFOR_ITEMS",
+        )
+        thisnode.add_payload(
+            VFNodeContentData(
                 Label="文本内容",
                 Type="String",
                 Key="text",

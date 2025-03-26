@@ -29,6 +29,11 @@
       "Type": "FANode",
       "Name": "@/Exam Provider/UI_TEXT_INPUT",
       "Component": "examui.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/Exam Provider/TEST_VFOR_ITEMS",
+      "Component": "examui_vfor.py"
     }
   ]
 }

@@ -5,6 +5,17 @@ from app.uisdk.VFUISchemas import (
     FunctionProp,
     PropVarType,
     BaseComponent,
+    ForLoopComponent,
+    ConditionType,
+    CompareCondition,
+    LogicalCondition,
+    DirectCondition,
+    Condition,
+    ComponentType,
+    NormalComponent,
+    SpanComponent,
+    ReadOnlyPropVar,
+    UnionComponent,
 )
 from app.uisdk.VFUIDefine import *
 from app.uisdk.NButton import NButton

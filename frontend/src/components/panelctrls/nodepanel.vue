@@ -39,6 +39,7 @@ import { type BaseComponent } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
   THIS_NODE_DATA,
+  CONTEXT_FUNCTION,
   VFOR_DATA,
   CONNECT_OPTIONS,
   TYPE_VFOR,
@@ -196,81 +197,85 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
   const components: Record<string, VNode> = {}
   if (!curSelectedNode.value) return components
 
-  for (const pid in curSelectedNode.value.data.Payloads.Order) {
-    const contextWpid = {
-      ...curSelectedNode.value.data,
-      [PAYLOADS_ID]: () => pid,
+  for (const pid of curSelectedNode.value.data.Payloads.Order) {
+    const context = {
+      [THIS_NODE_DATA]: curSelectedNode.value.data,
+      [CONTEXT_FUNCTION]: {
+        [PAYLOADS_ID]: () => [pid],
+      },
     }
-    const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType!
-    components[pid] = h(DynamicComponent, {
-      componentData: AllUIComponents.value[uitype],
-      dataContext: contextWpid,
-    })
+    const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType
+    if (uitype) {
+      components[pid] = h(DynamicComponent, {
+        componentData: AllUIComponents.value[uitype],
+        dataContext: context,
+      })
+    }
   }
 
-  curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
-    const payload = curSelectedNode.value!.data.Payloads.ById[pid]
-    let component: VNode | null = null
-    switch (
-      payload.UiType
-      // case 'textinput':
-      //   component = h(editable_textinput, { pid })
-      //   break
-      // case 'codeeditor':
-      //   component = h(editable_codeeditor, { pid })
-      //   break
-      // case 'vars_input':
-      //   component = h(editable_vars_input, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //   })
-      //   break
-      // case 'llmprompts':
-      //   component = h(editable_llmprompts, { pid })
-      //   break
-      // case 'iter_input':
-      //   component = h(editable_iter_input, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //   })
-      //   break
-      // case 'aggregatebranch':
-      //   component = h(editable_aggregatebranchs, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //     inputNodes: inputNodes.value,
-      //   })
-      //   break
-      // case 'llmmodel':
-      //   component = h(editable_llmmodel, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //   })
-      //   break
-      // case 'httprequests':
-      //   component = h(editable_httprequests, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //   })
-      //   break
-      // case 'httptimeout':
-      //   component = h(editable_httptimeout, { nodeId: nodeId.value, pid })
-      //   break
-      // case 'retry_config':
-      //   component = h(editable_retryconfig, {
-      //     pid,
-      //     selfVarSelections: selfVarSelections.value,
-      //   })
-      //   break
-      // case 'iterretryoutputs':
-      //   component = h(editable_iterretryoutputs, {
-      //     selfVarSelections: selfVarSelections.value,
-      //     selfVarSelections_aoutput: selfVarSelections_aouput.value,
-      //   })
-    ) {
-    }
-    if (component) components[pid] = component
-  })
+  // curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
+  //   const payload = curSelectedNode.value!.data.Payloads.ById[pid]
+  //   let component: VNode | null = null
+  //   switch (
+  //     payload.UiType
+  //   ) {
+  //     case 'textinput':
+  //       component = h(editable_textinput, { pid })
+  //       break
+  //     case 'codeeditor':
+  //       component = h(editable_codeeditor, { pid })
+  //       break
+  //     case 'vars_input':
+  //       component = h(editable_vars_input, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //       })
+  //       break
+  //     case 'llmprompts':
+  //       component = h(editable_llmprompts, { pid })
+  //       break
+  //     case 'iter_input':
+  //       component = h(editable_iter_input, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //       })
+  //       break
+  //     case 'aggregatebranch':
+  //       component = h(editable_aggregatebranchs, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //         inputNodes: inputNodes.value,
+  //       })
+  //       break
+  //     case 'llmmodel':
+  //       component = h(editable_llmmodel, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //       })
+  //       break
+  //     case 'httprequests':
+  //       component = h(editable_httprequests, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //       })
+  //       break
+  //     case 'httptimeout':
+  //       component = h(editable_httptimeout, { nodeId: nodeId.value, pid })
+  //       break
+  //     case 'retry_config':
+  //       component = h(editable_retryconfig, {
+  //         pid,
+  //         selfVarSelections: selfVarSelections.value,
+  //       })
+  //       break
+  //     case 'iterretryoutputs':
+  //       component = h(editable_iterretryoutputs, {
+  //         selfVarSelections: selfVarSelections.value,
+  //         selfVarSelections_aoutput: selfVarSelections_aouput.value,
+  //       })
+  //   }
+  //   if (component) components[pid] = component
+  // })
   return components
 })
 
@@ -313,154 +318,6 @@ onMounted(() => {})
 onUnmounted(() => {
   if (isEditing) isEditing.value = false
 })
-
-const formData = ref({
-  user: {
-    name: 'John',
-    hobbies: ['reading', 'running', 'traveling', 'painting', 'photography'],
-    brother: {
-      John: "John's brother",
-      Mary: "Mary's brother",
-      Tom: "Tom's brother",
-      Jerry: "Jerry's brother",
-      Lily: "Lily's brother",
-    },
-  },
-})
-const inputComponent: BaseComponent = {
-  Type: 'NFlex',
-  Props: {
-    vertical: {
-      Type: PropVarType.Value,
-      Data: true,
-    },
-  },
-  Slots: {
-    default: [
-      // 输入框组件
-      {
-        Type: 'NInput',
-        Props: {
-          size: {
-            Type: PropVarType.Value,
-            Data: 'large',
-          },
-          placeholder: {
-            Type: PropVarType.Value,
-            Data: 'Please enter your name',
-          },
-          value: {
-            Type: PropVarType.VModel,
-            Data: [THIS_NODE_DATA, 'user', 'name'],
-          },
-        },
-      },
-
-      // 直接文本显示
-      {
-        Type: 'NText',
-        Props: {
-          size: {
-            Type: PropVarType.Value,
-            Data: 'large',
-          },
-        },
-        Slots: {
-          default: {
-            Type: TYPE_VBIND,
-            Data: [CONNECT_OPTIONS, 'Self', 'self'],
-          },
-        },
-      },
-
-      // 混合内容显示
-      {
-        Type: 'NText',
-        Props: {
-          size: {
-            Type: PropVarType.Value,
-            Data: 'large',
-          },
-        },
-        Slots: {
-          default: [
-            {
-              Type: TYPE_VALUE,
-              Data: 'Hello, ',
-            },
-            {
-              Type: TYPE_VBIND,
-              Data: [THIS_NODE_DATA, 'user', 'name'],
-            },
-          ],
-        },
-      },
-
-      // 循环结构
-      {
-        Type: TYPE_VFOR,
-        Items: {
-          Type: PropVarType.VBind,
-          Data: [THIS_NODE_DATA, 'user', 'brother'],
-        },
-        ItemLabel: 'hobby',
-        IndexLabel: 'index',
-        Template: [
-          {
-            Type: 'NInput',
-            Props: {
-              size: {
-                Type: PropVarType.Value,
-                Data: 'small',
-              },
-              placeholder: {
-                Type: PropVarType.Value,
-                Data: 'Please enter',
-              },
-              value: {
-                Type: PropVarType.VModel,
-                Data: [THIS_NODE_DATA, 'user', 'brother', 'index'],
-              },
-            },
-          },
-          {
-            Type: 'NTag',
-            // IfCondition: {
-            //   Type: TYPE_CONDITION_COMPARE,
-            //   Left: {
-            //     Type: PropVarType.VBind,
-            //     Data: [VFOR_DATA, 'index'],
-            //   },
-            //   Operator: '>=',
-            //   Right: {
-            //     Type: PropVarType.Value,
-            //     Data: 3,
-            //   },
-            // },
-            Props: {
-              type: {
-                Type: PropVarType.Value,
-                Data: 'success',
-              },
-            },
-            Slots: {
-              default: [
-                {
-                  Type: TYPE_VBIND,
-                  Data: [VFOR_DATA, 'index'],
-                },
-                {
-                  Type: TYPE_VBIND,
-                  Data: [VFOR_DATA, 'hobby'],
-                },
-              ],
-            },
-          },
-        ],
-      },
-    ],
-  },
-}
 </script>
 
 <template>
@@ -516,12 +373,11 @@ const inputComponent: BaseComponent = {
           :key="`${nodeId}-payloads`"
         >
           <template v-for="(comp, pid) in payloadComponents" :key="`${nodeId}-${pid}-payloads`">
-            <component v-if="comp" :is="comp" :style="{ 'padding-bottom': '10px' }" />
+            <component v-if="comp" :is="comp" />
           </template>
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <!-- <DynamicComponent :componentData="inputComponent" :dataContext="formData" /> -->
         <pre>{{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <pre>{{ nodedatatext }}</pre>
