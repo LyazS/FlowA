@@ -205,7 +205,7 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
       },
     }
     const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType
-    if (uitype) {
+    if (uitype && AllUIComponents.value.hasOwnProperty(uitype)) {
       components[pid] = h(DynamicComponent, {
         componentData: AllUIComponents.value[uitype],
         dataContext: context,

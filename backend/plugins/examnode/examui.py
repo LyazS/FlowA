@@ -4,7 +4,7 @@ from app.uisdk import *
 class ExamUI(NInput):
     def __init__(self):
         super().__init__(
-            type="info",
+            type="textarea",
             value=VModelProp(
                 Type=PropVarType.VModel,
                 Data=[
@@ -17,6 +17,8 @@ class ExamUI(NInput):
             ),
             size="small",
             clearable=True,
+            showCount=True,
+            autosize=NInputAutoSize(minRows=3, maxRows=5),
         )
 
 

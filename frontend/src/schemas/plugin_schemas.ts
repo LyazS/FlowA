@@ -14,10 +14,16 @@ export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
 export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
 export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
 export const RESULTS_ID = '@RESULTS_ID@' as const
+export enum FunctionPropType {
+  ADDITEM = '@ADDITEM@',
+  REMOVEITEM = '@REMOVEITEM@',
+  APPENDITEM = '@APPENDITEM@',
+}
 export enum PropVarType {
   Value = '@VALUE@',
   VBind = '@VBIND@',
   VModel = '@VMODEL@',
+  Function = '@FUNCTION@',
 }
 // 类型定义
 export interface PropVarBase {
@@ -39,7 +45,15 @@ export interface VModelProp extends PropVarBase {
   Data: (string | number)[]
 }
 
-export type PropVar = ValueProp | VBindProp | VModelProp
+export interface FunctionProp extends PropVarBase {
+  Type: PropVarType.Function
+  Func: FunctionPropType
+  ItemKey?: string | number
+  DefaultValue?: any
+  DstPath: (string | number)[]
+}
+
+export type PropVar = ValueProp | VBindProp | VModelProp | FunctionProp
 export type ReadOnlyPropVar = ValueProp | VBindProp
 export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
 

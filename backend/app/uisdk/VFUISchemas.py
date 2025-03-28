@@ -58,7 +58,7 @@ class PropVarType(StrEnum):
     Value = "@VALUE@"
     VBind = "@VBIND@"
     VModel = "@VMODEL@"
-    FUNCTION = "@FUNCTION@"
+    Function = "@FUNCTION@"
 
 
 class PropVarBase(BaseModel):
@@ -84,11 +84,24 @@ class VModelProp(PropVarBase):
     )
 
 
+class FunctionPropType(StrEnum):
+    ADDITEM = "@ADDITEM@"
+    REMOVEITEM = "@REMOVEITEM@"
+    APPENDITEM = "@APPENDITEM@"
+    pass
+
+
 class FunctionProp(PropVarBase):
-    Type: Literal[PropVarType.FUNCTION]
+    Type: Literal[PropVarType.Function]
+    Func: FunctionPropType = Field(..., description="函数类型")
+    ItemKey: Optional[str] = Field(None, description="item的key")
+    DefaultValue: Any = Field(None, description="默认数据")
+    DstPath: List[Union[str, int]] = Field(
+        ..., description="目标路径数组", min_length=1
+    )
 
 
-PropVar = Union[ValueProp, VBindProp, VModelProp]
+PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
 ReadOnlyPropVar = Union[ValueProp, VBindProp]
 
 
@@ -149,6 +162,24 @@ class NormalComponent(BaseComponent):
                 "use specific component types instead"
             )
         return self
+
+    @field_validator("Props", mode="before")
+    @classmethod
+    def convert_props(
+        cls, props: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, PropVar]]:
+        """在验证前自动将普通 dict 转换为 PropVar 格式"""
+        if props is None:
+            return None
+        result_props = {}
+        for key, value in props.items():
+            if value is None:
+                continue
+            if not isinstance(value, PropVar):
+                result_props[key] = ValueProp(Data=value)
+            else:
+                result_props[key] = value
+        return result_props
 
 
 class SpanComponent(BaseComponent):

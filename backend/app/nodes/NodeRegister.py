@@ -16,6 +16,13 @@ FLOWA_NODE_REGISTRY: Dict[str, VFProvider] = {}
 FANODE_REGISTRY: Dict[str, FABaseNode] = {}  # 节点类型
 
 
+def path_to_module_str(path):
+    # 处理路径并去除扩展名
+    module_path = Path(path).with_suffix("")
+    # 转换为Posix格式的字符串，并将斜杠替换为点
+    return module_path.as_posix().replace("/", ".")
+
+
 def register_plugins():
     plugins_dir = Path(__file__).parent.parent.parent / "plugins"
 
@@ -37,9 +44,7 @@ def register_plugins():
             # 注册节点
             for plugin in config.Plugins:
                 if plugin.Type == "FANode":
-                    module_path = (
-                        f"plugins.{plugin_dir.name}.{Path(plugin.Execute).stem}"
-                    )
+                    module_path = f"plugins.{plugin_dir.name}.{path_to_module_str(plugin.Execute)}"
                     module = importlib.import_module(module_path)
                     node_class: FABaseNode = getattr(module, "EXPORT_NODE")
                     FANODE_REGISTRY[plugin.Name] = node_class
@@ -52,9 +57,7 @@ def register_plugins():
             # 注册UI组件
             for ui_plugin in config.UIPlugins:
                 if ui_plugin.Type == "FANode":
-                    module_path = (
-                        f"plugins.{plugin_dir.name}.{Path(ui_plugin.Component).stem}"
-                    )
+                    module_path = f"plugins.{plugin_dir.name}.{path_to_module_str(ui_plugin.Component)}"
                     module = importlib.import_module(module_path)
                     ui_component = getattr(module, "EXPORT_UI")
                     ui_plugin.Component = ui_component()

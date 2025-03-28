@@ -1,24 +1,33 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Literal
 from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
-from app.uisdk.VFUIUtils import cvtProps2PropVar
 
 
 class NButton(NormalComponent):
     def __init__(
         self,
-        block: bool | PropVar,
-        bordered: bool | PropVar,
-        circle: bool | PropVar,
-        color: str | PropVar,
-        dashed: bool | PropVar,
-        ghost: bool | PropVar,
-        round: bool | PropVar,
-        size: str | PropVar,
-        strong: bool | PropVar,
-        text: bool | PropVar,
-        text_color: str | PropVar,
-        type: str | PropVar,
-        level: str = "",
+        block: bool | PropVar = False,
+        bordered: bool | PropVar = True,
+        circle: bool | PropVar = False,
+        color: Optional[
+            str | PropVar
+        ] = None,  # 按钮颜色（支持形如 #FFF， #FFFFFF， yellow，rgb(0, 0, 0) 的颜色）
+        dashed: bool | PropVar = False,
+        ghost: bool | PropVar = False,
+        iconPlacement: PropVar | Literal["left", "right"] = "left",
+        round: bool | PropVar = False,
+        size: PropVar | Literal["tiny", "small", "medium", "large"] = "medium",
+        strong: bool | PropVar = False,
+        text: bool | PropVar = False,
+        text_color: Optional[
+            str | PropVar
+        ] = None,  # 按钮文字颜色（支持形如 #FFF， #FFFFFF， yellow，rgb(0, 0, 0) 的颜色）
+        type: (
+            PropVar
+            | Literal[
+                "default", "tertiary", "primary", "success", "info", "warning", "error"
+            ]
+        ) = "default",
+        level: Optional[Literal["secondary", "tertiary", "quaternary"]] = None,
         slots: Optional[Dict] = None,
     ):
         Props = {
@@ -28,6 +37,7 @@ class NButton(NormalComponent):
             "color": color,
             "dashed": dashed,
             "ghost": ghost,
+            "icon-placement": iconPlacement,
             "round": round,
             "size": size,
             "strong": strong,
@@ -44,7 +54,7 @@ class NButton(NormalComponent):
 
         super().__init__(
             Type="NButton",
-            Props=cvtProps2PropVar(Props),
+            Props=Props,
             Slots=slots,
         )
         pass

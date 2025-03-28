@@ -22,7 +22,29 @@
       "Description": "attach node (output)",
       "Execute": "attach_node_output.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/attach_node_next",
+      "Label": "附属节点（下一步）",
+      "Description": "attach node (next)",
+      "Execute": "attach_node_next.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/code_interpreter",
+      "Label": "代码解释器",
+      "Description": "code interpreter",
+      "Execute": "code_interpreter.py",
+      "Setting": null
     }
   ],
-  "UIPlugins": []
+  "UIPlugins": [
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_INPUT_VARS",
+      "Component": "UI_Components/InputVars.py"
+    }
+  ]
 }

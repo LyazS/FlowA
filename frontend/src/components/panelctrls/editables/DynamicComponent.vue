@@ -9,10 +9,12 @@ import type {
   LogicalCondition,
   PropVar,
   ReadOnlyPropVar,
+  FunctionProp,
   Condition,
 } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
+  FunctionPropType,
   THIS_NODE_DATA,
   CONTEXT_FUNCTION,
   VFOR_DATA,
@@ -27,6 +29,7 @@ import {
   TYPE_CONDITION_VBIND,
   TYPE_CONDITION_VALUE,
 } from '@/schemas/plugin_schemas'
+import { DYNAMIC_COMPONENTS_MAP, DYNAMIC_ICONS_MAP } from '@/schemas/dynamic_components_map'
 
 defineOptions({
   name: 'DynamicComponent',
@@ -44,9 +47,8 @@ const props = defineProps({
 })
 const getOrCreateVarSelection = inject<(path: string[]) => any>('getOrCreateVarSelection')!
 
-// 数据路径解析依赖数组第一个元素来决定使用字典
 // 数据路径解析器
-const resolveValueByPath = (path: (string | number)[]): any => {
+const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
   // 解析路径
   const resolvePath: (string | number)[] = []
   for (const element of path) {
@@ -60,6 +62,12 @@ const resolveValueByPath = (path: (string | number)[]): any => {
       resolvePath.push(element)
     }
   }
+  return resolvePath
+}
+
+// 数据获取依赖数组第一个元素来决定使用字典
+const getValueByPath = (path: (string | number)[]): any => {
+  const resolvePath: (string | number)[] = resolveDataPath(path)
   // 根据路径取值
   if (resolvePath[0] === THIS_NODE_DATA) {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
@@ -70,21 +78,10 @@ const resolveValueByPath = (path: (string | number)[]): any => {
   }
 }
 
-// 数据更新器
+// 数据更新
 const updateValueByPath = (path: (string | number)[], value: any) => {
   // 解析路径
-  const resolvePath: (string | number)[] = []
-  for (const element of path) {
-    if (
-      resolvePath[0] === THIS_NODE_DATA &&
-      props.dataContext[CONTEXT_FUNCTION].hasOwnProperty(element) &&
-      typeof props.dataContext[CONTEXT_FUNCTION][element] === 'function'
-    ) {
-      resolvePath.push(...props.dataContext[CONTEXT_FUNCTION][element]())
-    } else {
-      resolvePath.push(element)
-    }
-  }
+  const resolvePath: (string | number)[] = resolveDataPath(path)
   // 根据路径更新值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -94,6 +91,58 @@ const updateValueByPath = (path: (string | number)[], value: any) => {
   } else {
     console.error('Unsupported update path')
   }
+}
+
+// Object类型数据添加项
+const addItemByPath = (path: (string | number)[], key: string | number, value: any) => {
+  // 解析路径
+  const resolvePath: (string | number)[] = resolveDataPath(path)
+  // 根据路径添加值
+  const firstKey = resolvePath.shift()!
+  if (firstKey === THIS_NODE_DATA) {
+    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
+    if (parent) {
+      parent[key] = value
+      return
+    }
+  }
+  console.error('Unsupported add path')
+}
+// Object|Array类型数据删除项
+const removeItemByPath = (path: (string | number)[], key: string | number) => {
+  // 解析路径
+  const resolvePath: (string | number)[] = resolveDataPath(path)
+  // 根据路径删除值
+  const firstKey = resolvePath.shift()!
+  if (firstKey === THIS_NODE_DATA) {
+    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
+    if (parent) {
+      if (Array.isArray(parent) && typeof key === 'number') {
+        parent.splice(key as number, 1)
+        return
+      } else if (typeof parent === 'object') {
+        delete parent[key]
+        return
+      }
+    }
+  }
+  console.error('Unsupported delete path')
+}
+
+// Array类型数据添加项
+const appendItemByPath = (path: (string | number)[], value: any) => {
+  // 解析路径
+  const resolvePath: (string | number)[] = resolveDataPath(path)
+  // 根据路径插入值
+  const firstKey = resolvePath.shift()!
+  if (firstKey === THIS_NODE_DATA) {
+    const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
+    if (parent) {
+      parent.push(value)
+      return
+    }
+  }
+  console.error('Unsupported append path')
 }
 
 // 属性处理器
@@ -110,12 +159,41 @@ const processedProps = computed(() => {
         propsObj[propName] = prop.Data
         break
       case PropVarType.VBind:
-        propsObj[propName] = resolveValueByPath(prop.Data)
+        propsObj[propName] = getValueByPath(prop.Data)
         break
       case PropVarType.VModel:
-        propsObj[propName] = resolveValueByPath(prop.Data)
+        propsObj[propName] = getValueByPath(prop.Data)
         eventsObj[`onUpdate:${propName}`] = (val: any) => {
           updateValueByPath(prop.Data, val)
+        }
+        break
+      case PropVarType.Function:
+        const prop_Function = prop as FunctionProp
+        if (prop_Function.Func == FunctionPropType.ADDITEM) {
+          if (!!prop_Function.ItemKey && !!prop_Function.DefaultValue) {
+            propsObj[propName] = () =>
+              addItemByPath(
+                prop_Function.DstPath,
+                prop_Function.ItemKey!,
+                prop_Function.DefaultValue!,
+              )
+          } else {
+            console.error('Invalid add item function')
+          }
+        } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
+          if (!!prop_Function.ItemKey) {
+            propsObj[propName] = () =>
+              removeItemByPath(prop_Function.DstPath, prop_Function.ItemKey!)
+          } else {
+            console.error('Invalid remove item function')
+          }
+        } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
+          if (!!prop_Function.DefaultValue) {
+            propsObj[propName] = () =>
+              appendItemByPath(prop_Function.DstPath, prop_Function.DefaultValue!)
+          } else {
+            console.error('Invalid append item function')
+          }
         }
         break
     }
@@ -132,7 +210,7 @@ const resolveCondition = (condition?: Condition): boolean => {
     case PropVarType.Value:
       return !!condition.Data
     case PropVarType.VBind:
-      return !!resolveValueByPath(condition.Data)
+      return !!getValueByPath(condition.Data)
     case TYPE_CONDITION_COMPARE:
       return handleCompare(condition)
     case TYPE_CONDITION_LOGICAL:
@@ -144,7 +222,7 @@ const resolveCondition = (condition?: Condition): boolean => {
 
 const handleCompare = (config: CompareCondition): boolean => {
   const getValue = (source: ReadOnlyPropVar) =>
-    source.Type === PropVarType.VBind ? resolveValueByPath(source.Data) : source.Data
+    source.Type === PropVarType.VBind ? getValueByPath(source.Data) : source.Data
 
   const left = getValue(config.Left)
   const right = getValue(config.Right)
@@ -168,7 +246,7 @@ const handleLogical = (config: LogicalCondition) => {
 
 // 获取Span组件的值
 const getSpanValue = (config: SpanComponent): any => {
-  return config.Type === PropVarType.VBind ? resolveValueByPath(config.Data) : config.Data
+  return config.Type === PropVarType.VBind ? getValueByPath(config.Data) : config.Data
 }
 
 // 循环处理器
@@ -179,7 +257,7 @@ const handleForLoop = (config: ForLoopComponent) => {
   if (config.Items.Type === PropVarType.Value) {
     items = config.Items.Data
   } else if (config.Items.Type === PropVarType.VBind) {
-    items = resolveValueByPath(config.Items.Data)
+    items = getValueByPath(config.Items.Data)
   }
   const itemLabel = config.ItemLabel || '@Item'
   const indexLabel = config.IndexLabel || '@Index'
@@ -235,6 +313,21 @@ const processedSlots = computed(() => {
     {} as Record<string, BaseComponent | BaseComponent[]>,
   )
 })
+
+const resolveNormalComponent = (componentType: string) => {
+  if (componentType === 'DynamicComponent') {
+    return resolveComponent('DynamicComponent')
+  } else if (DYNAMIC_COMPONENTS_MAP.hasOwnProperty(componentType)) {
+    const component = DYNAMIC_COMPONENTS_MAP[componentType]
+    return component
+  } else if (DYNAMIC_ICONS_MAP.hasOwnProperty(componentType)) {
+    const component = DYNAMIC_ICONS_MAP[componentType]
+    return component
+  } else {
+    console.error(`Unsupported component type: ${componentType}`)
+    return null
+  }
+}
 </script>
 
 <template>
@@ -252,7 +345,7 @@ const processedSlots = computed(() => {
     </span>
 
     <!-- 处理普通组件 -->
-    <component v-else :is="resolveComponent(componentData.Type)" v-bind="processedProps">
+    <component v-else :is="resolveNormalComponent(componentData.Type)" v-bind="processedProps">
       <!-- 递归渲染每个插槽 -->
       <template v-for="(slotContent, name) in processedSlots" #[name]="slotProps">
         <!-- 处理数组类型插槽内容 -->

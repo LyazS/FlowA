@@ -1,27 +1,49 @@
-from typing import List, Dict, Optional
-from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
-from app.uisdk.VFUIUtils import cvtProps2PropVar
+from pydantic import BaseModel
+from typing import List, Dict, Optional, Literal
+from app.uisdk.VFUISchemas import PropVar, ReadOnlyPropVar, NormalComponent
+
+
+class NInputAutoSize(BaseModel):
+    minRows: Optional[int] = None
+    maxRows: Optional[int] = None
+    pass
 
 
 class NInput(NormalComponent):
     def __init__(
         self,
-        type: str | PropVar,
-        value: str | PropVar,
-        size: str | PropVar,
-        clearable: bool | PropVar,
+        autosize: bool | NInputAutoSize | ReadOnlyPropVar = False,
+        clearable: bool | ReadOnlyPropVar = False,
+        defaultValue: Optional[str | ReadOnlyPropVar] = None,
+        maxlength: Optional[int | ReadOnlyPropVar] = None,
+        minlength: Optional[int | ReadOnlyPropVar] = None,
+        round: bool | ReadOnlyPropVar = False,
+        rows: Optional[int | ReadOnlyPropVar] = None,
+        showCount: bool | ReadOnlyPropVar = False,
+        showPasswordOn: Optional[
+            ReadOnlyPropVar | Literal["click", "mousedown"]
+        ] = None,
+        size: ReadOnlyPropVar | Literal["tiny", "small", "medium", "large"] = "medium",
+        type: ReadOnlyPropVar | Literal["text", "password", "textarea"] = "text",
+        value: Optional[str | PropVar] = None,
         slots: Optional[Dict] = None,
     ):
         super().__init__(
             Type="NInput",
-            Props=cvtProps2PropVar(
-                {
-                    "type": type,
-                    "value": value,
-                    "size": size,
-                    "clearable": clearable,
-                }
-            ),
+            Props={
+                "autosize": autosize,
+                "clearable": clearable,
+                "default-value": defaultValue,
+                "maxlength": maxlength,
+                "minlength": minlength,
+                "round": round,
+                "rows": rows,
+                "show-count": showCount,
+                "show-password-on": showPasswordOn,
+                "size": size,
+                "type": type,
+                "value": value,
+            },
             Slots=slots,
         )
         pass
