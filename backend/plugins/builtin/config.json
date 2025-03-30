@@ -36,7 +36,7 @@
       "Name": "@/FlowABuiltin/code_interpreter",
       "Label": "代码解释器",
       "Description": "code interpreter",
-      "Execute": "code_interpreter.py",
+      "Execute": "code_interpreter/code_interpreter.py",
       "Setting": null
     }
   ],
@@ -44,7 +44,17 @@
     {
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_INPUT_VARS",
-      "Component": "UI_Components/InputVars.py"
+      "Component": "UI_Components/UI_InputVars.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_CODE_EDITOR",
+      "Component": "UI_Components/UI_CodeEditor.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_CODE_OUTPUT",
+      "Component": "code_interpreter/UI_CodeOutput.py"
     }
   ]
 }

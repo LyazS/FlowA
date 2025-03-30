@@ -42,7 +42,7 @@ interface VFNodeContentDataConfig {
 interface VFNodeContentData {
   Label: string
   Type: string
-  Key: string
+  // Key: string
   Data: any
   Config?: VFNodeContentDataConfig
   Hid?: string

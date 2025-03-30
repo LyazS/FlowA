@@ -187,7 +187,7 @@ class VFNode(VFNodeData):
             handle_id,
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromInner,
-                Path=["Results", rid],
+                Path=["Results", "ById", rid],
                 UseIds=[],
             ),
             data_id,

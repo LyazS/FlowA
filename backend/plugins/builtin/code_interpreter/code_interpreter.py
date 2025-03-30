@@ -12,10 +12,13 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentData,
     VFNodeHandleData,
     VFNodeConnectionDataType,
+    VFNodeContentDataConfig,
 )
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
+
+from ..UI_Components.UI_InputVars import DefaultInputVar
 
 
 class CodeInterpreter(FATaskNode):
@@ -47,13 +50,46 @@ class CodeInterpreter(FATaskNode):
             VFNodeContentData(
                 Label="输入变量",
                 Type="List",
-                Key="invars",
-                Data=[],
+                # Key="invars",
+                Data=[
+                    DefaultInputVar(key="arg1", valueStr="hello"),
+                    DefaultInputVar(key="arg2", valueStr="world"),
+                ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),
             payload_id="D_INPUT_VARS",
         )
+        thisnode.add_payload(
+            VFNodeContentData(
+                Label="Python代码",
+                Type="String",
+                # Key="code",
+                Data='#You can use numpy and cv2 by import\ndef main(arg1, arg2):\n    # do something\n    return {\n        "output1": arg1,\n        "output2": arg2\n    }',
+                UiType="@/FlowABuiltin/UI_CODE_EDITOR",
+                Config=VFNodeContentDataConfig(Language="python"),
+            ),
+            payload_id="D_CODE",
+        )
 
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="output1",
+                Type="String",
+                # Key="output",
+                Data="",
+            ),
+            handle_id="output",
+        )
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="output2",
+                Type="String",
+                # Key="output",
+                Data="",
+            ),
+            handle_id="output",
+        )
+        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_CODE_OUTPUT")
         return thisnode
 
 

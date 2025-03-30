@@ -3,6 +3,7 @@ from app.uisdk.VFUISchemas import (
     VBindProp,
     VModelProp,
     FunctionProp,
+    FunctionPropType,
     PropVarType,
     BaseComponent,
     ForLoopComponent,
@@ -17,6 +18,18 @@ from app.uisdk.VFUISchemas import (
     ReadOnlyPropVar,
     PropVar,
     UnionComponent,
+    ADDITEM_FuncProp,
+    REMOVEITEM_FuncProp,
+    APPENDITEM_FuncProp,
+    ADDRESULT2OUT_FuncProp,
+    REMOVERESULT4OUT_FuncProp,
+    OPENEDITOR_FuncProp,
+    FuncArg_ADDITEM,
+    FuncArg_REMOVEITEM,
+    FuncArg_APPENDITEM,
+    FuncArg_ADDRESULT2OUT,
+    FuncArg_REMOVERESULT4OUT,
+    FuncArg_OPENEDITOR,
 )
 from app.uisdk.VFUIDefine import *
 from app.uisdk.NButton import NButton

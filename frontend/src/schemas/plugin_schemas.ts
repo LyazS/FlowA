@@ -1,3 +1,5 @@
+import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
+
 // 特殊定义
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
 export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
@@ -18,6 +20,9 @@ export enum FunctionPropType {
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
   APPENDITEM = '@APPENDITEM@',
+  ADDRESULT2OUT = '@ADDRESULT2OUT@',
+  REMOVERESULT4OUT = '@REMOVERESULT4OUT@',
+  OPENEDITOR = '@OPENEDITOR@',
 }
 export enum PropVarType {
   Value = '@VALUE@',
@@ -48,9 +53,15 @@ export interface VModelProp extends PropVarBase {
 export interface FunctionProp extends PropVarBase {
   Type: PropVarType.Function
   Func: FunctionPropType
-  ItemKey?: string | number
-  DefaultValue?: any
-  DstPath: (string | number)[]
+  Arg: {
+    DstPath?: (string | number)[]
+    ItemKey?: ReadOnlyPropVar
+    ItemValue?: any
+    HandleId?: string
+    Result?: any
+    ResultId?: ReadOnlyPropVar
+    Language?: CodeEditorLanguage
+  }
 }
 
 export type PropVar = ValueProp | VBindProp | VModelProp | FunctionProp
@@ -85,10 +96,19 @@ export interface ForLoopComponent {
   IndexLabel: string
   Template: BaseComponent | BaseComponent[]
   IfCondition?: Condition
+  // 特殊绑定组件不允许有子组件
+  Slots?: never
+  Props?: never
 }
 
 // 条件判断系统
 export type Condition = CompareCondition | LogicalCondition | DirectCondition
+
+// 直接条件（修改为与Python模型一致的结构）
+export interface DirectCondition {
+  Type: typeof TYPE_CONDITION_DIRECT
+  Condition: ReadOnlyPropVar
+}
 
 // 比较条件
 export interface CompareCondition {
@@ -104,9 +124,6 @@ export interface LogicalCondition {
   Operator: 'AND' | 'OR'
   Conditions: Condition[]
 }
-
-// 直接值或绑定
-export type DirectCondition = ValueProp<any> | VBindProp
 
 // 插件系统保持不变
 export interface VFPluginSetting {

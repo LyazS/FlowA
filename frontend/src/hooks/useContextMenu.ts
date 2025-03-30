@@ -7,6 +7,7 @@ import { useVFlowRequest } from '@/services/useVFlowRequest'
 import { VFNodeFlag } from '@/components/nodes/VFNodeInterface'
 import { VFNode } from '@/components/nodes/VFNodeClass'
 import Logger from '@/utils/Logger'
+import { selectedNodeId } from '@/hooks/useVFlowAttribute'
 
 // 定义菜单项类型
 interface MenuItem {
@@ -103,7 +104,9 @@ export const useContextMenu = (): ContextMenuInstance => {
     logger.debug('删除节点')
     const node = event_cm.node
     const parent_id = node.parentNode
-
+    if (node.id == selectedNodeId.value) {
+      selectedNodeId.value = null
+    }
     removeNodeFromVFlow(node)
     buildNestedNodeGraph()
     recursiveUpdateNodeSize(parent_id)

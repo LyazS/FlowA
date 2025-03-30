@@ -56,7 +56,7 @@ export const useNodeUtils = () => {
             nlabel: thenodedata.Label,
             dpath: c_data.Path,
             dlabel: pathData.Label,
-            dkey: pathData.Key,
+            // dkey: pathData.Key,
             dtype: pathData.Type,
           })
         }
@@ -147,7 +147,8 @@ export const useNodeUtils = () => {
 
   const mapVarItemToSelect = (item: VarItem4Selections): SelectOption => {
     return {
-      label: `${item.nlabel}/${item.dlabel}/${item.dkey}/${item.dtype}`,
+      // label: `${item.nlabel}/${item.dlabel}/${item.dkey}/${item.dtype}`,
+      label: `${item.nlabel}/${item.dlabel}/${item.dtype}`,
       value: `${item.nodeId}/${item.dpath[0]}/${item.dpath[1]}`,
     }
   }

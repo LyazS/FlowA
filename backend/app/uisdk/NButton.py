@@ -1,5 +1,15 @@
 from typing import List, Dict, Optional, Literal
-from app.uisdk.VFUISchemas import PropVar, PropVarType, NormalComponent
+from app.uisdk.VFUISchemas import (
+    FunctionProp,
+    PropVar,
+    PropVarType,
+    NormalComponent,
+    ConditionType,
+    CompareCondition,
+    LogicalCondition,
+    DirectCondition,
+    Condition,
+)
 
 
 class NButton(NormalComponent):
@@ -28,7 +38,10 @@ class NButton(NormalComponent):
             ]
         ) = "default",
         level: Optional[Literal["secondary", "tertiary", "quaternary"]] = None,
+        onClick: Optional[FunctionProp] = None,
+        style: Optional[Dict] = None,
         slots: Optional[Dict] = None,
+        IfCondition: Optional[Condition] = None,
     ):
         Props = {
             "block": block,
@@ -44,6 +57,8 @@ class NButton(NormalComponent):
             "text": text,
             "text_color": text_color,
             "type": type,
+            "onClick": onClick,
+            "style": style,
         }
         if level == "secondary":
             Props["secondary"] = True
@@ -56,5 +71,6 @@ class NButton(NormalComponent):
             Type="NButton",
             Props=Props,
             Slots=slots,
+            IfCondition=IfCondition,
         )
         pass

@@ -65,6 +65,7 @@ class PropVarBase(BaseModel):
     Type: PropVarType
 
 
+# ================= 基础属性类型 =================
 class ValueProp(PropVarBase):
     Type: Literal[PropVarType.Value] = PropVarType.Value
     Data: Any = Field(..., description="静态值")
@@ -84,22 +85,106 @@ class VModelProp(PropVarBase):
     )
 
 
+# ================= 函数类型增强 =================
 class FunctionPropType(StrEnum):
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
     APPENDITEM = "@APPENDITEM@"
+    ADDRESULT2OUT = "@ADDRESULT2OUT@"
+    REMOVERESULT4OUT = "@REMOVERESULT4OUT@"
+    OPENEDITOR = "@OPENEDITOR@"
     pass
 
 
-class FunctionProp(PropVarBase):
-    Type: Literal[PropVarType.Function]
-    Func: FunctionPropType = Field(..., description="函数类型")
-    ItemKey: Optional[str] = Field(None, description="item的key")
-    DefaultValue: Any = Field(None, description="默认数据")
+class FuncArg_ADDITEM(BaseModel):
     DstPath: List[Union[str, int]] = Field(
         ..., description="目标路径数组", min_length=1
     )
+    ItemValue: Any = Field(None, description="item的value数据")
+    ItemKey: "ReadOnlyPropVar" = Field(..., description="item的key")
+    pass
 
+
+class FuncArg_REMOVEITEM(BaseModel):
+    DstPath: List[Union[str, int]] = Field(
+        ..., description="目标路径数组", min_length=1
+    )
+    ItemKey: "ReadOnlyPropVar" = Field(..., description="item的key")
+    pass
+
+
+class FuncArg_APPENDITEM(BaseModel):
+    DstPath: List[Union[str, int]] = Field(
+        ..., description="目标路径数组", min_length=1
+    )
+    ItemValue: Any = Field(None, description="item的value数据")
+    pass
+
+
+class FuncArg_ADDRESULT2OUT(BaseModel):
+    HandleId: str = Field(..., description="输出句柄id")
+    Result: Any = Field(..., description="结果数据")
+    pass
+
+
+class FuncArg_REMOVERESULT4OUT(BaseModel):
+    ResultId: "ReadOnlyPropVar" = Field(..., description="结果id")
+    pass
+
+
+class FuncArg_OPENEDITOR(BaseModel):
+    Language: str = Field(..., description="编辑器语言")
+    DstPath: List[Union[str, int]] = Field(
+        ..., description="目标路径数组", min_length=1
+    )
+    pass
+
+
+# ================= 强化函数属性 =================
+class _FunctionPropBase(PropVarBase):
+    Type: Literal[PropVarType.Function] = PropVarType.Function
+    Func: FunctionPropType
+
+
+class ADDITEM_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.ADDITEM] = FunctionPropType.ADDITEM
+    Arg: FuncArg_ADDITEM
+
+
+class REMOVEITEM_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.REMOVEITEM] = FunctionPropType.REMOVEITEM
+    Arg: FuncArg_REMOVEITEM
+
+
+class APPENDITEM_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.APPENDITEM] = FunctionPropType.APPENDITEM
+    Arg: FuncArg_APPENDITEM
+
+
+class ADDRESULT2OUT_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.ADDRESULT2OUT] = FunctionPropType.ADDRESULT2OUT
+    Arg: FuncArg_ADDRESULT2OUT
+
+
+class REMOVERESULT4OUT_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.REMOVERESULT4OUT] = FunctionPropType.REMOVERESULT4OUT
+    Arg: FuncArg_REMOVERESULT4OUT
+
+
+class OPENEDITOR_FuncProp(_FunctionPropBase):
+    Func: Literal[FunctionPropType.OPENEDITOR] = FunctionPropType.OPENEDITOR
+    Arg: FuncArg_OPENEDITOR
+
+
+# ================= 最终联合类型 =================
+FunctionProp = Union[
+    ADDITEM_FuncProp,
+    REMOVEITEM_FuncProp,
+    APPENDITEM_FuncProp,
+    ADDRESULT2OUT_FuncProp,
+    REMOVERESULT4OUT_FuncProp,
+    OPENEDITOR_FuncProp,
+]
 
 PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
 ReadOnlyPropVar = Union[ValueProp, VBindProp]
@@ -113,20 +198,20 @@ class ConditionType(StrEnum):
 
 
 class CompareCondition(BaseModel):
-    Type: Literal[ConditionType.Compare]
+    Type: Literal[ConditionType.Compare] = ConditionType.Compare
     Left: ReadOnlyPropVar
     Operator: Literal["==", "!=", ">", "<", ">=", "<="]
     Right: ReadOnlyPropVar
 
 
 class LogicalCondition(BaseModel):
-    Type: Literal[ConditionType.Logical]
+    Type: Literal[ConditionType.Logical] = ConditionType.Logical
     Operator: Literal["AND", "OR"]
     Conditions: List["Condition"]
 
 
 class DirectCondition(BaseModel):
-    Type: Literal[ConditionType.Direct]
+    Type: Literal[ConditionType.Direct] = ConditionType.Direct
     Condition: ReadOnlyPropVar
 
 

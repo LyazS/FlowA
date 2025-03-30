@@ -40,7 +40,7 @@ class ExamNode(FATaskNode):
             VFNodeContentData(
                 Label="文本内容",
                 Type="String",
-                Key="text",
+                # Key="text",
                 Data="Hello World",
                 UiType="@/Exam Provider/UI_TEXT_INPUT",
             ),

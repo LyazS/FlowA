@@ -68,7 +68,7 @@ const options = reactive({
 const { curSelectedNode } = useCurSelectedNode()
 const codelabel = computed(() => {
   if (!selectedNodeId.value) return ''
-  return `${curSelectedNode.value.data.label}`
+  return `${curSelectedNode.value.data.Label}`
 })
 const codedata = computed({
   get() {

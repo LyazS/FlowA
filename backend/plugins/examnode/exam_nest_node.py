@@ -74,7 +74,7 @@ class ExamNestNode(FATaskNode):
             VFNodeContentData(
                 Label="测试vfor",
                 Type="List",
-                Key="items",
+                # Key="items",
                 Data=[],
                 UiType="@/Exam Provider/TEST_VFOR_ITEMS",
             ),
@@ -84,7 +84,7 @@ class ExamNestNode(FATaskNode):
             VFNodeContentData(
                 Label="文本内容",
                 Type="String",
-                Key="text",
+                # Key="text",
                 Data="Hello World",
                 UiType="@/Exam Provider/UI_TEXT_INPUT",
             ),

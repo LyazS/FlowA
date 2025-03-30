@@ -10,7 +10,7 @@ export interface VarItem4Selections {
   nlabel: string
   dpath: (string | number)[]
   dlabel: string
-  dkey: string
+  // dkey: string
   dtype: string
 }
 

@@ -1,6 +1,15 @@
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Literal
-from app.uisdk.VFUISchemas import PropVar, ReadOnlyPropVar, NormalComponent
+from app.uisdk.VFUISchemas import (
+    PropVar,
+    ReadOnlyPropVar,
+    NormalComponent,
+    ConditionType,
+    CompareCondition,
+    LogicalCondition,
+    DirectCondition,
+    Condition,
+)
 
 
 class NInputAutoSize(BaseModel):
@@ -26,7 +35,9 @@ class NInput(NormalComponent):
         size: ReadOnlyPropVar | Literal["tiny", "small", "medium", "large"] = "medium",
         type: ReadOnlyPropVar | Literal["text", "password", "textarea"] = "text",
         value: Optional[str | PropVar] = None,
+        style: Optional[Dict] = None,
         slots: Optional[Dict] = None,
+        IfCondition: Optional[Condition] = None,
     ):
         super().__init__(
             Type="NInput",
@@ -43,7 +54,9 @@ class NInput(NormalComponent):
                 "size": size,
                 "type": type,
                 "value": value,
+                "style": style,
             },
             Slots=slots,
+            IfCondition=IfCondition,
         )
         pass

@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { h, resolveComponent, inject, computed, Fragment, type VNode, type PropType } from 'vue'
+import {
+  h,
+  resolveComponent,
+  inject,
+  computed,
+  Fragment,
+  type VNode,
+  type PropType,
+  type ComputedRef,
+} from 'vue'
 import type {
   BaseComponent,
   NormalComponent,
@@ -11,6 +20,7 @@ import type {
   ReadOnlyPropVar,
   FunctionProp,
   Condition,
+  ValueProp,
 } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
@@ -29,7 +39,21 @@ import {
   TYPE_CONDITION_VBIND,
   TYPE_CONDITION_VALUE,
 } from '@/schemas/plugin_schemas'
-import { DYNAMIC_COMPONENTS_MAP, DYNAMIC_ICONS_MAP } from '@/schemas/dynamic_components_map'
+import {
+  DYNAMIC_COMPONENTS_MAP,
+  DYNAMIC_FA_COMPONENTS_MAP,
+  DYNAMIC_ICONS_MAP,
+} from '@/schemas/dynamic_components_map'
+import { VFNode } from '@/components/nodes/VFNodeClass'
+import {
+  isEditorMode,
+  isEditing,
+  isShowCodeEditor,
+  CodeEditorPath,
+  CodeEditorLangType,
+} from '@/hooks/useVFlowAttribute'
+import { type SelectOption } from 'naive-ui'
+import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 
 defineOptions({
   name: 'DynamicComponent',
@@ -45,7 +69,8 @@ const props = defineProps({
     required: true,
   },
 })
-const getOrCreateVarSelection = inject<(path: string[]) => any>('getOrCreateVarSelection')!
+const getOrCreateVarSelection =
+  inject<(path: string[]) => ComputedRef<SelectOption[]>>('getOrCreateVarSelection')!
 
 // 数据路径解析器
 const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
@@ -74,7 +99,12 @@ const getValueByPath = (path: (string | number)[]): any => {
   } else if (resolvePath[0] === VFOR_DATA) {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
   } else if (resolvePath[0] === CONNECT_OPTIONS) {
-    return getOrCreateVarSelection(resolvePath.slice(1) as string[])
+    if (resolvePath.length === 3) {
+      return getOrCreateVarSelection(resolvePath.slice(1) as string[])
+    } else {
+      console.error('Invalid connect option path')
+      return null
+    }
   }
 }
 
@@ -145,9 +175,53 @@ const appendItemByPath = (path: (string | number)[], value: any) => {
   console.error('Unsupported append path')
 }
 
+// Results添加项
+const addItem2Results = (handleid: string, result: any) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.addResultWithConnection(result, handleid)
+    return
+  }
+  console.error('Unsupported append path')
+}
+// Results删除项
+const removeItem4Results = (rid: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.rmResultWithConnection(rid)
+    return
+  }
+  console.error('Unsupported remove path')
+}
+
+// 打开编辑器
+const openCodeEditor = (path: (string | number)[], lang: CodeEditorLanguage) => {
+  // 解析路径
+  const resolvePath: (string | number)[] = resolveDataPath(path)
+  // 根据路径打开编辑器
+  const firstKey = resolvePath.shift()!
+  if (firstKey === THIS_NODE_DATA) {
+    CodeEditorPath.value = ['data', ...resolvePath]
+    CodeEditorLangType.value = lang
+    isShowCodeEditor.value = true
+  }
+}
+const getPropValueFromReadOnlyPropVar = (prop: ReadOnlyPropVar): any => {
+  switch (prop.Type) {
+    case PropVarType.Value:
+      return prop.Data
+    case PropVarType.VBind:
+      return getValueByPath(prop.Data)
+    default:
+      return null
+  }
+}
+
 // 属性处理器
 const processedProps = computed(() => {
-  const propsObj: Record<string, any> = {}
+  const propsObj: Record<string, any> = {
+    disabled: !isEditorMode.value,
+  }
   const eventsObj: Record<string, Function> = {}
 
   for (const [propName, propVar] of Object.entries(
@@ -170,29 +244,48 @@ const processedProps = computed(() => {
       case PropVarType.Function:
         const prop_Function = prop as FunctionProp
         if (prop_Function.Func == FunctionPropType.ADDITEM) {
-          if (!!prop_Function.ItemKey && !!prop_Function.DefaultValue) {
+          const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
+          if (!!ItemKey && !!ItemValue && !!DstPath) {
             propsObj[propName] = () =>
-              addItemByPath(
-                prop_Function.DstPath,
-                prop_Function.ItemKey!,
-                prop_Function.DefaultValue!,
-              )
+              addItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey), ItemValue)
           } else {
             console.error('Invalid add item function')
           }
         } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
-          if (!!prop_Function.ItemKey) {
+          const { ItemKey, DstPath } = prop_Function.Arg
+          if (!!ItemKey && !!DstPath) {
             propsObj[propName] = () =>
-              removeItemByPath(prop_Function.DstPath, prop_Function.ItemKey!)
+              removeItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey))
           } else {
             console.error('Invalid remove item function')
           }
         } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
-          if (!!prop_Function.DefaultValue) {
-            propsObj[propName] = () =>
-              appendItemByPath(prop_Function.DstPath, prop_Function.DefaultValue!)
+          const { DstPath, ItemValue } = prop_Function.Arg
+          if (!!ItemValue && !!DstPath) {
+            propsObj[propName] = () => appendItemByPath(DstPath, ItemValue)
           } else {
             console.error('Invalid append item function')
+          }
+        } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
+          const { HandleId, Result } = prop_Function.Arg
+          if (!!HandleId && !!Result) {
+            propsObj[propName] = () => addItem2Results(HandleId, Result)
+          } else {
+            console.error('Invalid add result function')
+          }
+        } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
+          const { ResultId } = prop_Function.Arg
+          if (!!ResultId) {
+            propsObj[propName] = () => removeItem4Results(getPropValueFromReadOnlyPropVar(ResultId))
+          } else {
+            console.error('Invalid remove result function')
+          }
+        } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
+          const { DstPath, Language } = prop_Function.Arg
+          if (!!DstPath && !!Language) {
+            propsObj[propName] = () => openCodeEditor(DstPath, Language)
+          } else {
+            console.error('Invalid open code editor function')
           }
         }
         break
@@ -207,10 +300,8 @@ const resolveCondition = (condition?: Condition): boolean => {
   if (!condition) return true
 
   switch (condition.Type) {
-    case PropVarType.Value:
-      return !!condition.Data
-    case PropVarType.VBind:
-      return !!getValueByPath(condition.Data)
+    case TYPE_CONDITION_DIRECT:
+      return getPropValueFromReadOnlyPropVar(condition.Condition)
     case TYPE_CONDITION_COMPARE:
       return handleCompare(condition)
     case TYPE_CONDITION_LOGICAL:
@@ -221,11 +312,8 @@ const resolveCondition = (condition?: Condition): boolean => {
 }
 
 const handleCompare = (config: CompareCondition): boolean => {
-  const getValue = (source: ReadOnlyPropVar) =>
-    source.Type === PropVarType.VBind ? getValueByPath(source.Data) : source.Data
-
-  const left = getValue(config.Left)
-  const right = getValue(config.Right)
+  const left = getPropValueFromReadOnlyPropVar(config.Left)
+  const right = getPropValueFromReadOnlyPropVar(config.Right)
 
   const operators: Record<string, (a: any, b: any) => boolean> = {
     '==': (a, b) => a == b,
@@ -274,6 +362,7 @@ const handleForLoop = (config: ForLoopComponent) => {
       ...props.dataContext,
       [CONTEXT_FUNCTION]: {
         ...props.dataContext[CONTEXT_FUNCTION],
+        [itemLabel]: () => [item],
         [indexLabel]: () => [key],
       },
       [VFOR_DATA]: {
@@ -284,16 +373,16 @@ const handleForLoop = (config: ForLoopComponent) => {
     }
 
     if (Array.isArray(config.Template)) {
-      return config.Template.map((template) => {
+      return config.Template.map((template, index) => {
         return h(resolveComponent('DynamicComponent'), {
-          key: key,
+          key: `${indexLabel}-${key}-${index}`,
           componentData: template,
           dataContext: loopContext,
         })
       })
     } else {
       return h(resolveComponent('DynamicComponent'), {
-        key: key,
+        key: `${indexLabel}-${key}`,
         componentData: config.Template,
         dataContext: loopContext,
       })
@@ -318,11 +407,11 @@ const resolveNormalComponent = (componentType: string) => {
   if (componentType === 'DynamicComponent') {
     return resolveComponent('DynamicComponent')
   } else if (DYNAMIC_COMPONENTS_MAP.hasOwnProperty(componentType)) {
-    const component = DYNAMIC_COMPONENTS_MAP[componentType]
-    return component
+    return DYNAMIC_COMPONENTS_MAP[componentType]
+  } else if (DYNAMIC_FA_COMPONENTS_MAP.hasOwnProperty(componentType)) {
+    return DYNAMIC_FA_COMPONENTS_MAP[componentType]
   } else if (DYNAMIC_ICONS_MAP.hasOwnProperty(componentType)) {
-    const component = DYNAMIC_ICONS_MAP[componentType]
-    return component
+    return DYNAMIC_ICONS_MAP[componentType]
   } else {
     console.error(`Unsupported component type: ${componentType}`)
     return null
@@ -352,7 +441,7 @@ const resolveNormalComponent = (componentType: string) => {
         <template v-if="Array.isArray(slotContent)">
           <DynamicComponent
             v-for="(item, idx) in slotContent"
-            :key="idx"
+            :key="`slot-${name}-${idx}`"
             :component-data="item"
             :data-context="dataContext"
           />

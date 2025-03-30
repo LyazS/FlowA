@@ -1,5 +1,14 @@
 from typing import List, Dict, Optional
-from app.uisdk.VFUISchemas import PropVar, ReadOnlyPropVar, NormalComponent
+from app.uisdk.VFUISchemas import (
+    PropVar,
+    ReadOnlyPropVar,
+    NormalComponent,
+    ConditionType,
+    CompareCondition,
+    LogicalCondition,
+    DirectCondition,
+    Condition,
+)
 
 
 class NFlex(NormalComponent):
@@ -11,6 +20,7 @@ class NFlex(NormalComponent):
         wrap: bool | PropVar = True,
         style: Optional[Dict] = None,
         slots: Optional[Dict] = None,
+        IfCondition: Optional[Condition] = None,
     ):
         super().__init__(
             Type="NFlex",
@@ -22,4 +32,5 @@ class NFlex(NormalComponent):
                 "style": style,
             },
             Slots=slots,
+            IfCondition=IfCondition,
         )

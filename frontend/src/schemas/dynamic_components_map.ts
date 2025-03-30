@@ -143,8 +143,14 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   NSpace: NSpace,
 }
 
-import { Add, Close } from '@vicons/ionicons5'
+import RefVarSelect from '@/components/panelctrls/editables/RefVarSelect.vue'
+export const DYNAMIC_FA_COMPONENTS_MAP: Record<string, Component> = {
+  RefVarSelect: RefVarSelect,
+}
+
+import { Add, Close, CreateOutline } from '@vicons/ionicons5'
 export const DYNAMIC_ICONS_MAP: Record<string, Component> = {
   Add: Add,
   Close: Close,
+  CreateOutline: CreateOutline,
 }

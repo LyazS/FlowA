@@ -22,4 +22,4 @@ def replace_vars(text: str, input_args: Dict[str, str]) -> str:
 
 
 def getUuid():
-    return uuid7str()
+    return uuid7str().replace("-", "")

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   type Ref,
+  type ComputedRef,
   computed,
   ref,
   provide,
@@ -126,13 +127,15 @@ const saveTitle = () => {
   }
 }
 
-const _VarSelection = reactive<Record<string, any>>({})
+const _VarSelection = reactive<Record<string, ComputedRef<SelectOption[]>>>({})
 const getOrCreateVarSelection = (path: string[]) => {
   const key = path.join('/')
   if (!(key in _VarSelection)) {
     if (path[0] === 'Self') {
-      recursiveFindVariables(nodeId.value, [path[1]], [], false, [], false, []).map((item) =>
-        mapVarItemToSelect(item),
+      _VarSelection[key] = computed(() =>
+        recursiveFindVariables(nodeId.value, [path[1]], [], false, [], false, []).map((item) =>
+          mapVarItemToSelect(item),
+        ),
       )
     }
   }
@@ -207,6 +210,7 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
     const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType
     if (uitype && AllUIComponents.value.hasOwnProperty(uitype)) {
       components[pid] = h(DynamicComponent, {
+        key: `${nodeId.value}-${pid}-payloads`,
         componentData: AllUIComponents.value[uitype],
         dataContext: context,
       })
@@ -282,30 +286,43 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
 // 渲染输出的连接
 const outputsComponents = computed<VNode | null>(() => {
   if (!curSelectedNode.value) return null
-  const ouitype = curSelectedNode.value.data.Config.OutputsUiType
-  switch (ouitype) {
-    // case 'tagoutputs':
-    //   return h(editable_tagoutputs, {
-    //     outputVarSelections: outputVarSelections.value,
-    //   })
-    // case 'packoutputs':
-    //   return h(editable_packoutputs, {
-    //     nodeId: nodeId.value,
-    //     selfVarSelections: selfVarSelections_aouput.value,
-    //   })
-    // case 'retryoutputs':
-    //   return h(editable_retryoutputs, {
-    //     selfVarSelections: selfVarSelections_aouput.value,
-    //   })
-    // case 'condoutputs':
-    //   return h(editable_condoutputs, {
-    //     selfVarSelections: selfVarSelections.value,
-    //   })
-    // case 'codeoutputs':
-    //   return h(editable_codeoutputs, {})
-    default:
-      return null
+  const context = {
+    [THIS_NODE_DATA]: curSelectedNode.value.data,
+    [CONTEXT_FUNCTION]: {},
   }
+  const uitype = curSelectedNode.value.data.Config.OutputsUiType
+  if (uitype && AllUIComponents.value.hasOwnProperty(uitype)) {
+    return h(DynamicComponent, {
+      key: `${nodeId.value}-outputs`,
+      componentData: AllUIComponents.value[uitype],
+      dataContext: context,
+    })
+  }
+  return null
+  // const ouitype = curSelectedNode.value.data.Config.OutputsUiType
+  // switch (ouitype) {
+  //   case 'tagoutputs':
+  //     return h(editable_tagoutputs, {
+  //       outputVarSelections: outputVarSelections.value,
+  //     })
+  //   case 'packoutputs':
+  //     return h(editable_packoutputs, {
+  //       nodeId: nodeId.value,
+  //       selfVarSelections: selfVarSelections_aouput.value,
+  //     })
+  //   case 'retryoutputs':
+  //     return h(editable_retryoutputs, {
+  //       selfVarSelections: selfVarSelections_aouput.value,
+  //     })
+  //   case 'condoutputs':
+  //     return h(editable_condoutputs, {
+  //       selfVarSelections: selfVarSelections.value,
+  //     })
+  //   case 'codeoutputs':
+  //     return h(editable_codeoutputs, {})
+  //   default:
+  //     return null
+  // }
 })
 
 const nodedatatext = computed(() => {
