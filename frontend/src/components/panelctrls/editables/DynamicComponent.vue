@@ -101,11 +101,10 @@ const getValueByPath = (path: (string | number)[]): any => {
   } else if (resolvePath[0] === CONNECT_OPTIONS) {
     if (resolvePath.length === 3) {
       return getOrCreateVarSelection(resolvePath.slice(1) as string[])
-    } else {
-      console.error('Invalid connect option path')
-      return null
     }
   }
+  console.error('Invalid connect option path')
+  return null
 }
 
 // 数据更新

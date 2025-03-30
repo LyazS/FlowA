@@ -38,6 +38,14 @@
       "Description": "code interpreter",
       "Execute": "code_interpreter/code_interpreter.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/LLM_inference",
+      "Label": "LLM推理",
+      "Description": "LLM inference",
+      "Execute": "LLM_inference/LLM_inference.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
