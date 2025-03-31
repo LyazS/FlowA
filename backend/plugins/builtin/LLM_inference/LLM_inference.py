@@ -1,4 +1,6 @@
-from typing import List, Dict, Optional, TYPE_CHECKING, Any
+from typing import List, Dict, Optional, TYPE_CHECKING, Any, Literal
+from pydantic import BaseModel
+from enum import StrEnum
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.fanode import FANodeValidateNeed
@@ -19,6 +21,40 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
 from ..UI_Components.UI_InputVars import DefaultInputVar
+
+
+class LLMSettingType(StrEnum):
+    Const = "Const"
+    Null = "Null"
+    Ref = "Ref"
+
+
+LLMTypeOptions: List[SelectOptions] = [
+    SelectOptions(label="引用", value=LLMSettingType.Ref),
+    SelectOptions(label="常量", value=LLMSettingType.Const),
+]
+LLMTypeOptionsWnull: List[SelectOptions] = [
+    SelectOptions(label="引用", value=LLMSettingType.Ref),
+    SelectOptions(label="常量", value=LLMSettingType.Const),
+    SelectOptions(label="缺省", value=LLMSettingType.Null),
+]
+
+
+class LLMSetting(BaseModel):
+    Label: str
+    Type: LLMSettingType
+    Content: Any
+
+
+class LLMSettings(BaseModel):
+    Model: LLMSetting
+    Stream: LLMSetting
+    MaxTokens: LLMSetting
+    Temperature: LLMSetting
+    TopP: LLMSetting
+    FrequencyPenalty: LLMSetting
+    ResponseFormat: LLMSetting
+    Stop: LLMSetting
 
 
 class LLMInference(FATaskNode):
@@ -50,19 +86,49 @@ class LLMInference(FATaskNode):
             VFNodeContentData(
                 Label="模型设置",
                 Type="Dict",
-                Data={
-                    "Model": {
-                        "Label": "模型",
-                        "Type": "Const",
-                        "Content": "deepseek-chat",
-                    },
-                    "MaxTokens": {
-                        "Label": "流式输出",
-                        "Type": "Const",
-                        "Content": True,
-                    },
-                },
-                UiType="@/FlowABuiltin/UI_CODE_EDITOR",
+                Data=LLMSettings(
+                    Model=LLMSetting(
+                        Label="模型选择",
+                        Type=LLMSettingType.Const,
+                        Content="deepseek-chat",
+                    ),
+                    Stream=LLMSetting(
+                        Label="流式输出",
+                        Type=LLMSettingType.Const,
+                        Content=True,
+                    ),
+                    MaxTokens=LLMSetting(
+                        Label="最大输出",
+                        Type=LLMSettingType.Null,
+                        Content=4096,
+                    ),
+                    Temperature=LLMSetting(
+                        Label="温度调整",
+                        Type=LLMSettingType.Null,
+                        Content=0.75,
+                    ),
+                    TopP=LLMSetting(
+                        Label="Top   P",
+                        Type=LLMSettingType.Null,
+                        Content=0.9,
+                    ),
+                    FrequencyPenalty=LLMSetting(
+                        Label="频率惩罚",
+                        Type=LLMSettingType.Null,
+                        Content=0.5,
+                    ),
+                    ResponseFormat=LLMSetting(
+                        Label="回复格式",
+                        Type=LLMSettingType.Null,
+                        Content="json",
+                    ),
+                    Stop=LLMSetting(
+                        Label="停止标记",
+                        Type=LLMSettingType.Null,
+                        Content="",
+                    ),
+                ),
+                UiType="@/FlowABuiltin/UI_LLM_SETTINGS",
             ),
             payload_id="D_MODEL_SETTING",
         )

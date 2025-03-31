@@ -177,23 +177,20 @@ class VarBooleanInput(NFlex):
             justify="start",
             style={"width": "50%"},
             slots={
-                "default": NormalComponent(
-                    Type="NSwitch",
-                    Props={
-                        "size": "medium",
-                        "style": {"width": "50%"},
-                        "value": VModelProp(
-                            Data=[
-                                THIS_NODE_DATA,
-                                "Payloads",
-                                "ById",
-                                PAYLOADS_ID,
-                                "Data",
-                                "@Index",
-                                "valueBool",
-                            ],
-                        ),
-                    },
+                "default": NSwitch(
+                    size="medium",
+                    style={"width": "50%"},
+                    value=VModelProp(
+                        Data=[
+                            THIS_NODE_DATA,
+                            "Payloads",
+                            "ById",
+                            PAYLOADS_ID,
+                            "Data",
+                            "@Index",
+                            "valueBool",
+                        ],
+                    ),
                 )
             },
             IfCondition=CompareCondition(

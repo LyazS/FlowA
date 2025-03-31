@@ -302,3 +302,8 @@ class ForLoopComponent(BaseComponent):
 UnionComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]
 for cls in [ForLoopComponent, SpanComponent, NormalComponent]:
     cls.model_rebuild()
+
+class SelectOptions(BaseModel):
+    label: str
+    value: str
+    pass

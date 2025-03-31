@@ -71,6 +71,9 @@ import {
   // 布局组件
   NFlex,
   NGrid,
+  NGridItem,
+  NRow,
+  NCol,
   NSpace,
 } from 'naive-ui'
 
@@ -139,7 +142,12 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   NTab: NTab,
   NMarquee: NMarquee,
   NFlex: NFlex,
-  NGrid: NGrid,
+  // 存在问题，NGridItem无法二次封装导致失效
+  // NGrid: NGrid,
+  // NGridItem: NGridItem,
+  // NaiveUI组件库不建议使用以下两个
+  // NRow: NRow,
+  // NCol: NCol,
   NSpace: NSpace,
 }
 

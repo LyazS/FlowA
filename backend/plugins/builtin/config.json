@@ -63,6 +63,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_CODE_OUTPUT",
       "Component": "code_interpreter/UI_CodeOutput.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_LLM_SETTINGS",
+      "Component": "LLM_inference/UI_LLM_Settings.py"
     }
   ]
 }
