@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash'
 import type {
   VFNodeContentData,
   VFNodeContents,
@@ -289,27 +290,28 @@ class VFNode implements BaseVFNodeData {
   }
 }
 export function createVFNodeFromData(data: VFNodeData): VFNode {
+  const cp_data = cloneDeep(data)
   // 使用基础属性创建实例
-  const node = new VFNode(data.NType, data.VType, data.Label)
+  const node = new VFNode(cp_data.NType, cp_data.VType, cp_data.Label)
 
   // 填充其他必选属性
-  node.Flag = data.Flag
-  node.PlaceholderLabel = data.PlaceholderLabel
-  node.Size = data.Size
-  node.Connections = data.Connections
-  node.Payloads = data.Payloads
-  node.Results = data.Results
-  node.State = data.State
-  node.Config = data.Config
+  node.Flag = cp_data.Flag
+  node.PlaceholderLabel = cp_data.PlaceholderLabel
+  node.Size = cp_data.Size
+  node.Connections = cp_data.Connections
+  node.Payloads = cp_data.Payloads
+  node.Results = cp_data.Results
+  node.State = cp_data.State
+  node.Config = cp_data.Config
 
   // 处理附属节点特性
-  if ('Attaching' in data) {
-    node.Attaching = data.Attaching
+  if ('Attaching' in cp_data) {
+    node.Attaching = cp_data.Attaching
   }
 
   // 处理嵌套节点特性
-  if ('Nesting' in data) {
-    const nestedData = data as NestedVFNodeData
+  if ('Nesting' in cp_data) {
+    const nestedData = cp_data as NestedVFNodeData
     node.MinSize = nestedData.MinSize
     node.Nesting = nestedData.Nesting
   }
