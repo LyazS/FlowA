@@ -68,6 +68,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_LLM_SETTINGS",
       "Component": "LLM_inference/UI_LLM_Settings.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_LLM_PROMPTS",
+      "Component": "LLM_inference/UI_LLM_Prompts.py"
     }
   ]
 }

@@ -27,7 +27,7 @@ export const useVFlowSaver = () => {
     }
     await postData('workflow/update', data)
     AutoSaveMessage.value = `自动保存 ${new Date().toLocaleTimeString()}`
-  }, 1000)
+  }, 500)
 
   const autoSaveWorkflow = () => {
     if (!isEditorMode.value) return

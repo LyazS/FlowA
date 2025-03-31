@@ -54,6 +54,7 @@ import {
 } from '@/hooks/useVFlowAttribute'
 import { type SelectOption } from 'naive-ui'
 import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
+import { cloneDeep } from 'lodash'
 
 defineOptions({
   name: 'DynamicComponent',
@@ -246,7 +247,7 @@ const processedProps = computed(() => {
           const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
           if (!!ItemKey && !!ItemValue && !!DstPath) {
             propsObj[propName] = () =>
-              addItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey), ItemValue)
+              addItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey), cloneDeep(ItemValue))
           } else {
             console.error('Invalid add item function')
           }
@@ -261,14 +262,14 @@ const processedProps = computed(() => {
         } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
           const { DstPath, ItemValue } = prop_Function.Arg
           if (!!ItemValue && !!DstPath) {
-            propsObj[propName] = () => appendItemByPath(DstPath, ItemValue)
+            propsObj[propName] = () => appendItemByPath(DstPath, cloneDeep(ItemValue))
           } else {
             console.error('Invalid append item function')
           }
         } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
           const { HandleId, Result } = prop_Function.Arg
           if (!!HandleId && !!Result) {
-            propsObj[propName] = () => addItem2Results(HandleId, Result)
+            propsObj[propName] = () => addItem2Results(HandleId, cloneDeep(Result))
           } else {
             console.error('Invalid add result function')
           }

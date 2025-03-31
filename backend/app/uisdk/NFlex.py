@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Literal
 from app.uisdk.VFUISchemas import (
     PropVar,
     ReadOnlyPropVar,
@@ -17,6 +17,9 @@ class NFlex(NormalComponent):
         align: Optional[str | PropVar] = None,
         justify: str | PropVar = "start",
         vertical: Optional[bool | PropVar] = False,
+        size: Optional[
+            PropVar | Literal["small", "medium", "large"] | float | List[float]
+        ] = "medium",
         wrap: bool | PropVar = True,
         style: Optional[Dict] = None,
         slots: Optional[Dict] = None,
@@ -28,6 +31,7 @@ class NFlex(NormalComponent):
                 "align": align,
                 "justify": justify,
                 "vertical": vertical,
+                "size": size,
                 "wrap": wrap,
                 "style": style,
             },

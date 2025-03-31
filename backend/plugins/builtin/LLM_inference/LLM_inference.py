@@ -29,15 +29,7 @@ class LLMSettingType(StrEnum):
     Ref = "Ref"
 
 
-LLMTypeOptions: List[SelectOptions] = [
-    SelectOptions(label="引用", value=LLMSettingType.Ref),
-    SelectOptions(label="常量", value=LLMSettingType.Const),
-]
-LLMTypeOptionsWnull: List[SelectOptions] = [
-    SelectOptions(label="引用", value=LLMSettingType.Ref),
-    SelectOptions(label="常量", value=LLMSettingType.Const),
-    SelectOptions(label="缺省", value=LLMSettingType.Null),
-]
+
 
 
 class LLMSetting(BaseModel):
@@ -56,6 +48,32 @@ class LLMSettings(BaseModel):
     ResponseFormat: LLMSetting
     Stop: LLMSetting
 
+
+class LLMRole(StrEnum):
+    system = "system"
+    user = "user"
+    assistant = "assistant"
+    pass
+
+
+class SinglePrompt(BaseModel):
+    role: LLMRole
+    content: str
+    pass
+LLMTypeOptions: List[SelectOptions] = [
+    SelectOptions(label="引用", value=LLMSettingType.Ref),
+    SelectOptions(label="常量", value=LLMSettingType.Const),
+]
+LLMTypeOptionsWnull: List[SelectOptions] = [
+    SelectOptions(label="引用", value=LLMSettingType.Ref),
+    SelectOptions(label="常量", value=LLMSettingType.Const),
+    SelectOptions(label="缺省", value=LLMSettingType.Null),
+]
+LLMRoleOptions: List[SelectOptions] = [
+    SelectOptions(label="System", value=LLMRole.system),
+    SelectOptions(label="User", value=LLMRole.user),
+    SelectOptions(label="Assistant", value=LLMRole.assistant),
+]
 
 class LLMInference(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
@@ -143,6 +161,20 @@ class LLMInference(FATaskNode):
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),
             payload_id="D_INPUT_VARS",
+        )
+        thisnode.add_payload(
+            VFNodeContentData(
+                Label="Prompts设计",
+                Type="List",
+                Data=[
+                    SinglePrompt(
+                        role=LLMRole.system, content="You ara a {{arg1}} {{arg2}}."
+                    ),
+                    SinglePrompt(role=LLMRole.user, content="Hi."),
+                ],
+                UiType="@/FlowABuiltin/UI_LLM_PROMPTS",
+            ),
+            payload_id="D_PROMPTS",
         )
 
         thisnode.add_result_into_outputs(
