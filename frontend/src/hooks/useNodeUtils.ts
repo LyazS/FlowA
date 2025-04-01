@@ -6,8 +6,19 @@ import {
 } from '@/components/nodes/VFNodeInterface'
 import { type SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
-import type { NodeWithVFData, VarItem4Selections } from '@/schemas/schemas'
+import type { NodeWithVFData } from '@/schemas/schemas'
 
+export interface VarItem4Selections {
+  NodeId: string | number
+  NodeLabel: string
+  DataPath: (string | number)[]
+  DataLabel: string
+  DataType: string
+}
+export interface HandleVarItem4Selects {
+  Label: string
+  Data: VarItem4Selections[]
+}
 interface NodeUtilsInstance {
   findVarFromIO: (
     nid: string,
@@ -16,12 +27,8 @@ interface NodeUtilsInstance {
   ) => VarItem4Selections[]
   recursiveFindVariables: (
     nid: string,
-    findSelf: string[],
-    findAttach: string[],
-    findAllInput: boolean,
-    findInput: string[],
-    findAllOutput: boolean,
-    findOutput: string[],
+    handleType: VFNodeConnectionType,
+    handles: string[] | null,
   ) => VarItem4Selections[]
   mapVarItemToSelect: (item: VarItem4Selections) => SelectOption
 }
@@ -52,12 +59,11 @@ export const useNodeUtils = () => {
         const pathData = resolveValueByPath(c_data.Path, thenode.data)
         if (pathData) {
           result.push({
-            nodeId: nid,
-            nlabel: thenodedata.Label,
-            dpath: c_data.Path,
-            dlabel: pathData.Label,
-            // dkey: pathData.Key,
-            dtype: pathData.Type,
+            NodeId: nid,
+            NodeLabel: thenodedata.Label,
+            DataPath: c_data.Path,
+            DataLabel: pathData.Label,
+            DataType: pathData.Type,
           })
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromOuter && c_data.HandleId) {
@@ -69,7 +75,9 @@ export const useNodeUtils = () => {
 
         for (const edge of Object.values(edges)) {
           result.push(
-            ...recursiveFindVariables(edge.source, [], [], false, [], false, [edge.sourceHandle!]),
+            ...recursiveFindVariables(edge.source, VFNodeConnectionType.Outputs, [
+              edge.sourceHandle!,
+            ]),
           )
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromAttached && c_data.ANode) {
@@ -77,30 +85,14 @@ export const useNodeUtils = () => {
           const anode = findNode(thenode.data.Nesting?.ANodes?.[aname]?.Nid)
           if (anode) {
             const { ConnectionType, HandleId } = hdata
-            result.push(
-              ...recursiveFindVariables(
-                anode.id,
-                ConnectionType === VFNodeConnectionType.Self ? [HandleId] : [],
-                ConnectionType === VFNodeConnectionType.Attach ? [HandleId] : [],
-                false,
-                ConnectionType === VFNodeConnectionType.Inputs ? [HandleId] : [],
-                false,
-                ConnectionType === VFNodeConnectionType.Outputs ? [HandleId] : [],
-              ),
-            )
+            result.push(...recursiveFindVariables(anode.id, ConnectionType, [HandleId]))
           }
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromParent && thenode.parentNode) {
         result.push(
-          ...recursiveFindVariables(
-            thenode.parentNode,
-            [],
-            [c_data.HandleId!],
-            false,
-            [],
-            false,
-            [],
-          ),
+          ...recursiveFindVariables(thenode.parentNode, VFNodeConnectionType.Attach, [
+            c_data.HandleId!,
+          ]),
         )
       }
     }
@@ -109,37 +101,30 @@ export const useNodeUtils = () => {
 
   const recursiveFindVariables = (
     nid: string,
-    findSelf: string[] = [],
-    findAttach: string[] = [],
-    findAllInput: boolean = false,
-    findInput: string[] = [],
-    findAllOutput: boolean = false,
-    findOutput: string[] = [],
+    handleType: VFNodeConnectionType,
+    handles: string[] | null,
   ): VarItem4Selections[] => {
     const result: VarItem4Selections[] = []
     const thenode = findNode(nid)
     if (!thenode) return result
 
     const thenodedata = thenode.data as VFNodeData
-    let processedFindInput = [...findInput]
-    let processedFindOutput = [...findOutput]
 
-    if (findAllInput) {
-      processedFindInput = Object.keys(thenodedata.Connections.Inputs)
+    if (!handles) {
+      if (handleType === VFNodeConnectionType.Self) {
+        handles = Object.keys(thenodedata.Connections.Inputs)
+      } else if (handleType === VFNodeConnectionType.Attach) {
+        handles = Object.keys(thenodedata.Connections.Attach)
+      } else if (handleType === VFNodeConnectionType.Inputs) {
+        handles = Object.keys(thenodedata.Connections.Inputs)
+      } else if (handleType === VFNodeConnectionType.Outputs) {
+        handles = Object.keys(thenodedata.Connections.Outputs)
+      } else {
+        handles = []
+      }
     }
-    if (findAllOutput) {
-      processedFindOutput = Object.keys(thenodedata.Connections.Outputs)
-    }
-
-    ;[
-      { type: VFNodeConnectionType.Self, handles: findSelf },
-      { type: VFNodeConnectionType.Attach, handles: findAttach },
-      { type: VFNodeConnectionType.Inputs, handles: processedFindInput },
-      { type: VFNodeConnectionType.Outputs, handles: processedFindOutput },
-    ].forEach(({ type, handles }) => {
-      handles.forEach((hid) => {
-        result.push(...findVarFromIO(nid, type, hid))
-      })
+    handles.forEach((hid) => {
+      result.push(...findVarFromIO(nid, handleType, hid))
     })
 
     return result
@@ -148,8 +133,8 @@ export const useNodeUtils = () => {
   const mapVarItemToSelect = (item: VarItem4Selections): SelectOption => {
     return {
       // label: `${item.nlabel}/${item.dlabel}/${item.dkey}/${item.dtype}`,
-      label: `${item.nlabel}/${item.dlabel}/${item.dtype}`,
-      value: `${item.nodeId}/${item.dpath[0]}/${item.dpath[1]}`,
+      label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,
+      value: `${item.NodeId}/${item.DataPath.join('/')}`,
     }
   }
 

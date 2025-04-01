@@ -29,9 +29,6 @@ class LLMSettingType(StrEnum):
     Ref = "Ref"
 
 
-
-
-
 class LLMSetting(BaseModel):
     Label: str
     Type: LLMSettingType
@@ -60,6 +57,8 @@ class SinglePrompt(BaseModel):
     role: LLMRole
     content: str
     pass
+
+
 LLMTypeOptions: List[SelectOptions] = [
     SelectOptions(label="引用", value=LLMSettingType.Ref),
     SelectOptions(label="常量", value=LLMSettingType.Const),
@@ -74,6 +73,7 @@ LLMRoleOptions: List[SelectOptions] = [
     SelectOptions(label="User", value=LLMRole.user),
     SelectOptions(label="Assistant", value=LLMRole.assistant),
 ]
+
 
 class LLMInference(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
@@ -90,7 +90,8 @@ class LLMInference(FATaskNode):
         thisnode.set_flag(VFNodeFlag.IsTask)
         thisnode.set_size(80, 80)
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
-        thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output_res", "RESULT")
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output_info", "INFO")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")
         thisnode.add_handle_data(
             VFNodeConnectionType.Self,
@@ -179,14 +180,51 @@ class LLMInference(FATaskNode):
 
         thisnode.add_result_into_outputs(
             VFNodeContentData(
-                Label="output1",
+                Label="推理结果",
                 Type="String",
-                # Key="output",
                 Data="",
             ),
-            handle_id="output",
+            handle_id="output_res",
+            result_id="D_ANSWER",
         )
-        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_CODE_OUTPUT")
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="LLM模型",
+                Type="String",
+                Data="",
+            ),
+            handle_id="output_info",
+            result_id="D_MODEL",
+        )
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="输入Token",
+                Type="Integer",
+                Data=0,
+            ),
+            handle_id="output_info",
+            result_id="D_IN_TOKEN",
+        )
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="输出Token",
+                Type="Integer",
+                Data=0,
+            ),
+            handle_id="output_info",
+            result_id="D_OUT_TOKEN",
+        )
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="停止原因",
+                Type="String",
+                Data="",
+            ),
+            handle_id="output_info",
+            result_id="D_STOP_REASON",
+        )
+
+        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_TAG_OUTPUTS")
         return thisnode
 
 

@@ -30,7 +30,11 @@ import {
 } from 'naive-ui'
 import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
-import { useNodeUtils } from '@/hooks/useNodeUtils'
+import {
+  useNodeUtils,
+  type VarItem4Selections,
+  type HandleVarItem4Selects,
+} from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode, isEditing } from '@/hooks/useVFlowAttribute'
@@ -42,7 +46,7 @@ import {
   THIS_NODE_DATA,
   CONTEXT_FUNCTION,
   VFOR_DATA,
-  CONNECT_OPTIONS,
+  CONNECT_DATA_TO_SELECT,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -53,9 +57,14 @@ import {
   TYPE_CONDITION_VBIND,
   TYPE_CONDITION_VALUE,
   PAYLOADS_ID,
-  RESULTS_ID,
 } from '@/schemas/plugin_schemas'
-
+import {
+  type VFNodeData,
+  VFNodeConnectionType,
+  type VFNodeHandleData,
+  type VFNodeHandle,
+  VFNodeConnectionDataType,
+} from '@/components/nodes/VFNodeInterface'
 const { recursiveFindVariables, mapVarItemToSelect } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
 
@@ -127,22 +136,89 @@ const saveTitle = () => {
   }
 }
 
-const _VarSelection = reactive<Record<string, ComputedRef<SelectOption[]>>>({})
+const _VarSelection: Record<string, ComputedRef<VarItem4Selections[]>> = {}
 const getOrCreateVarSelection = (path: string[]) => {
-  const key = path.join('/')
+  const key = `${nodeId.value}-${path.join('/')}`
   if (!(key in _VarSelection)) {
-    if (path[0] === 'Self') {
-      _VarSelection[key] = computed(() =>
-        recursiveFindVariables(nodeId.value, [path[1]], [], false, [], false, []).map((item) =>
-          mapVarItemToSelect(item),
-        ),
-      )
+    let ctype: VFNodeConnectionType
+    if (path[0] === 'Self') ctype = VFNodeConnectionType.Self
+    else if (path[0] === 'Attach') ctype = VFNodeConnectionType.Attach
+    else if (path[0] === 'Input') ctype = VFNodeConnectionType.Inputs
+    else if (path[0] === 'Output') ctype = VFNodeConnectionType.Outputs
+    else return []
+
+    if (path[1]) {
+      _VarSelection[key] = computed(() => recursiveFindVariables(nodeId.value, ctype, [path[1]]))
+    } else {
+      _VarSelection[key] = computed(() => recursiveFindVariables(nodeId.value, ctype, null))
     }
   }
-  return _VarSelection[key]
+
+  return _VarSelection[key].value
 }
 provide('getOrCreateVarSelection', getOrCreateVarSelection)
 
+const _VarSelectionWHandle: Record<string, ComputedRef<Record<string, HandleVarItem4Selects>>> = {}
+const getOrCreateVarSelectionWHandle = (path: string[]) => {
+  const key = `${nodeId.value}-${path.join('/')}`
+  if (!(key in _VarSelectionWHandle)) {
+    let ctype: VFNodeConnectionType
+    let Connections: Record<string, VFNodeHandle>
+    if (path[0] == VFNodeConnectionType.Self) {
+      ctype = VFNodeConnectionType.Self
+      Connections = curSelectedNode.value.data.Connections.Self
+    } else if (path[0] == VFNodeConnectionType.Attach) {
+      ctype = VFNodeConnectionType.Attach
+      Connections = curSelectedNode.value.data.Connections.Attach
+    } else if (path[0] == VFNodeConnectionType.Inputs) {
+      ctype = VFNodeConnectionType.Inputs
+      Connections = curSelectedNode.value.data.Connections.Inputs
+    } else if (path[0] == VFNodeConnectionType.Outputs) {
+      ctype = VFNodeConnectionType.Outputs
+      Connections = curSelectedNode.value.data.Connections.Outputs
+    } else return []
+
+    if (path[1] && Connections.hasOwnProperty(path[1])) {
+      _VarSelectionWHandle[key] = computed(() => {
+        const selections: Record<string, HandleVarItem4Selects> = {
+          [path[1]]: {
+            Label: Connections[path[1]].Label,
+            Data: recursiveFindVariables(nodeId.value, ctype, [path[1]]),
+          },
+        }
+        return selections
+      })
+    } else {
+      _VarSelectionWHandle[key] = computed(() => {
+        const selections: Record<string, HandleVarItem4Selects> = {}
+        for (const hid of Object.keys(Connections)) {
+          selections[hid] = {
+            Label: Connections[hid].Label,
+            Data: recursiveFindVariables(nodeId.value, ctype, [hid]),
+          }
+        }
+        return selections
+      })
+    }
+  }
+
+  return _VarSelectionWHandle[key].value
+}
+provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
+
+watch(
+  () => selectedNodeId.value,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      Object.keys(_VarSelection).forEach((key) => {
+        delete _VarSelection[key]
+      })
+      Object.keys(_VarSelectionWHandle).forEach((key) => {
+        delete _VarSelectionWHandle[key]
+      })
+    }
+  },
+)
 // // 输出变量字典{列表}
 // const outputVarSelections = computed(() => {
 //   const selections: Record<string, SelectOption[]> = {}

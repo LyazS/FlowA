@@ -232,7 +232,7 @@ class UI_SingleInputVars(NFlex):
                         style={"width": "50%"},
                         options=VBindProp(
                             Data=[
-                                CONNECT_OPTIONS,
+                                CONNECT_DATA_TO_SELECT,
                                 "Self",
                                 "self",
                             ]

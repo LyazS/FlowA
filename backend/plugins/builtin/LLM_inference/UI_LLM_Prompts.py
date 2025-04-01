@@ -33,8 +33,8 @@ class UI_PromptOperate(NFlex):
                     NormalComponent(
                         Type="NSelect",
                         Props={
-                            "size": "tiny",
-                            "style": {"width": "130px"},
+                            "size": "small",
+                            "style": {"width": "100px", "margin-bottom": 0},
                             "options": LLMRoleOptions,
                             "value": VModelProp(
                                 Data=[
@@ -50,6 +50,7 @@ class UI_PromptOperate(NFlex):
                         },
                     ),
                     NButton(
+                        style={"margin-bottom": 0},
                         type="warning",
                         text=True,
                         onClick=OPENEDITOR_FuncProp(

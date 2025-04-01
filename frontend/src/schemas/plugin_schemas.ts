@@ -1,11 +1,18 @@
 import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 
-// 特殊定义
+// 特殊定义 =====================================================================
+
+// 路径定义
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
 export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
 export const VFOR_DATA = '@VFOR_DATA@' as const
-export const CONNECT_OPTIONS = '@CONNECT_OPTIONS@' as const
 export const NODE_CONFIG = '@NODE_CONFIG@' as const
+export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
+// 连接项定义，路径为[CONNECT_*, <Handle Type>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
+export const CONNECT_DATA = '@CONNECT_DATA@' as const
+export const CONNECT_DATA_HANDLE = '@CONNECT_DATA_HANDLE@' as const
+export const CONNECT_DATA_TO_SELECT = '@CONNECT_DATA_TO_SELECT@' as const
+// 类型定义
 export const TYPE_VFOR = '@VFOR@' as const
 export const TYPE_VALUE = '@VALUE@' as const
 export const TYPE_VBIND = '@VBIND@' as const
@@ -15,8 +22,6 @@ export const TYPE_CONDITION_LOGICAL = '@CONDITION_LOGICAL@' as const
 export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
 export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
 export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
-export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
-export const RESULTS_ID = '@RESULTS_ID@' as const
 export enum FunctionPropType {
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
@@ -31,7 +36,8 @@ export enum PropVarType {
   VModel = '@VMODEL@',
   Function = '@FUNCTION@',
 }
-// 类型定义
+// =============================================================================
+// 接口定义
 export interface PropVarBase {
   Type: PropVarType
 }

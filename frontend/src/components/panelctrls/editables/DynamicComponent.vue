@@ -28,7 +28,9 @@ import {
   THIS_NODE_DATA,
   CONTEXT_FUNCTION,
   VFOR_DATA,
-  CONNECT_OPTIONS,
+  CONNECT_DATA,
+  CONNECT_DATA_HANDLE,
+  CONNECT_DATA_TO_SELECT,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -53,13 +55,14 @@ import {
   CodeEditorLangType,
 } from '@/hooks/useVFlowAttribute'
 import { type SelectOption } from 'naive-ui'
+import { useNodeUtils, type VarItem4Selections } from '@/hooks/useNodeUtils'
 import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 import { cloneDeep } from 'lodash'
 
 defineOptions({
   name: 'DynamicComponent',
 })
-
+const { mapVarItemToSelect } = useNodeUtils()
 const props = defineProps({
   componentData: {
     type: Object as PropType<BaseComponent>,
@@ -71,7 +74,10 @@ const props = defineProps({
   },
 })
 const getOrCreateVarSelection =
-  inject<(path: string[]) => ComputedRef<SelectOption[]>>('getOrCreateVarSelection')!
+  inject<(path: string[]) => VarItem4Selections[]>('getOrCreateVarSelection')!
+const getOrCreateVarSelectionWHandle = inject<
+  (path: string[]) => Record<string, VarItem4Selections[]>
+>('getOrCreateVarSelectionWHandle')!
 
 // 数据路径解析器
 const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
@@ -99,9 +105,19 @@ const getValueByPath = (path: (string | number)[]): any => {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
   } else if (resolvePath[0] === VFOR_DATA) {
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
-  } else if (resolvePath[0] === CONNECT_OPTIONS) {
-    if (resolvePath.length === 3) {
+  } else if (resolvePath[0] === CONNECT_DATA_TO_SELECT) {
+    if (resolvePath.length >= 2) {
+      return getOrCreateVarSelection(resolvePath.slice(1) as string[]).map((item) =>
+        mapVarItemToSelect(item),
+      )
+    }
+  } else if (resolvePath[0] === CONNECT_DATA) {
+    if (resolvePath.length >= 2) {
       return getOrCreateVarSelection(resolvePath.slice(1) as string[])
+    }
+  } else if (resolvePath[0] === CONNECT_DATA_HANDLE) {
+    if (resolvePath.length >= 2) {
+      return getOrCreateVarSelectionWHandle(resolvePath.slice(1) as string[])
     }
   }
   console.error('Invalid connect option path')

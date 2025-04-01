@@ -57,7 +57,7 @@ class SingleAttrBoolean(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_OPTIONS,
+                                CONNECT_DATA_TO_SELECT,
                                 "Self",
                                 "self",
                             ]
@@ -133,7 +133,7 @@ class SingleAttrNumber(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_OPTIONS,
+                                CONNECT_DATA_TO_SELECT,
                                 "Self",
                                 "self",
                             ]
@@ -213,7 +213,7 @@ class SingleAttrSelect(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_OPTIONS,
+                                CONNECT_DATA_TO_SELECT,
                                 "Self",
                                 "self",
                             ]
