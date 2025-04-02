@@ -9,6 +9,7 @@ from app.api import api_router
 from app.core.config import settings
 from app.db.session import init_db, close_db_connection
 from app.nodes.NodeRegister import register_plugins
+
 if settings.DEBUG:
     tracemalloc.start()
 
@@ -16,8 +17,9 @@ if settings.DEBUG:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_logging(settings.LOG_FILE_PATH)
-    register_plugins()
     await init_db()
+    # 要先初始化数据库再初始化插件
+    await register_plugins()
     yield
     # 这里可以放置清理代码
     await close_db_connection()

@@ -40,9 +40,9 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
-from app.nodes import FANODECOLLECTION
+from app.nodes import FLOWA_PROVIDER_REGISTRY
 from app.nodes.BaseNode import FABaseNode
-from app.nodes.NodeRegister import FANODE_REGISTRY, FLOWA_NODE_REGISTRY
+
 
 router = APIRouter()
 
@@ -50,7 +50,7 @@ router = APIRouter()
 @router.get("/initinfo")
 async def get_initinfo():
     result = {}
-    for pname, pd in FLOWA_NODE_REGISTRY.items():
+    for pname, pd in FLOWA_PROVIDER_REGISTRY.items():
         result[pname] = pd.model_dump()
     return FAWorkflowOperationResponse(
         type=FAWorkflowOperationType.success,

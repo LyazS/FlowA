@@ -27,6 +27,7 @@ from app.schemas.farequest import (
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
+    from app.services.FAValidator import FAValidator
 
 
 class FABaseNode(ABC):
@@ -90,10 +91,7 @@ class FABaseNode(ABC):
         return None
 
     @abstractmethod
-    def validate(
-        self,
-        validateVars: Dict[FANodeValidateNeed, Any],
-    ) -> Optional[ValidationError]:
+    def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         return None
 
     async def processRequest(

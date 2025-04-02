@@ -4,7 +4,7 @@ import json
 import importlib
 from pathlib import Path
 import traceback
-from typing import Dict, Any
+from typing import Dict, Any, List
 from loguru import logger
 from app.nodes.BaseNode import FABaseNode
 from app.uisdk import BaseComponent
@@ -12,7 +12,7 @@ from app.schemas.VFlowPlugin import VFProvider
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFNodeInterface import VFNodeFlag
 
-FLOWA_NODE_REGISTRY: Dict[str, VFProvider] = {}
+FLOWA_PROVIDER_REGISTRY: Dict[str, VFProvider] = {}
 FANODE_REGISTRY: Dict[str, FABaseNode] = {}  # 节点类型
 
 
@@ -23,7 +23,7 @@ def path_to_module_str(path):
     return module_path.as_posix().replace("/", ".")
 
 
-def register_plugins():
+async def register_plugins():
     plugins_dir = Path(__file__).parent.parent.parent / "plugins"
 
     for plugin_dir in plugins_dir.iterdir():
@@ -52,6 +52,10 @@ def register_plugins():
                     plugin.CreateInfo.set_label(plugin.Label)
                     plugin.CreateInfo.set_node_type(plugin.Name)
 
+                    node_init = getattr(module, "EXPORT_INIT", None)
+                    if node_init is not None:
+                        await node_init()
+
                     logger.info(f"Register NODE [{plugin.Name}].")
             pass
             # 注册UI组件
@@ -69,14 +73,14 @@ def register_plugins():
             if not (plugin_dir / config.Icon).exists():
                 logger.warning(f"Icon {config.Icon} not found.")
 
-            FLOWA_NODE_REGISTRY[config.Provider] = config
+            FLOWA_PROVIDER_REGISTRY[config.Provider] = config
             pass
         except Exception as e:
             errmsg = traceback.format_exc()
             logger.error(f"Error loading plugin [{plugin_dir.name}]: {errmsg}")
             raise e
     # 最后检查嵌套节点的子节点是否存在
-    for provider in FLOWA_NODE_REGISTRY.values():
+    for provider in FLOWA_PROVIDER_REGISTRY.values():
         for plugin in provider.Plugins:
             if plugin.CreateInfo is not None and (
                 plugin.CreateInfo.Flag & VFNodeFlag.IsNested

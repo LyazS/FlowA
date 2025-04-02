@@ -3,12 +3,13 @@ import {
   VFNodeConnectionType,
   type VFNodeHandleData,
   VFNodeConnectionDataType,
+  type VFNodeContentData,
 } from '@/components/nodes/VFNodeInterface'
 import { type SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
 import type { NodeWithVFData } from '@/schemas/schemas'
 
-export interface VarItem4Selections {
+export interface VarItem {
   NodeId: string | number
   NodeLabel: string
   DataPath: (string | number)[]
@@ -17,20 +18,20 @@ export interface VarItem4Selections {
 }
 export interface HandleVarItem4Selects {
   Label: string
-  Data: VarItem4Selections[]
+  Data: VarItem[]
 }
 interface NodeUtilsInstance {
   findVarFromIO: (
     nid: string,
     findconnect: VFNodeConnectionType,
     hid: string,
-  ) => VarItem4Selections[]
+  ) => VarItem[]
   recursiveFindVariables: (
     nid: string,
     handleType: VFNodeConnectionType,
     handles: string[] | null,
-  ) => VarItem4Selections[]
-  mapVarItemToSelect: (item: VarItem4Selections) => SelectOption
+  ) => VarItem[]
+  mapVarItemToSelect: (item: VarItem) => SelectOption
 }
 let instance: NodeUtilsInstance | null = null
 
@@ -44,8 +45,8 @@ export const useNodeUtils = () => {
     nid: string,
     findconnect: VFNodeConnectionType,
     hid: string,
-  ): VarItem4Selections[] => {
-    const result: VarItem4Selections[] = []
+  ): VarItem[] => {
+    const result: VarItem[] = []
     const thenode = findNode(nid) as NodeWithVFData
 
     if (!thenode || !thenode.data.Connections[findconnect]?.[hid]) {
@@ -56,7 +57,7 @@ export const useNodeUtils = () => {
 
     for (const c_data of Object.values(connection) as Array<VFNodeHandleData>) {
       if (c_data.Type === VFNodeConnectionDataType.FromInner && c_data.Path) {
-        const pathData = resolveValueByPath(c_data.Path, thenode.data)
+        const pathData:VFNodeContentData = resolveValueByPath(c_data.Path, thenode.data)
         if (pathData) {
           result.push({
             NodeId: nid,
@@ -103,8 +104,8 @@ export const useNodeUtils = () => {
     nid: string,
     handleType: VFNodeConnectionType,
     handles: string[] | null,
-  ): VarItem4Selections[] => {
-    const result: VarItem4Selections[] = []
+  ): VarItem[] => {
+    const result: VarItem[] = []
     const thenode = findNode(nid)
     if (!thenode) return result
 
@@ -130,7 +131,7 @@ export const useNodeUtils = () => {
     return result
   }
 
-  const mapVarItemToSelect = (item: VarItem4Selections): SelectOption => {
+  const mapVarItemToSelect = (item: VarItem): SelectOption => {
     return {
       // label: `${item.nlabel}/${item.dlabel}/${item.dkey}/${item.dtype}`,
       label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,

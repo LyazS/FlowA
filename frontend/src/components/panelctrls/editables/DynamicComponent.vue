@@ -55,7 +55,7 @@ import {
   CodeEditorLangType,
 } from '@/hooks/useVFlowAttribute'
 import { type SelectOption } from 'naive-ui'
-import { useNodeUtils, type VarItem4Selections } from '@/hooks/useNodeUtils'
+import { useNodeUtils, type VarItem } from '@/hooks/useNodeUtils'
 import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 import { cloneDeep } from 'lodash'
 
@@ -74,9 +74,9 @@ const props = defineProps({
   },
 })
 const getOrCreateVarSelection =
-  inject<(path: string[]) => VarItem4Selections[]>('getOrCreateVarSelection')!
+  inject<(path: string[]) => VarItem[]>('getOrCreateVarSelection')!
 const getOrCreateVarSelectionWHandle = inject<
-  (path: string[]) => Record<string, VarItem4Selections[]>
+  (path: string[]) => Record<string, VarItem[]>
 >('getOrCreateVarSelectionWHandle')!
 
 // 数据路径解析器

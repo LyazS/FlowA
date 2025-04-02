@@ -32,7 +32,7 @@ import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
 import {
   useNodeUtils,
-  type VarItem4Selections,
+  type VarItem,
   type HandleVarItem4Selects,
 } from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
@@ -136,7 +136,7 @@ const saveTitle = () => {
   }
 }
 
-const _VarSelection: Record<string, ComputedRef<VarItem4Selections[]>> = {}
+const _VarSelection: Record<string, ComputedRef<VarItem[]>> = {}
 const getOrCreateVarSelection = (path: string[]) => {
   const key = `${nodeId.value}-${path.join('/')}`
   if (!(key in _VarSelection)) {

@@ -1,6 +1,7 @@
 from enum import Enum, StrEnum, IntEnum
 from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field, model_validator
+from app.utils.vueRef import RefType
 
 
 class VFNodeConnectionDataType(str, Enum):
@@ -54,7 +55,7 @@ class VFNodeContentData(BaseModel):
     Label: str
     Type: str
     # Key: str
-    Data: Any
+    Data: RefType
     Config: Optional[VFNodeContentDataConfig] = None
     Hid: Optional[str] = None
     Did: Optional[str] = None

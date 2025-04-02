@@ -31,6 +31,7 @@ from app.nodes.BaseNode import FABaseNode
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
+    from app.services.FAValidator import FAValidator
 
 
 class FANodeWaitStatus(BaseModel):
@@ -256,10 +257,7 @@ class FATaskNode(FABaseNode):
             )
         ]
 
-    def validate(
-        self,
-        validateVars: Dict[FANodeValidateNeed, Any],
-    ) -> Optional[ValidationError]:
+    def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         return None
 
     async def processRequest(
@@ -267,4 +265,3 @@ class FATaskNode(FABaseNode):
         request: dict,
     ) -> Optional[FAWorkflowOperationResponse]:
         return None
-

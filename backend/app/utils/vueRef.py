@@ -290,6 +290,8 @@ def serialize_ref(value):
         return {key: serialize_ref(val) for key, val in value.items()}
     elif isinstance(value, Ref):
         return serialize_ref(value.value)
+    elif isinstance(value,BaseModel):
+        return serialize_ref(value.model_dump())
     else:
         return str(value)  # 默认转换为字符串
 

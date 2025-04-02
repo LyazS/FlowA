@@ -63,7 +63,7 @@ async def create_workflow(create_request: FAWorkflowCreateRequest):
                 if create_request.name is None:
                     raise ValueError("name is required for new workflow")
                 db_wf = FAWorkflowModel(
-                    wid=getUuid().replace("-", ""),
+                    wid=getUuid(),
                     name=create_request.name,
                     lastModified=datetime.now(ZoneInfo("Asia/Shanghai")),
                 )
@@ -73,7 +73,7 @@ async def create_workflow(create_request: FAWorkflowCreateRequest):
                 if create_request.vflow is None:
                     raise ValueError("vflow is required for upload workflow")
                 db_wf = FAWorkflowModel(
-                    wid=getUuid().replace("-", ""),
+                    wid=getUuid(),
                     name=create_request.name,
                     curVFlow=create_request.vflow,
                     lastModified=datetime.now(ZoneInfo("Asia/Shanghai")),
@@ -89,7 +89,7 @@ async def create_workflow(create_request: FAWorkflowCreateRequest):
                     raise ValueError("vflow is required for release workflow")
                 db_wf = FAReleasedWorkflowModel(
                     wid=create_request.wid,
-                    rwid=getUuid().replace("-", ""),
+                    rwid=getUuid(),
                     name=create_request.name,
                     description=create_request.description,
                     vflow=create_request.vflow,
