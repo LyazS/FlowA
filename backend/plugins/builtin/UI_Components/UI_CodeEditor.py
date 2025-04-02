@@ -17,7 +17,18 @@ class UI_CodeEditor(NFlex):
                         style={"align-content": "center", "align-items": "center"},
                         slots={
                             "default": [
-                                Header(type="warning", text="Python代码"),
+                                Header(
+                                    type="warning",
+                                    text=VBindProp(
+                                        Data=[
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            PAYLOADS_ID,
+                                            "Label",
+                                        ]
+                                    ),
+                                ),
                                 NButton(
                                     type="warning",
                                     text=True,

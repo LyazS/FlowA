@@ -21,22 +21,17 @@ if TYPE_CHECKING:
 from ..UI_Components.UI_InputVars import DefaultInputVar
 
 
-class CodeInterpreter(FATaskNode):
+class Jinja2Template(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         pass
 
     @staticmethod
-    def getNodeConfig():
-        return {}
-
-    @staticmethod
     def getNodeCreateInfo():
         thisnode = VFNode("basenode")
-        thisnode.set_flag(VFNodeFlag.IsTask)
+        thisnode.set_flag(VFNodeFlag.IsPassive)
         thisnode.set_size(80, 80)
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
-        thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")
         thisnode.add_handle_data(
             VFNodeConnectionType.Self,
@@ -60,34 +55,16 @@ class CodeInterpreter(FATaskNode):
         )
         thisnode.add_payload(
             VFNodeContentData(
-                Label="Python代码",
+                Label="Jinja2模板",
                 Type="String",
-                Data='#You can use numpy and cv2 by import\ndef main(arg1, arg2):\n    # do something\n    return {\n        "output1": arg1,\n        "output2": arg2\n    }',
+                Data='<p>{{ arg1 }}</p>\n<hr>\n<p>{{ arg2 }}</p>',
                 UiType="@/FlowABuiltin/UI_CODE_EDITOR",
-                Config=VFNodeContentDataConfig(Language="python"),
+                Config=VFNodeContentDataConfig(Language="django"),
             ),
-            payload_id="D_CODE",
+            payload_id="D_JINJA2_TEMPLATE",
         )
-
-        thisnode.add_result_into_outputs(
-            VFNodeContentData(
-                Label="output1",
-                Type="String",
-                Data="",
-            ),
-            handle_id="output",
-        )
-        thisnode.add_result_into_outputs(
-            VFNodeContentData(
-                Label="output2",
-                Type="String",
-                Data="",
-            ),
-            handle_id="output",
-        )
-        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_CODE_OUTPUT")
         return thisnode
 
 
 # 必须存在
-EXPORT_NODE = CodeInterpreter
+EXPORT_NODE = Jinja2Template

@@ -41,6 +41,14 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/jinja2_template",
+      "Label": "Jinja2模板",
+      "Description": "jinja2 template",
+      "Execute": "jinja2_template/jinja2_template.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/LLM_inference",
       "Label": "LLM推理",
       "Description": "LLM inference",
