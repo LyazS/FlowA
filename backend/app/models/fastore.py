@@ -158,3 +158,11 @@ class FANodeCacheModel(Base):
     # 定义复合索引
     __table_args__ = (Index("idx_fa_node_cache_wid_cid_nid", "wid", "cid", "nid"),)
     pass
+
+
+class FANodeConfigStoreModel(Base):
+    __tablename__ = "fa_node_config_store"
+
+    NodeName: Mapped[str] = mapped_column(String(255), primary_key=True)
+    NodeConfig: Mapped[dict] = mapped_column(BigJSONType, nullable=False)
+    pass

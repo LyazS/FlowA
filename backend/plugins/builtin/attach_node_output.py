@@ -2,8 +2,8 @@ from typing import List, Dict, Optional, TYPE_CHECKING, Any
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.fanode import FANodeValidateNeed
-from app.nodes.basenode import FABaseNode
-from app.nodes.tasknode import FATaskNode
+from app.nodes.BaseNode import FABaseNode
+from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFNodeInterface import (

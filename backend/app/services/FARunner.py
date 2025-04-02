@@ -64,7 +64,7 @@ class FARunner:
         return self.nodes[nid]
 
     def buildNodes(self):
-        from app.nodes.tasknode import FANodeWaitStatus
+        from app.nodes.TaskNode import FANodeWaitStatus
         from app.nodes import FANODECOLLECTION
 
         # 初始化大图节点，即parentNode == None

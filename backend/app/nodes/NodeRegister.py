@@ -6,7 +6,7 @@ from pathlib import Path
 import traceback
 from typing import Dict, Any
 from loguru import logger
-from app.nodes.basenode import FABaseNode
+from app.nodes.BaseNode import FABaseNode
 from app.uisdk import BaseComponent
 from app.schemas.VFlowPlugin import VFProvider
 from app.schemas.VFNodeClass import VFNode

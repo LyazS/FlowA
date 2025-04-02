@@ -1,4 +1,4 @@
-from .basenode import FABaseNode
-from .tasknode import FATaskNode
+from .BaseNode import FABaseNode
+from .TaskNode import FATaskNode
 
 FANODECOLLECTION = {}

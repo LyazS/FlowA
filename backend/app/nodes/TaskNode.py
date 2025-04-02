@@ -27,7 +27,7 @@ from app.schemas.farequest import (
 )
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
-from app.nodes.basenode import FABaseNode
+from app.nodes.BaseNode import FABaseNode
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner

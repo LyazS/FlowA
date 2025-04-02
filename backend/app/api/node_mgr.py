@@ -41,7 +41,7 @@ from app.models.fastore import (
     FANodeCacheModel,
 )
 from app.nodes import FANODECOLLECTION
-from app.nodes.basenode import FABaseNode
+from app.nodes.BaseNode import FABaseNode
 from app.nodes.NodeRegister import FANODE_REGISTRY, FLOWA_NODE_REGISTRY
 
 router = APIRouter()

@@ -1,9 +1,20 @@
-from typing import List, Dict, Optional, TYPE_CHECKING, Any
+from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union, Literal
+import asyncio
+import os
+import re
+import ast
+import copy
+import sys
+import json
+import traceback
+import base64
+from enum import StrEnum
+from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.fanode import FANodeValidateNeed
-from app.nodes.basenode import FABaseNode
-from app.nodes.tasknode import FATaskNode
+from app.nodes.BaseNode import FABaseNode
+from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFNodeInterface import (
@@ -14,11 +25,33 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
 )
+from app.utils.tools import read_yaml
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
 from ..UI_Components.UI_InputVars import DefaultInputVar
+
+
+class EvalType(StrEnum):
+    Python = "Python"
+    SnekBox = "SnekBox"
+    pass
+
+
+class CodeOutput(BaseModel):
+    success: bool
+    output: Union[Dict, str] = None
+    error: str = None
+    pass
+
+
+DefaultNodeConfig = read_yaml(
+    os.path.join(
+        os.path.dirname(__file__),
+        "configs/FANode_code_interpreter.yaml",
+    )
+)
 
 
 class CodeInterpreter(FATaskNode):
