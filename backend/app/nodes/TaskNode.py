@@ -257,7 +257,7 @@ class FATaskNode(FABaseNode):
             )
         ]
 
-    def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
+    async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         return None
 
     async def processRequest(

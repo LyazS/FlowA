@@ -138,7 +138,7 @@ class CodeInterpreter(FATaskNode):
         super().__init__(wid, nodeinfo, runner)
         pass
 
-    def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
+    async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
             # 首先要检查输入
@@ -150,23 +150,32 @@ class CodeInterpreter(FATaskNode):
             node_payloads = self.data.Payloads
             node_results = self.data.Results
 
+            selfVars = await validator.getConnectionByPath(
+                self.id,
+                [
+                    CONNECT_DATA_TO_SELECT,
+                    "Self",
+                    "self",
+                ],
+            )
+
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
-                var = Single_VarInput.model_validate(var_dict)
-                if var.type == VarType.Ref and var.value not in selfVars:
-                    error_msgs.append(f"没有该变量选项{var.value}")
+                var = DefaultInputVar.model_validate(var_dict)
+                if var.type == "Ref" and var.valueStr not in selfVars:
+                    error_msgs.append(f"没有该变量选项{var.valueStr}")
                 else:
                     CodeInputArgs.add(var.key)
-            for pid in node_results.order:
-                item: VFNodeContentData = node_results.byId[pid]
-                CodeOutputArgs.append(item.key)
+            for pid in node_results.Order:
+                item: VFNodeContentData = node_results.ById[pid]
+                CodeOutputArgs.append(item.Label)
                 pass
 
-            D_CODE: VFNodeContentData = node_payloads.byId["D_CODE"]
-            if not isinstance(D_CODE.data.value, str):
+            D_CODE: VFNodeContentData = node_payloads.ById["D_CODE"]
+            if not isinstance(D_CODE.Data.value, str):
                 raise Exception(f"Python代码格式错误")
             try:
-                tree = ast.parse(D_CODE.data.value)
+                tree = ast.parse(D_CODE.Data.value)
                 hasMain = False
                 for node in ast.walk(tree):
                     if isinstance(node, ast.FunctionDef) and node.name == "main":

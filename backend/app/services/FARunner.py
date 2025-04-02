@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import traceback
 from loguru import logger
 from app.core.config import settings
-from app.schemas.vfnode import VFNodeConnectionDataType, VFlowData, VFNodeFlag
+from app.schemas.vfnode import VFlowData
 from app.schemas.fanode import FARunStatus
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.schemas.farequest import (
