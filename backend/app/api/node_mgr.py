@@ -40,7 +40,7 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
-from app.nodes import FLOWA_PROVIDER_REGISTRY
+from app.nodes import FLOWA_PROVIDER_REGISTRY, FANODE_REGISTRY
 from app.nodes.BaseNode import FABaseNode
 
 
@@ -60,8 +60,8 @@ async def get_initinfo():
 
 @router.get("/config")
 async def nodeconfig(ntype: str):
-    if ntype in FANODECOLLECTION:
-        node: "FABaseNode" = FANODECOLLECTION[ntype]
+    if ntype in FANODE_REGISTRY:
+        node: "FABaseNode" = FANODE_REGISTRY[ntype]
         return FAWorkflowOperationResponse(
             type=FAWorkflowOperationType.success,
             data=node.getNodeConfig(),

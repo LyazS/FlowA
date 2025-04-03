@@ -6,7 +6,7 @@ import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
 export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
 export const VFOR_DATA = '@VFOR_DATA@' as const
-export const NODE_CONFIG = '@NODE_CONFIG@' as const
+export const NODE_CONFIG_DATA = '@NODE_CONFIG_DATA@' as const
 export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
 // 连接项定义，路径为[CONNECT_*, <Handle Type>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
 export const CONNECT_DATA = '@CONNECT_DATA@' as const

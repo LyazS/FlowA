@@ -2,6 +2,7 @@
 THIS_NODE_DATA = "@THIS_NODE_DATA@"
 CONTEXT_FUNCTION = "@CONTEXT_FUNCTION@"
 VFOR_DATA = "@VFOR_DATA@"
+NODE_CONFIG_DATA = "@NODE_CONFIG_DATA@"
 PAYLOADS_ID = "@PAYLOADS_ID@"
 # 连接项定义，路径为[CONNECT_*, <VFNodeConnectionType>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
 # TODO: 连接项定义的具体数据结构

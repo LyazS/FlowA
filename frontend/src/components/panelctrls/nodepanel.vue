@@ -30,16 +30,13 @@ import {
 } from 'naive-ui'
 import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
-import {
-  useNodeUtils,
-  type VarItem,
-  type HandleVarItem4Selects,
-} from '@/hooks/useNodeUtils'
+import { useNodeUtils, type VarItem, type HandleVarItem4Selects } from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode, isEditing } from '@/hooks/useVFlowAttribute'
 import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
-import { type InputNode } from '@/schemas/schemas'
+import { getData } from '@/utils/requestMethod'
+import { type InputNode, type NodeWithVFData } from '@/schemas/schemas'
 import { type BaseComponent } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
@@ -70,27 +67,6 @@ const { autoSaveWorkflow } = useVFlowSaver()
 
 const editable_header = defineAsyncComponent(() => import('./editables/common/header.vue'))
 const DynamicComponent = defineAsyncComponent(() => import('./editables/DynamicComponent.vue'))
-// const editable_tagoutputs = defineAsyncComponent(() => import('./editables/tagoutputs.vue'))
-// const editable_packoutputs = defineAsyncComponent(() => import('./editables/packoutputs.vue'))
-// const editable_retryoutputs = defineAsyncComponent(() => import('./editables/retryoutputs.vue'))
-// const editable_iterretryoutputs = defineAsyncComponent(
-//   () => import('./editables/iterretryoutputs.vue'),
-// )
-// const editable_retryconfig = defineAsyncComponent(() => import('./editables/retry_config.vue'))
-// const editable_condoutputs = defineAsyncComponent(() => import('./editables/condoutputs.vue'))
-// const editable_codeoutputs = defineAsyncComponent(() => import('./editables/codeoutputs.vue'))
-// const editable_iter_input = defineAsyncComponent(() => import('./editables/iter_input.vue'))
-// const editable_textinput = defineAsyncComponent(() => import('./editables/textinput.vue'))
-// const editable_texttag = defineAsyncComponent(() => import('./editables/texttag.vue'))
-// const editable_codeeditor = defineAsyncComponent(() => import('./editables/codeeditor.vue'))
-// const editable_vars_input = defineAsyncComponent(() => import('./editables/vars_input.vue'))
-// const editable_llmprompts = defineAsyncComponent(() => import('./editables/llmprompts.vue'))
-// const editable_aggregatebranchs = defineAsyncComponent(
-//   () => import('./editables/aggregatebranchs.vue'),
-// )
-// const editable_llmmodel = defineAsyncComponent(() => import('./editables/llmmodel.vue'))
-// const editable_httprequests = defineAsyncComponent(() => import('./editables/httprequests.vue'))
-// const editable_httptimeout = defineAsyncComponent(() => import('./editables/httptimeout.vue'))
 
 const { findNode, getHandleConnections } = useVueFlow()
 
@@ -136,6 +112,7 @@ const saveTitle = () => {
   }
 }
 
+// 连接变量选择相关
 const _VarSelection: Record<string, ComputedRef<VarItem[]>> = {}
 const getOrCreateVarSelection = (path: string[]) => {
   const key = `${nodeId.value}-${path.join('/')}`
@@ -206,6 +183,21 @@ const getOrCreateVarSelectionWHandle = (path: string[]) => {
 }
 provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
 
+// 节点config相关
+const _NodeConfig: Record<string, any> = {}
+const getNodeConfig =  (nid: string) => {
+  if (nid in _NodeConfig) return _NodeConfig[nid]
+  const node = findNode(nid) as NodeWithVFData
+  if (!node) return {}
+  const res = getData(`node/config?ntype=${encodeURIComponent(node.data.NType)}`).then((res) => {
+    return res
+  })
+  _NodeConfig[nid] = res
+  return res
+}
+provide('getNodeConfig', getNodeConfig)
+
+// 监控并清理缓存
 watch(
   () => selectedNodeId.value,
   (newVal, oldVal) => {
@@ -216,60 +208,12 @@ watch(
       Object.keys(_VarSelectionWHandle).forEach((key) => {
         delete _VarSelectionWHandle[key]
       })
+      Object.keys(_NodeConfig).forEach((key) => {
+        delete _NodeConfig[key]
+      })
     }
   },
 )
-// // 输出变量字典{列表}
-// const outputVarSelections = computed(() => {
-//   const selections: Record<string, SelectOption[]> = {}
-//   if (!curSelectedNode.value) return selections
-//   for (const hid of Object.keys(curSelectedNode.value.data.Connections.Outputs)) {
-//     selections[hid] = recursiveFindVariables(nodeId.value, [], [], false, [], false, [hid]).map(
-//       (item) => mapVarItemToSelect(item),
-//     )
-//   }
-//   return selections
-// })
-
-// // 自身可用变量
-// const selfVarSelections = computed(() => {
-//   return recursiveFindVariables(nodeId.value, ['self'], [], false, [], false, []).map((item) =>
-//     mapVarItemToSelect(item),
-//   )
-// })
-
-// const selfVarSelections_aouput = computed(() => {
-//   return recursiveFindVariables(nodeId.value, ['attach_output'], [], false, [], false, []).map(
-//     (item) => mapVarItemToSelect(item),
-//   )
-// })
-
-// // 输入链接的节点
-// const inputNodes = computed<Record<string, InputNode[]>>(() => {
-//   const preNodes: Record<string, InputNode[]> = {}
-//   if (!curSelectedNode.value) return preNodes
-//   for (const hid of Object.keys(curSelectedNode.value.data.Connections.Inputs)) {
-//     const edges = getHandleConnections({ id: hid, type: 'target', nodeId: nodeId.value })
-//     preNodes[hid] = edges.map((edge) => ({
-//       srcid: edge.source,
-//       srcohid: edge.sourceHandle,
-//     })) as InputNode[]
-//   }
-//   return preNodes
-// })
-
-// 渲染节点payload的内置变量
-const payloadInnerComponents = computed<Record<string, VNode>>(() => {
-  const components: Record<string, VNode> = {}
-  if (!curSelectedNode.value) return components
-  curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
-    const payload = curSelectedNode.value!.data.Payloads.ById[pid]
-    // if (payload.Uitype === 'texttag') {
-    //   components[pid] = h(editable_texttag, { pid })
-    // }
-  })
-  return components
-})
 
 // 渲染节点payload数据
 const payloadComponents = computed<Record<string, VNode>>(() => {
@@ -293,69 +237,6 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
     }
   }
 
-  // curSelectedNode.value.data.Payloads.Order.forEach((pid) => {
-  //   const payload = curSelectedNode.value!.data.Payloads.ById[pid]
-  //   let component: VNode | null = null
-  //   switch (
-  //     payload.UiType
-  //   ) {
-  //     case 'textinput':
-  //       component = h(editable_textinput, { pid })
-  //       break
-  //     case 'codeeditor':
-  //       component = h(editable_codeeditor, { pid })
-  //       break
-  //     case 'vars_input':
-  //       component = h(editable_vars_input, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //       })
-  //       break
-  //     case 'llmprompts':
-  //       component = h(editable_llmprompts, { pid })
-  //       break
-  //     case 'iter_input':
-  //       component = h(editable_iter_input, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //       })
-  //       break
-  //     case 'aggregatebranch':
-  //       component = h(editable_aggregatebranchs, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //         inputNodes: inputNodes.value,
-  //       })
-  //       break
-  //     case 'llmmodel':
-  //       component = h(editable_llmmodel, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //       })
-  //       break
-  //     case 'httprequests':
-  //       component = h(editable_httprequests, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //       })
-  //       break
-  //     case 'httptimeout':
-  //       component = h(editable_httptimeout, { nodeId: nodeId.value, pid })
-  //       break
-  //     case 'retry_config':
-  //       component = h(editable_retryconfig, {
-  //         pid,
-  //         selfVarSelections: selfVarSelections.value,
-  //       })
-  //       break
-  //     case 'iterretryoutputs':
-  //       component = h(editable_iterretryoutputs, {
-  //         selfVarSelections: selfVarSelections.value,
-  //         selfVarSelections_aoutput: selfVarSelections_aouput.value,
-  //       })
-  //   }
-  //   if (component) components[pid] = component
-  // })
   return components
 })
 
@@ -375,30 +256,6 @@ const outputsComponents = computed<VNode | null>(() => {
     })
   }
   return null
-  // const ouitype = curSelectedNode.value.data.Config.OutputsUiType
-  // switch (ouitype) {
-  //   case 'tagoutputs':
-  //     return h(editable_tagoutputs, {
-  //       outputVarSelections: outputVarSelections.value,
-  //     })
-  //   case 'packoutputs':
-  //     return h(editable_packoutputs, {
-  //       nodeId: nodeId.value,
-  //       selfVarSelections: selfVarSelections_aouput.value,
-  //     })
-  //   case 'retryoutputs':
-  //     return h(editable_retryoutputs, {
-  //       selfVarSelections: selfVarSelections_aouput.value,
-  //     })
-  //   case 'condoutputs':
-  //     return h(editable_condoutputs, {
-  //       selfVarSelections: selfVarSelections.value,
-  //     })
-  //   case 'codeoutputs':
-  //     return h(editable_codeoutputs, {})
-  //   default:
-  //     return null
-  // }
 })
 
 const nodedatatext = computed(() => {
@@ -447,19 +304,6 @@ onUnmounted(() => {
             </template>
           </n-flex>
         </n-alert>
-        <n-flex
-          vertical
-          v-if="Object.keys(payloadInnerComponents).length > 0"
-          :style="{ 'padding-bottom': '10px' }"
-          :key="`${nodeId}-inner`"
-        >
-          <editable_header type="default">内置变量</editable_header>
-          <n-flex vertical>
-            <template v-for="(comp, pid) in payloadInnerComponents" :key="`${nodeId}-${pid}-inner`">
-              <component v-if="comp" :is="comp" />
-            </template>
-          </n-flex>
-        </n-flex>
         <n-flex
           vertical
           v-if="Object.keys(payloadComponents).length > 0"

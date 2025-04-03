@@ -262,8 +262,11 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "Model",
                         ],
                         typeOptions=LLMTypeOptions,
-                        options=ValueProp(
-                            Data=[],
+                        options=VBindProp(
+                            Data=[
+                                NODE_CONFIG_DATA,
+                                "models_select",
+                            ],
                         ),
                     ),
                     SingleAttrBoolean(

@@ -26,6 +26,7 @@ import {
   PropVarType,
   FunctionPropType,
   THIS_NODE_DATA,
+  NODE_CONFIG_DATA,
   CONTEXT_FUNCTION,
   VFOR_DATA,
   CONNECT_DATA,
@@ -48,6 +49,7 @@ import {
 } from '@/schemas/dynamic_components_map'
 import { VFNode } from '@/components/nodes/VFNodeClass'
 import {
+  selectedNodeId,
   isEditorMode,
   isEditing,
   isShowCodeEditor,
@@ -73,11 +75,11 @@ const props = defineProps({
     required: true,
   },
 })
-const getOrCreateVarSelection =
-  inject<(path: string[]) => VarItem[]>('getOrCreateVarSelection')!
-const getOrCreateVarSelectionWHandle = inject<
-  (path: string[]) => Record<string, VarItem[]>
->('getOrCreateVarSelectionWHandle')!
+const getOrCreateVarSelection = inject<(path: string[]) => VarItem[]>('getOrCreateVarSelection')!
+const getOrCreateVarSelectionWHandle = inject<(path: string[]) => Record<string, VarItem[]>>(
+  'getOrCreateVarSelectionWHandle',
+)!
+const getNodeConfig = inject<(nid: string) => any>('getNodeConfig')!
 
 // 数据路径解析器
 const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
@@ -119,6 +121,9 @@ const getValueByPath = (path: (string | number)[]): any => {
     if (resolvePath.length >= 2) {
       return getOrCreateVarSelectionWHandle(resolvePath.slice(1) as string[])
     }
+  } else if (resolvePath[0] === NODE_CONFIG_DATA) {
+    const nodeConfig = getNodeConfig(selectedNodeId.value as string)
+    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], nodeConfig)
   }
   console.error('Invalid connect option path')
   return null

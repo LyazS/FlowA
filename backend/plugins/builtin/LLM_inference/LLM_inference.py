@@ -1,6 +1,15 @@
-from typing import List, Dict, Optional, TYPE_CHECKING, Any, Literal
+from typing import List, Dict, Optional, TYPE_CHECKING, Any, Literal, Union, cast
 from pydantic import BaseModel
 from enum import StrEnum
+import os
+import json
+import asyncio
+import traceback
+from loguru import logger
+from decimal import Decimal
+import openai
+from openai import AsyncOpenAI, NotGiven
+from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
 from app.nodes.BaseNode import FABaseNode
@@ -15,9 +24,19 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
 )
+from app.schemas.farequest import (
+    ValidationError,
+    FANodeUpdateType,
+    FANodeUpdateData,
+    FARunStatus,
+)
+from app.schemas.vfnode_contentdata import VarType
+from app.utils.tools import read_yaml, reduceGet, replace_vars
+from app.utils.db4node import loadNodeConfig, setNodeConfig
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
+    from app.services.FAValidator import FAValidator
 
 from ..UI_Components.UI_InputVars import InputVarModel
 
@@ -39,7 +58,7 @@ class LLMSettings(BaseModel):
     Stream: LLMSetting
     MaxTokens: LLMSetting
     Temperature: LLMSetting
-    TopP: LLMSetting
+    Temperature: LLMSetting
     FrequencyPenalty: LLMSetting
     ResponseFormat: LLMSetting
     Stop: LLMSetting
@@ -55,6 +74,66 @@ class LLMRole(StrEnum):
 class SinglePrompt(BaseModel):
     role: LLMRole
     content: str
+    pass
+
+
+class LLMModes(BaseModel):
+    name: str
+    max_input_tokens: Decimal
+    max_output_tokens: Decimal
+    prompt: Decimal
+    complete: Decimal
+    rate: Decimal
+    capability: List[str]
+    pass
+
+
+THIS_NODE_NAME = "@FALLMInference"
+NODE_CONFIG = {}
+BASE_URL = None
+API_KEY = None
+MODELS = None
+MODELS_SELECT = None
+AsyncOAIClient = None
+
+
+async def init_node_class():
+    global NODE_CONFIG
+    global BASE_URL
+    global API_KEY
+    global MODELS
+    global MODELS_SELECT
+    global AsyncOAIClient
+    ret, config = await loadNodeConfig(THIS_NODE_NAME)
+    if ret:
+        NODE_CONFIG = config
+    else:
+        NODE_CONFIG = read_yaml(
+            os.path.join(
+                os.path.dirname(__file__),
+                "FANode_LLM_inference.yaml",
+            )
+        )
+        await setNodeConfig(THIS_NODE_NAME, NODE_CONFIG)
+    BASE_URL = NODE_CONFIG["base_url"]
+    API_KEY = NODE_CONFIG["api_key"]
+    MODELS = {
+        m["name"]: LLMModes(
+            name=m["name"],
+            max_input_tokens=Decimal(m["max_input_tokens"]),
+            max_output_tokens=Decimal(m["max_output_tokens"]),
+            prompt=Decimal(m["prompt"]),
+            complete=Decimal(m["complete"]),
+            rate=Decimal(m["rate"]),
+            capability=m["capability"],
+        )
+        for m in NODE_CONFIG["models"]
+    }
+    MODELS_SELECT = [
+        SelectOptions(label=m["name"], value=m["name"]) for m in NODE_CONFIG["models"]
+    ]
+    AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
+
     pass
 
 
@@ -79,9 +158,205 @@ class LLMInference(FATaskNode):
         super().__init__(wid, nodeinfo, runner)
         pass
 
+    def validateConfigVar(self, s_config: LLMSetting, selfVars):
+        if s_config.Type == LLMSettingType.Ref:
+            if s_config.Content not in selfVars:
+                return False
+        return True
+
+    async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
+        error_msgs = []
+        try:
+            selfVars = await validator.getConnectionByPath(
+                self.id,
+                [
+                    CONNECT_DATA_TO_SELECT,
+                    "Self",
+                    "self",
+                ],
+            )
+            node_payloads = self.data.Payloads
+
+            UI_INPUT_VARS: VFNodeContentData = node_payloads.ById["UI_INPUT_VARS"]
+            for var_dict in UI_INPUT_VARS.Data.value:
+                var = InputVarModel.model_validate(var_dict)
+                if var.type == VarType.Ref and var.valueStr not in selfVars:
+                    error_msgs.append(f"变量未定义{var.valueStr}")
+            D_MODEL_SETTING: VFNodeContentData = node_payloads.ById["D_MODEL_SETTING"]
+            model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
+            if model_cfg.Model.Content not in MODELS:
+                error_msgs.append(f"模型{model_cfg.Model.Content}不在支持列表中")
+            if not self.validateConfigVar(model_cfg.Model, selfVars):
+                error_msgs.append(f"模型配置变量{model_cfg.Model.Content}未定义")
+            if not self.validateConfigVar(model_cfg.MaxTokens, selfVars):
+                error_msgs.append(f"模型配置变量{model_cfg.MaxTokens.Content}未定义")
+            if not self.validateConfigVar(model_cfg.Temperature, selfVars):
+                error_msgs.append(f"模型配置变量{model_cfg.Temperature.Content}未定义")
+            if not self.validateConfigVar(model_cfg.TopP, selfVars):
+                error_msgs.append(f"模型配置变量{model_cfg.TopP.Content}未定义")
+            if not self.validateConfigVar(model_cfg.FrequencyPenalty, selfVars):
+                error_msgs.append(
+                    f"模型配置变量{model_cfg.FrequencyPenalty.Content}未定义"
+                )
+            if not self.validateConfigVar(model_cfg.ResponseFormat, selfVars):
+                error_msgs.append(
+                    f"模型配置变量{model_cfg.ResponseFormat.Content}未定义"
+                )
+
+        except Exception as e:
+            pass
+        if len(error_msgs) > 0:
+            return ValidationError(nid=self.id, errors=error_msgs)
+        return None
+
+    async def getConfigVar(self, s_config: LLMSetting):
+        if s_config.Type == LLMSettingType.Ref:
+            return await InputVarModel.get_value(
+                InputVarModel(
+                    key="",
+                    type=VarType.Ref,
+                    valueStr=s_config.Content,
+                ),
+                self.id,
+                self.runner().getRefData,
+            )
+            pass
+        elif s_config.Type == LLMSettingType.Const:
+            return s_config.Content
+        elif s_config.Type == LLMSettingType.Null:
+            return NotGiven
+        return NotGiven
+
+    async def run(self) -> List[FANodeUpdateData]:
+        for try_count in range(5):
+            try:
+                node_payloads = self.data.Payloads
+                node_results = self.data.Results
+                D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
+                D_MODEL_SETTING: VFNodeContentData = node_payloads.ById[
+                    "D_MODEL_SETTING"
+                ]
+                D_PROMPTS: VFNodeContentData = node_payloads.ById["D_PROMPTS"]
+                D_ANSWER: VFNodeContentData = node_results.ById["D_ANSWER"]
+                D_MODEL: VFNodeContentData = node_results.ById["D_MODEL"]
+                D_IN_TOKEN: VFNodeContentData = node_results.ById["D_IN_TOKEN"]
+                D_OUT_TOKEN: VFNodeContentData = node_results.ById["D_OUT_TOKEN"]
+                D_STOP_REASON: VFNodeContentData = node_results.ById["D_STOP_REASON"]
+                InputArgs = {}
+                for var_dict in D_INPUT_VARS.Data.value:
+                    var = InputVarModel.model_validate(var_dict)
+                    InputArgs[var.key] = await InputVarModel.get_value(
+                        var,
+                        self.id,
+                        self.runner().getRefData,
+                    )
+                model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
+                isStream = await self.getConfigVar(model_cfg.Stream)
+                completions_params = {
+                    "model": await self.getConfigVar(model_cfg.Model),
+                    "stream": isStream,
+                    "max_tokens": await self.getConfigVar(model_cfg.MaxTokens),
+                    "temperature": await self.getConfigVar(model_cfg.Temperature),
+                    "top_p": await self.getConfigVar(model_cfg.Temperature),
+                    # "top_k": await self.getConfigVar(model_cfg.top_k),
+                    "frequency_penalty": await self.getConfigVar(
+                        model_cfg.FrequencyPenalty
+                    ),
+                }
+                if isStream:
+                    completions_params["stream_options"] = {"include_usage": True}
+                    pass
+                isJson = await self.getConfigVar(model_cfg.ResponseFormat) == "json"
+                if isJson:
+                    completions_params["response_format"] = {"type": "json_object"}
+                # messages
+                messages = []
+                for prompt in D_PROMPTS.Data.value:
+                    prompt_obj = SinglePrompt.model_validate(prompt)
+                    prompt_obj.content = replace_vars(prompt_obj.content, InputArgs)
+                    messages.append(json.loads(prompt_obj.model_dump_json()))
+                    pass
+                completions_params["messages"] = messages
+                completions_params = {
+                    k: v for k, v in completions_params.items() if v is not NotGiven
+                }
+                chat_completion: ChatCompletion = await AsyncOAIClient.with_options(
+                    max_retries=10
+                ).chat.completions.create(**completions_params)
+                D_ANSWER.Data.value = ""
+                if isStream:
+                    async for chunk in chat_completion:
+                        chunk = cast(ChatCompletionChunk, chunk)
+                        if len(chunk.choices) > 0:
+                            content = chunk.choices[0].delta.content
+                            D_ANSWER.Data.value += content
+                            D_STOP_REASON.Data.value = chunk.choices[0].finish_reason
+                            pass
+                        if chunk.usage is not None:
+                            D_IN_TOKEN.Data.value = chunk.usage.prompt_tokens
+                            D_OUT_TOKEN.Data.value = chunk.usage.completion_tokens
+                            pass
+                else:
+                    D_ANSWER.Data.value = chat_completion.choices[0].message.content
+                    D_IN_TOKEN.Data.value = chat_completion.usage.prompt_tokens
+                    D_OUT_TOKEN.Data.value = chat_completion.usage.completion_tokens
+                    D_STOP_REASON.Data.value = chat_completion.choices[0].finish_reason
+                    pass
+                D_MODEL.Data.value = completions_params["model"]
+                logger.info(
+                    f"补全Tokens：{D_IN_TOKEN.Data.value} + {D_OUT_TOKEN.Data.value}"
+                )
+                if isJson:
+                    json.loads(D_ANSWER.Data.value)
+                self.setAllOutputStatus(FARunStatus.Success)
+                return
+            except json.JSONDecodeError:
+                if try_count >= 5:
+                    raise Exception(f"JSON格式错误：{D_ANSWER.Data.value}")
+                else:
+                    logger.warning(f"正在重试，因为JSON格式错误：{D_ANSWER.Data.value}")
+                    await asyncio.sleep(2**try_count)
+                    continue
+                pass
+            except openai.APIConnectionError as e:
+                errmsg = traceback.format_exc()
+                if try_count >= 5:
+                    raise Exception(f"LLM节点运行失败：{errmsg}")
+                else:
+                    logger.warning(f"正在重试，因为API连接错误：{errmsg}")
+                    await asyncio.sleep(2**try_count)
+                    continue
+                pass
+            except openai.RateLimitError as e:
+                errmsg = traceback.format_exc()
+                if try_count >= 5:
+                    raise Exception(f"LLM节点运行失败：{errmsg}")
+                else:
+                    logger.warning(f"正在重试，因为API请求频率限制：{errmsg}")
+                    await asyncio.sleep(2**try_count)
+                    continue
+                pass
+            except openai.APIStatusError as e:
+                errmsg = traceback.format_exc()
+                if try_count >= 5:
+                    raise Exception(f"LLM节点运行失败：{errmsg}")
+                else:
+                    logger.warning(f"正在重试，因为API状态错误：{errmsg}")
+                    await asyncio.sleep(2**try_count)
+                    continue
+                pass
+            except Exception as e:
+                errmsg = traceback.format_exc()
+                logger.warning(f"LLM节点运行失败：{errmsg}")
+                raise Exception(f"LLM节点运行失败：{errmsg}")
+            pass
+
     @staticmethod
     def getNodeConfig():
-        return {}
+        return {
+            "models": MODELS,
+            "models_select": MODELS_SELECT,
+        }
 
     @staticmethod
     def getNodeCreateInfo():
@@ -229,3 +504,5 @@ class LLMInference(FATaskNode):
 
 # 必须存在
 EXPORT_NODE = LLMInference
+# 可选存在
+EXPORT_INIT = init_node_class
