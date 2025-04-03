@@ -220,9 +220,6 @@ class CodeInterpreter(FATaskNode):
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
 
-    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
-        return reduceGet(self.data, path)
-
     async def run(self) -> List[FANodeUpdateData]:
         CodeInputArgs = {}
         node_payloads = self.data.Payloads
@@ -250,24 +247,16 @@ class CodeInterpreter(FATaskNode):
         # 需要返回输出结果
         codeResult = await SimplePythonRun(code_run, EVALTYPE, SNEKBOXURL)
         if codeResult.success:
-            returnUpdateData = []
             for rid in node_results.Order:
                 item: VFNodeContentData = node_results.ById[rid]
                 if item.Label not in codeResult.output:
                     raise Exception(f"实际返回结果缺少输出参数【{rid}】")
-                returnUpdateData.append(
-                    FANodeUpdateData(
-                        type=FANodeUpdateType.overwrite,
-                        path=["Results", "ById", rid, "Data"],
-                        data=codeResult.output[item.Label],
-                    )
-                )
+
                 # 更新内部数据
                 self.data.Results.ById[rid].Data.value = codeResult.output[item.Label]
                 logger.debug(f"{item.Label}: {codeResult.output[item.Label]}")
-            # 返回之前先设置好输出handle状态
+            # 返回之前要设置好输出handle状态
             self.setAllOutputStatus(FARunStatus.Success)
-            # return returnUpdateData
             return []
         else:
             raise Exception(f"执行代码失败：{codeResult.error}")

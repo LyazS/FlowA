@@ -75,12 +75,10 @@ class FARunner:
         # 获取cur节点的层级 =======================================
         cur_matches = re.findall(cur_pattern, curnid)
         cur_level = list(map(int, cur_matches))
-
+        # 获取ref节点的层级 =======================================
         ref_nid, ref_path = refdata.split("/", 1)
         ref_level = re.findall(Niter_pattern, ref_nid)
 
-        # if len(nid_level) > len(cur_level):
-        #     raise ValueError(f"refdata {refdata} is not valid")
         assert len(ref_level) <= len(cur_level)  # 层级不匹配
         for i in range(len(ref_level)):
             ref_level[i] = cur_level[i]
