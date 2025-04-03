@@ -21,14 +21,6 @@ class FANodeWaitType(StrEnum):
     pass
 
 
-class FANodeValidateNeed(StrEnum):
-    Self = "Self"
-    AttachOutput = "AttachOutput"
-    InputNodes = "InputNodes"
-    InputNodesWVars = "InputNodesWVars"
-    pass
-
-
 class ConnectOption_Var(BaseModel):
     ConnectionType: VFNodeConnectionType
     HandleID: str

@@ -72,6 +72,7 @@ import type {
   FAReleaseWorkflowInfo,
   JinjaRefTriggerData,
 } from '@/schemas/vflow_schemas'
+import {type VFNode} from '@/components/nodes/VFNodeClass'
 import { FAProgressRequestType } from '@/schemas/vflow_schemas'
 
 // 类型定义
@@ -96,9 +97,9 @@ const showSelectPanel = ref(false)
 // 计算属性
 const Jinja2NodeOptions = computed(() => {
   return getNodes.value
-    .filter((node: NodeWithVFData) => node.data.ntype === 'jinja2_template')
+    .filter((node: NodeWithVFData) => node.data.NType === '@/FlowABuiltin/jinja2_template')
     .map((node: NodeWithVFData) => ({
-      label: node.data.label,
+      label: node.data.Label,
       value: node.id,
     }))
 })
@@ -223,10 +224,10 @@ const Jinja2RenderNodeChange = throttle(async () => {
   Jinja2RenderData.value = {}
 
   for (const nid of Jinja2RenderNodeIDs.value) {
-    const node = findNode(nid)
+    const node = findNode(nid) as NodeWithVFData
     if (!node) continue
 
-    const content = node.data.payloads.byId.D_VARSINPUT.data.reduce(
+    const content = node.data.Payloads.ById['D_INPUT_VARS'].Data.reduce(
       (acc: Record<string, null>, curr: { key: string }) => {
         acc[curr.key] = null
         return acc
@@ -235,8 +236,8 @@ const Jinja2RenderNodeChange = throttle(async () => {
     )
 
     Jinja2RenderData.value[nid] = {
-      label: node.data.label,
-      template: node.data.payloads.byId.D_CODE.data,
+      label: node.data.Label,
+      template: node.data.Payloads.ById['D_JINJA2_TEMPLATE'].Data,
       content,
       rendered: null,
       isdirty: false,

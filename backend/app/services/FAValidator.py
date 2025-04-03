@@ -12,7 +12,6 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
 )
 from app.uisdk.VFUIDefine import *
-from app.schemas.fanode import FANodeValidateNeed
 from app.nodes import FATaskNode, FANODE_REGISTRY
 
 

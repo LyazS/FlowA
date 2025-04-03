@@ -19,6 +19,7 @@ from app.schemas.farequest import (
     FANodeUpdateType,
     FANodeUpdateData,
 )
+from app.schemas.vfnode_contentdata import VarType
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -164,7 +165,7 @@ class CodeInterpreter(FATaskNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.type == "Ref" and var.valueStr not in selfVars:
+                if var.type == VarType.Ref and var.valueStr not in selfVars:
                     error_msgs.append(f"没有该变量选项{var.valueStr}")
                 else:
                     CodeInputArgs.add(var.key)

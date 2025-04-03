@@ -2,7 +2,7 @@ from typing import List, Optional, Any, Union, Dict
 import json
 from datetime import datetime
 from pydantic import BaseModel
-from enum import Enum
+from enum import StrEnum
 from .vfnode import VFlowData, VFNodeData
 from .fanode import FARunStatus
 
@@ -26,7 +26,7 @@ class ValidationError(BaseModel):
     pass
 
 
-class FANodeUpdateType(Enum):
+class FANodeUpdateType(StrEnum):
     overwrite = "overwrite"
     append = "append"
     remove = "remove"
@@ -41,7 +41,7 @@ class FANodeUpdateData(BaseModel):
     pass
 
 
-class SSEResponseType(Enum):
+class SSEResponseType(StrEnum):
     updatenode = "updatenode"
     batchupdatenode = "batchupdatenode"
     internalerror = "internalerror"
@@ -108,14 +108,14 @@ class FAWorkflow(BaseModel):
     pass
 
 
-class FAWorkflowCreateType(Enum):
+class FAWorkflowCreateType(StrEnum):
     new = "new"
     upload = "upload"
     release = "release"
     pass
 
 
-class FAWorkflowRunType(Enum):
+class FAWorkflowRunType(StrEnum):
     Full = "Full"
     Incremental = "Incremental"
     Api = "Api"
@@ -130,7 +130,7 @@ class FAWorkflowRunRequest(BaseModel):
     pass
 
 
-class FAWorkflowRunReqType(Enum):
+class FAWorkflowRunReqType(StrEnum):
     validation = "validation"
     isrunning = "isrunning"
     internalerror = "internalerror"
@@ -153,7 +153,7 @@ class FAWorkflowCreateRequest(BaseModel):
     pass
 
 
-class FAWorkflowLocation(Enum):
+class FAWorkflowLocation(StrEnum):
     wfname = "wfname"
     rwfname = "rwfname"
     rwfdescription = "rwfdescription"
@@ -211,7 +211,7 @@ class FAWorkflowNodeRequest(BaseModel):
     pass
 
 
-class FAWorkflowOperationType(Enum):
+class FAWorkflowOperationType(StrEnum):
     success = "success"
     error = "error"
     pass
@@ -224,7 +224,7 @@ class FAWorkflowOperationResponse(BaseModel):
     pass
 
 
-class FAProgressRequestType(Enum):
+class FAProgressRequestType(StrEnum):
     VFlowUI = "VFlowUI"
     JinJa = "JinJa"
     pass

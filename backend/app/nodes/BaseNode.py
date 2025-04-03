@@ -6,7 +6,6 @@ from loguru import logger
 from app.schemas.fanode import (
     FARunStatus,
     FANodeWaitType,
-    FANodeValidateNeed,
     ConnectOption_Var,
     ConnectOption_Node,
 )
@@ -90,6 +89,7 @@ class FABaseNode(ABC):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         return None
 
+    @abstractmethod
     async def processRequest(
         self,
         request: dict,
