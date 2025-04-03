@@ -1,5 +1,6 @@
 from typing import Dict, List, TYPE_CHECKING, Set
 import asyncio
+import re
 import aiofiles
 from aiofiles import os as aiofiles_os
 import os
@@ -8,6 +9,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import traceback
 from loguru import logger
+from app.utils.vueRef import RefType
 from app.core.config import settings
 from app.schemas.vfnode import VFlowData
 from app.schemas.fanode import FARunStatus
@@ -29,6 +31,7 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
+from app.schemas.VFNodeInterface import VFNodeFlag
 from sqlalchemy import select, update, exc, exists, delete
 from sqlalchemy.orm import selectinload
 
@@ -63,16 +66,43 @@ class FARunner:
     def getNode(self, nid: str) -> "FATaskNode":
         return self.nodes[nid]
 
+    async def getRefData(self, curnid: str, refdata: str):
+        """
+        根据curnid获取相对应层级的refdata数据
+        """
+        cur_pattern = r"#([0-9]+)"
+        Niter_pattern = r"#(\w+)"
+        # 获取cur节点的层级 =======================================
+        cur_matches = re.findall(cur_pattern, curnid)
+        cur_level = list(map(int, cur_matches))
+
+        ref_nid, ref_path = refdata.split("/", 1)
+        ref_level = re.findall(Niter_pattern, ref_nid)
+
+        # if len(nid_level) > len(cur_level):
+        #     raise ValueError(f"refdata {refdata} is not valid")
+        assert len(ref_level) <= len(cur_level)  # 层级不匹配
+        for i in range(len(ref_level)):
+            ref_level[i] = cur_level[i]
+        ref_replace_nid = ref_nid.split("#", 1)[0] + "".join(
+            map(lambda x: "#" + str(x), ref_level)
+        )
+        ref_node = self.getNode(ref_replace_nid)
+        ref_data: RefType = await ref_node.getContentByPath(
+            ref_path.split("/") + ["Data"]
+        )
+        return ref_data.value
+
     def buildNodes(self):
         from app.nodes.TaskNode import FANodeWaitStatus
-        from app.nodes import FANODECOLLECTION
+        from app.nodes import FANODE_REGISTRY
 
         # 初始化大图节点，即parentNode == None
         for nodeinfo in self.flowdata.nodes:
             if nodeinfo.parentNode == None:
                 self.addNode(
                     nodeinfo.id,
-                    (FANODECOLLECTION[nodeinfo.data.ntype])(
+                    (FANODE_REGISTRY[nodeinfo.data.NType])(
                         self.wid,
                         nodeinfo,
                         self,
@@ -88,8 +118,8 @@ class FARunner:
                 ):
                     continue
                 if not (
-                    (VFNodeFlag.isTask & self.getNode(edgeinfo.source).data.flag)
-                    and (VFNodeFlag.isTask & self.getNode(edgeinfo.target).data.flag)
+                    (VFNodeFlag.IsTask & self.getNode(edgeinfo.source).data.Flag)
+                    and (VFNodeFlag.IsTask & self.getNode(edgeinfo.target).data.Flag)
                 ):
                     continue
                 source_handle = edgeinfo.sourceHandle

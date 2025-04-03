@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from app.core.config import settings
 from app.schemas.fanode import FARunStatus
 from app.schemas.vfnode import VFlowData
+from app.schemas.VFNodeInterface import VFNodeFlag
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from app.services.messageMgr import ALL_MESSAGES_MGR
@@ -190,7 +191,7 @@ async def get_task_progress(prequest_body: Annotated[str, Body()]):
             if prequest.type == FAProgressRequestType.VFlowUI:
                 for nid in farunner.nodes.keys():
                     node = farunner.getNode(nid)
-                    if node.data.flag & VFNodeFlag.isTask:
+                    if node.data.Flag & VFNodeFlag.IsTask:
                         fetch_nids.append(nid)
                     pass
                 pass
@@ -219,14 +220,14 @@ async def get_task_progress(prequest_body: Annotated[str, Body()]):
                 # 需要手动构建他的状态
                 for nid in farunner.nodes.keys():
                     node = farunner.getNode(nid)
-                    if node.data.flag & VFNodeFlag.isPassive:
+                    if node.data.Flag & VFNodeFlag.IsPassive:
                         sse_data = SSEResponseData(
                             nid=nid,
                             oriid=farunner.nodes[nid].oriid,
                             data=[
                                 FANodeUpdateData(
                                     type=FANodeUpdateType.overwrite,
-                                    path=["state", "status"],
+                                    path=["State", "Status"],
                                     data=FARunStatus.Passive,
                                 )
                             ],

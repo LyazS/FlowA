@@ -18,7 +18,7 @@ from app.schemas.VFNodeInterface import (
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
-from ..UI_Components.UI_InputVars import DefaultInputVar
+from ..UI_Components.UI_InputVars import InputVarModel
 
 
 class Jinja2Template(FATaskNode):
@@ -46,8 +46,8 @@ class Jinja2Template(FATaskNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    DefaultInputVar(key="arg1", valueStr="hello"),
-                    DefaultInputVar(key="arg2", valueStr="world"),
+                    InputVarModel(key="arg1", valueStr="hello"),
+                    InputVarModel(key="arg2", valueStr="world"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),

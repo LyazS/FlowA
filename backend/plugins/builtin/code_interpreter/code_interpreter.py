@@ -8,11 +8,12 @@ import sys
 import json
 import traceback
 import base64
+from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.vfnode import VFNodeInfo
-from app.schemas.fanode import FANodeValidateNeed
+from app.schemas.fanode import FARunStatus
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -30,14 +31,15 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
 )
-from app.utils.tools import read_yaml
+from app.utils.tools import read_yaml, reduceGet
 from app.utils.db4node import loadNodeConfig, setNodeConfig
+
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
 
-from ..UI_Components.UI_InputVars import DefaultInputVar
+from ..UI_Components.UI_InputVars import InputVarModel
 
 
 class EvalType(StrEnum):
@@ -54,7 +56,7 @@ class CodeOutput(BaseModel):
 
 
 THIS_NODE_NAME = "@FACodeInterpreter"
-NodeConfig = {}
+NODE_CONFIG = {}
 CODE_TEMPLATE_FUNCTION = None
 CODE_TEMPLATE_INPUT = None
 CODE_TEMPLATE_OUTPUT_RE = None
@@ -64,7 +66,7 @@ SNEKBOXURL = None
 
 
 async def init_node_class():
-    global NodeConfig
+    global NODE_CONFIG
     global CODE_TEMPLATE_FUNCTION
     global CODE_TEMPLATE_INPUT
     global CODE_TEMPLATE_OUTPUT_RE
@@ -73,22 +75,22 @@ async def init_node_class():
     global SNEKBOXURL
     ret, config = await loadNodeConfig(THIS_NODE_NAME)
     if ret:
-        NodeConfig = config
+        NODE_CONFIG = config
     else:
-        NodeConfig = read_yaml(
+        NODE_CONFIG = read_yaml(
             os.path.join(
                 os.path.dirname(__file__),
                 "FANode_code_interpreter.yaml",
             )
         )
-        await setNodeConfig(THIS_NODE_NAME, NodeConfig)
-    CODE_TEMPLATE_FUNCTION = NodeConfig["codetemplate_func"]
-    CODE_TEMPLATE_INPUT = NodeConfig["codetemplate_input"]
-    CODE_TEMPLATE_OUTPUT_RE = NodeConfig["codetemplate_output_re"]
-    CODE_TEMPLATE = NodeConfig["codetemplate"]
+        await setNodeConfig(THIS_NODE_NAME, NODE_CONFIG)
+    CODE_TEMPLATE_FUNCTION = NODE_CONFIG["codetemplate_func"]
+    CODE_TEMPLATE_INPUT = NODE_CONFIG["codetemplate_input"]
+    CODE_TEMPLATE_OUTPUT_RE = NODE_CONFIG["codetemplate_output_re"]
+    CODE_TEMPLATE = NODE_CONFIG["codetemplate"]
 
-    EVALTYPE = EvalType(NodeConfig["evaltype"])
-    SNEKBOXURL = NodeConfig.get("snekboxUrl", "")
+    EVALTYPE = EvalType(NODE_CONFIG["evaltype"])
+    SNEKBOXURL = NODE_CONFIG.get("snekboxUrl", "")
 
     pass
 
@@ -161,7 +163,7 @@ class CodeInterpreter(FATaskNode):
 
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
-                var = DefaultInputVar.model_validate(var_dict)
+                var = InputVarModel.model_validate(var_dict)
                 if var.type == "Ref" and var.valueStr not in selfVars:
                     error_msgs.append(f"没有该变量选项{var.valueStr}")
                 else:
@@ -218,6 +220,59 @@ class CodeInterpreter(FATaskNode):
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
 
+    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
+        return reduceGet(self.data, path)
+
+    async def run(self) -> List[FANodeUpdateData]:
+        CodeInputArgs = {}
+        node_payloads = self.data.Payloads
+        node_results = self.data.Results
+
+        D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
+        for var_dict in D_INPUT_VARS.Data.value:
+            var = InputVarModel.model_validate(var_dict)
+            CodeInputArgs[var.key] = await InputVarModel.get_value(
+                var,
+                self.id,
+                self.runner().getRefData,
+            )
+        D_CODE: VFNodeContentData = node_payloads.ById["D_CODE"]
+
+        # 开始执行代码
+        code_in_args = json.dumps(CodeInputArgs, ensure_ascii=False)
+        code_in_args_b64 = base64.b64encode(code_in_args.encode("utf-8")).decode(
+            "utf-8"
+        )
+        code_run: str = copy.deepcopy(CODE_TEMPLATE)
+        code_run = code_run.replace(CODE_TEMPLATE_FUNCTION, D_CODE.Data.value).replace(
+            CODE_TEMPLATE_INPUT, code_in_args_b64
+        )
+        # 需要返回输出结果
+        codeResult = await SimplePythonRun(code_run, EVALTYPE, SNEKBOXURL)
+        if codeResult.success:
+            returnUpdateData = []
+            for rid in node_results.Order:
+                item: VFNodeContentData = node_results.ById[rid]
+                if item.Label not in codeResult.output:
+                    raise Exception(f"实际返回结果缺少输出参数【{rid}】")
+                returnUpdateData.append(
+                    FANodeUpdateData(
+                        type=FANodeUpdateType.overwrite,
+                        path=["Results", "ById", rid, "Data"],
+                        data=codeResult.output[item.Label],
+                    )
+                )
+                # 更新内部数据
+                self.data.Results.ById[rid].Data.value = codeResult.output[item.Label]
+                logger.debug(f"{item.Label}: {codeResult.output[item.Label]}")
+            # 返回之前先设置好输出handle状态
+            self.setAllOutputStatus(FARunStatus.Success)
+            # return returnUpdateData
+            return []
+        else:
+            raise Exception(f"执行代码失败：{codeResult.error}")
+        pass
+
     @staticmethod
     def getNodeConfig():
         return {}
@@ -243,8 +298,8 @@ class CodeInterpreter(FATaskNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    DefaultInputVar(key="arg1", valueStr="hello"),
-                    DefaultInputVar(key="arg2", valueStr="world"),
+                    InputVarModel(key="arg1", valueStr="hello"),
+                    InputVarModel(key="arg2", valueStr="world"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),

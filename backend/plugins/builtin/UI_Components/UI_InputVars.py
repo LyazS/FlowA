@@ -1,16 +1,40 @@
+from typing import Callable, Any
+from loguru import logger
 from pydantic import BaseModel
 from app.uisdk import *
 from .Header import Header
 from .RefVarSelect import UI_RefVarSelect
+from app.schemas.vfnode_contentdata import VarType
 
 
-class DefaultInputVar(BaseModel):
+class InputVarModel(BaseModel):
     key: str = ""
-    type: str = "String"
+    type: VarType = VarType.String
     valueStr: str = ""
     valueNum: int | float = 0
     valueBool: bool = False
     pass
+
+    @classmethod
+    async def get_value(
+        cls, var: "InputVarModel", cur_nid: str, getRef: Callable[[str], Any] = None
+    ):
+        if var.type == VarType.String:
+            return var.valueStr
+        elif var.type == VarType.Integer:
+            return var.valueNum
+        elif var.type == VarType.Number:
+            return var.valueNum
+        elif var.type == VarType.Boolean:
+            return var.valueBool
+        elif var.type == VarType.Ref:
+            if getRef:
+                return await getRef(cur_nid, var.valueStr)
+            else:
+                logger.error("getRef function is not provided")
+                return None
+        return None
+        pass
 
 
 class VarNameInput(NInput):
@@ -295,7 +319,7 @@ class UI_InputVars(NFlex):
                                                 PAYLOADS_ID,
                                                 "Data",
                                             ],
-                                            ItemValue=DefaultInputVar(),
+                                            ItemValue=InputVarModel(),
                                         )
                                     ),
                                     slots={

@@ -4,7 +4,6 @@ from typing import List, Any, Dict, Optional, Union
 from enum import Enum, Flag
 from pydantic import BaseModel
 import json
-from .vfnode_contentdata import VFNodeContentDataType
 from app.utils.vueRef import RefType
 from app.schemas.VFNodeInterface import VFNodeData
 

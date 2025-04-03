@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, TYPE_CHECKING, Any
+from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union
 from abc import ABC, abstractmethod
 from weakref import ref
 import copy
@@ -51,10 +51,6 @@ class FABaseNode(ABC):
         # 该节点的运行状态
         self.runStatus = FARunStatus.Pending
 
-        # 该节点需求的验证内容
-        self.validateNeededs: List[FANodeValidateNeed] = []
-        self.Need_ConnctOptions_Var: List[ConnectOption_Var] = []
-        self.Need_ConnctOptions_Node: List[ConnectOption_Node] = []
         pass
 
     def store(self):
@@ -87,7 +83,7 @@ class FABaseNode(ABC):
         return []
 
     @abstractmethod
-    async def getRefData(self, refdata: str) -> Any:
+    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
         return None
 
     @abstractmethod

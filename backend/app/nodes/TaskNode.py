@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, TYPE_CHECKING, Any, cast
+from typing import List, Dict, Optional, TYPE_CHECKING, Any, cast, Union
 from abc import ABC, abstractmethod
 import asyncio
 import re
@@ -8,9 +8,7 @@ import json
 import copy
 from loguru import logger
 from app.schemas.fanode import FARunStatus, FANodeWaitType, FANodeValidateNeed
-from app.schemas.vfnode_contentdata import Single_VarInput, VarType
-from app.schemas.vfnode import VFNodeData
-from app.schemas.vfnode import VFNodeInfo, VFNodeContentDataType
+from app.schemas.vfnode import VFNodeInfo
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -25,6 +23,7 @@ from app.schemas.farequest import (
     FAWorkflowOperationResponse,
     FAProgressRequestType,
 )
+from app.utils.tools import reduceGet
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.BaseNode import FABaseNode
@@ -186,64 +185,67 @@ class FATaskNode(FABaseNode):
         )
         pass
 
-    async def getRefData(self, refdata: str):
-        nid, contentname, ctid = refdata.split("/")
-        Niter_pattern = r"#(\w+)"
-        nid_matches = re.findall(Niter_pattern, nid)
-        nid_layout = len(nid_matches)
-        nest_layout = self.getNestLayout()
-        if len(nid_matches) > len(nest_layout):
-            raise ValueError(f"refdata {refdata} is not valid")
-        for i in range(len(nid_matches)):
-            nid_matches[i] = nest_layout[i]
-        nid_replace = nid.split("#", 1)[0] + "".join(
-            map(lambda x: "#" + str(x), nid_matches)
-        )
-        thenode = self.runner().getNode(nid_replace)
-        content = thenode.data.getContent(contentname).byId[ctid]
-        rtype = content.type
-        rdata = None
-        # 针对迭代特殊处理
-        if rtype == VFNodeContentDataType.IterIndex:
-            nest_layout = self.getNestLayout()
-            rdata = nest_layout[nid_layout]
-            pass
-        elif rtype == VFNodeContentDataType.IterItem:
-            nest_layout = self.getNestLayout()
-            iterNode: "FANode_iter_run" = thenode
-            rdata = iterNode.iter_var[nest_layout[nid_layout]]
-            pass
-        elif rtype == VFNodeContentDataType.IterRetryItem:
-            nest_layout = self.getNestLayout()
-            iterNode: "FANode_iter_retry_run" = thenode
-            rdata = iterNode.iter_item
-            pass
-        else:
-            rdata = content.data.value
-        pass
-        return rdata
+    # async def getRefData(self, refdata: str):
+    #     nid, contentname, ctid = refdata.split("/")
+    #     Niter_pattern = r"#(\w+)"
+    #     nid_matches = re.findall(Niter_pattern, nid)
+    #     nid_layout = len(nid_matches)
+    #     nest_layout = self.getNestLayout()
+    #     if len(nid_matches) > len(nest_layout):
+    #         raise ValueError(f"refdata {refdata} is not valid")
+    #     for i in range(len(nid_matches)):
+    #         nid_matches[i] = nest_layout[i]
+    #     nid_replace = nid.split("#", 1)[0] + "".join(
+    #         map(lambda x: "#" + str(x), nid_matches)
+    #     )
+    #     thenode = self.runner().getNode(nid_replace)
+    #     content = thenode.data.getContent(contentname).byId[ctid]
+    #     rtype = content.type
+    #     rdata = None
+    #     # 针对迭代特殊处理
+    #     if rtype == VFNodeContentDataType.IterIndex:
+    #         nest_layout = self.getNestLayout()
+    #         rdata = nest_layout[nid_layout]
+    #         pass
+    #     elif rtype == VFNodeContentDataType.IterItem:
+    #         nest_layout = self.getNestLayout()
+    #         iterNode: "FANode_iter_run" = thenode
+    #         rdata = iterNode.iter_var[nest_layout[nid_layout]]
+    #         pass
+    #     elif rtype == VFNodeContentDataType.IterRetryItem:
+    #         nest_layout = self.getNestLayout()
+    #         iterNode: "FANode_iter_retry_run" = thenode
+    #         rdata = iterNode.iter_item
+    #         pass
+    #     else:
+    #         rdata = content.data.value
+    #     pass
+    #     return rdata
 
-    def getNestLayout(self) -> List[int]:
-        pattern = r"#([0-9]+)"
-        matches = re.findall(pattern, self.id)
-        level = list(map(int, matches))
-        return level
+    # def getNestLayout(self) -> List[int]:
+    #     pattern = r"#([0-9]+)"
+    #     matches = re.findall(pattern, self.id)
+    #     level = list(map(int, matches))
+    #     return level
 
-    async def getVar(self, var: Single_VarInput):
-        if var.type == VarType.String:
-            return str(var.value)
-        elif var.type == VarType.Number:
-            return float(var.value)
-        elif var.type == VarType.Boolean:
-            return bool(var.value)
-        elif var.type == VarType.Integer:
-            return int(var.value)
-        elif var.type == VarType.Ref:
-            return await self.getRefData(var.value)
-        pass
+    # async def getVar(self, var: Single_VarInput):
+    #     if var.type == VarType.String:
+    #         return str(var.value)
+    #     elif var.type == VarType.Number:
+    #         return float(var.value)
+    #     elif var.type == VarType.Boolean:
+    #         return bool(var.value)
+    #     elif var.type == VarType.Integer:
+    #         return int(var.value)
+    #     elif var.type == VarType.Ref:
+    #         return await self.getRefData(var.value)
+    #     pass
 
     # 需要子类实现的函数 ===============================================================
-    # @abstractmethod
+
+    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
+        return reduceGet(self.data, path)
+
     async def run(self) -> List[FANodeUpdateData]:
         self.setAllOutputStatus(FARunStatus.Success)
         pass

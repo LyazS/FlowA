@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Any
 from loguru import logger
+from pydantic import BaseModel
 from app.schemas.farequest import VarItem, ValidationError
 from app.schemas.vfnode import VFlowData
 from app.schemas.VFNodeInterface import (
@@ -15,19 +16,35 @@ from app.schemas.fanode import FANodeValidateNeed
 from app.nodes import FATaskNode, FANODE_REGISTRY
 
 
+class ConnectEdge(BaseModel):
+    nid: str
+    hid: str
+    pass
+
+
+class ConnectGraph(BaseModel):
+    source: Dict[str, List[ConnectEdge]] = {}
+    target: Dict[str, List[ConnectEdge]] = {}
+    pass
+
+
 class FAValidator:
     def __init__(self):
         self.nodes: Dict[str, FATaskNode] = {}
-        self.connectGraph = {}
+        self.connectGraph: Dict[str, ConnectGraph] = {}
         pass
 
     def get_handle_connections(self, nid, type_str, hid):
         """获取连接到指定handle的边"""
         if nid in self.connectGraph:
-            if type_str == "source" and hid in self.connectGraph[nid]["source"]:
-                return self.connectGraph[nid]["source"][hid]
-            elif type_str == "target" and hid in self.connectGraph[nid]["target"]:
-                return self.connectGraph[nid]["target"][hid]
+            # if type_str == "source" and hid in self.connectGraph[nid]["source"]:
+            #     return self.connectGraph[nid]["source"][hid]
+            # elif type_str == "target" and hid in self.connectGraph[nid]["target"]:
+            #     return self.connectGraph[nid]["target"][hid]
+            if type_str == "source":
+                return self.connectGraph[nid].source.get(hid, [])
+            elif type_str == "target":
+                return self.connectGraph[nid].target.get(hid, [])
         return []
 
     def resolve_value_by_path(self, path, data_context):
@@ -216,7 +233,6 @@ class FAValidator:
 
         for c_data in connection.values():
             if c_data.Type == VFNodeConnectionDataType.FromInner and c_data.Path:
-                # 使用resolveValueByPath查找路径数据
                 path_data: VFNodeContentData = self.resolve_value_by_path(
                     c_data.Path, thenode.data
                 )
@@ -230,20 +246,15 @@ class FAValidator:
                             DataType=path_data.Type,
                         )
                     )
-
             elif c_data.Type == VFNodeConnectionDataType.FromOuter and c_data.HandleId:
-                # 使用handleId而非inputKey
                 edges = self.get_handle_connections(nid, "target", c_data.HandleId)
-
                 for edge in edges:
-                    src_nid = edge["nid"]
-                    src_handle = edge["hid"]
+                    src_nid = edge.nid
+                    src_handle = edge.hid
                     result.extend(
                         self.recursive_find_variables(src_nid, "Outputs", [src_handle])
                     )
-
             elif c_data.Type == VFNodeConnectionDataType.FromAttached and c_data.ANode:
-                # 匹配前端的ANode遍历逻辑
                 for aname, hdata in c_data.ANode.items():
                     anode_nid = thenode.data.Nesting.ANodes.get(aname, {}).get("Nid")
                     if anode := self.nodes.get(anode_nid):
@@ -252,7 +263,6 @@ class FAValidator:
                                 anode.id, hdata.ConnectionType, [hdata.HandleId]
                             )
                         )
-
             elif (
                 c_data.Type == VFNodeConnectionDataType.FromParent
                 and thenode.parentNode
@@ -333,30 +343,56 @@ class FAValidator:
             self.nodes[nodeinfo.id] = node
             pass
         # 构建节点连接关系
+        # for edgeinfo in flowdata.edges:
+        #     if edgeinfo.source in self.nodes and edgeinfo.target in self.nodes:
+        #         source_handle = edgeinfo.sourceHandle
+        #         target_handle = edgeinfo.targetHandle
+        #         if edgeinfo.source not in self.connectGraph:
+        #             self.connectGraph[edgeinfo.source] = {"source": {}, "target": {}}
+        #             pass
+        #         if source_handle not in self.connectGraph[edgeinfo.source]["source"]:
+        #             self.connectGraph[edgeinfo.source]["source"][source_handle] = []
+        #             pass
+        #         self.connectGraph[edgeinfo.source]["source"][source_handle].append(
+        #             {"nid": edgeinfo.target, "hid": target_handle}
+        #         )
+        #         pass
+        #         if edgeinfo.target not in self.connectGraph:
+        #             self.connectGraph[edgeinfo.target] = {"source": {}, "target": {}}
+        #             pass
+        #         if target_handle not in self.connectGraph[edgeinfo.target]["target"]:
+        #             self.connectGraph[edgeinfo.target]["target"][target_handle] = []
+        #             pass
+        #         self.connectGraph[edgeinfo.target]["target"][target_handle].append(
+        #             {"nid": edgeinfo.source, "hid": source_handle}
+        #         )
+        #         pass
+
         for edgeinfo in flowdata.edges:
             if edgeinfo.source in self.nodes and edgeinfo.target in self.nodes:
                 source_handle = edgeinfo.sourceHandle
                 target_handle = edgeinfo.targetHandle
                 if edgeinfo.source not in self.connectGraph:
-                    self.connectGraph[edgeinfo.source] = {"source": {}, "target": {}}
+                    self.connectGraph[edgeinfo.source] = ConnectGraph()
                     pass
-                if source_handle not in self.connectGraph[edgeinfo.source]["source"]:
-                    self.connectGraph[edgeinfo.source]["source"][source_handle] = []
+                if source_handle not in self.connectGraph[edgeinfo.source].source:
+                    self.connectGraph[edgeinfo.source].source[source_handle] = []
                     pass
-                self.connectGraph[edgeinfo.source]["source"][source_handle].append(
-                    {"nid": edgeinfo.target, "hid": target_handle}
+                self.connectGraph[edgeinfo.source].source[source_handle].append(
+                    ConnectEdge(nid=edgeinfo.target, hid=target_handle)
                 )
                 pass
                 if edgeinfo.target not in self.connectGraph:
-                    self.connectGraph[edgeinfo.target] = {"source": {}, "target": {}}
+                    self.connectGraph[edgeinfo.target] = ConnectGraph()
                     pass
-                if target_handle not in self.connectGraph[edgeinfo.target]["target"]:
-                    self.connectGraph[edgeinfo.target]["target"][target_handle] = []
+                if target_handle not in self.connectGraph[edgeinfo.target].target:
+                    self.connectGraph[edgeinfo.target].target[target_handle] = []
                     pass
-                self.connectGraph[edgeinfo.target]["target"][target_handle].append(
-                    {"nid": edgeinfo.source, "hid": source_handle}
+                self.connectGraph[edgeinfo.target].target[target_handle].append(
+                    ConnectEdge(nid=edgeinfo.source, hid=source_handle)
                 )
                 pass
+
         # 逐个节点验证，主要验证变量是否合法
         validations: List[ValidationError] = []
         for nid in self.nodes.keys():

@@ -20,7 +20,7 @@ from app.schemas.VFNodeInterface import (
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
-from ..UI_Components.UI_InputVars import DefaultInputVar
+from ..UI_Components.UI_InputVars import InputVarModel
 
 
 class LLMSettingType(StrEnum):
@@ -156,8 +156,8 @@ class LLMInference(FATaskNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    DefaultInputVar(key="arg1", valueStr="good"),
-                    DefaultInputVar(key="arg2", valueStr="assistant"),
+                    InputVarModel(key="arg1", valueStr="good"),
+                    InputVarModel(key="arg2", valueStr="assistant"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),

@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 class ExamNode(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
-        self.validateNeededs: List[FANodeValidateNeed] = [FANodeValidateNeed.Self]
         pass
 
     @staticmethod
