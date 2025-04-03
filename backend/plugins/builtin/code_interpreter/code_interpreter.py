@@ -255,7 +255,6 @@ class CodeInterpreter(FATaskNode):
 
                 # 更新内部数据
                 self.data.Results.ById[rid].Data.value = codeResult.output[item.Label]
-                logger.debug(f"{item.Label}: {codeResult.output[item.Label]}")
             # 返回之前要设置好输出handle状态
             self.setAllOutputStatus(FARunStatus.Success)
             return []

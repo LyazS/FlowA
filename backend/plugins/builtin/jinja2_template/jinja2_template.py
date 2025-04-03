@@ -128,7 +128,7 @@ class Jinja2Template(FATaskNode):
                     path=[var.key],
                     data=RefTriggerData(
                         path=[],
-                        operation=RefOptions.set,
+                        operation=RefOptions.Set,
                         new_value=await InputVarModel.get_value(
                             var,
                             self.id,
@@ -138,37 +138,6 @@ class Jinja2Template(FATaskNode):
                     ),
                 )
             )
-            # if var.type == VarType.Ref:
-            #     refdata: str = var.valueStr
-            #     nid, path = refdata.split("/", 1)
-            #     thenode = self.runner().getNode(nid)
-            #     curData.append(
-            #         FANodeUpdateData(
-            #             type=FANodeUpdateType.dontcare,
-            #             path=[var.key],
-            #             data=RefTriggerData(
-            #                 path=[],
-            #                 operation=RefOptions.set,
-            #                 new_value=serialize_ref(
-            #                     thenode.getContentByPath(path.split("/") + ["Data"])
-            #                 ),
-            #                 old_value=None,
-            #             ),
-            #         )
-            #     )
-            # else:
-            #     curData.append(
-            #         FANodeUpdateData(
-            #             type=FANodeUpdateType.dontcare,
-            #             path=[var.key],
-            #             data=RefTriggerData(
-            #                 path=[],
-            #                 operation=RefOptions.set,
-            #                 new_value=var.value,
-            #                 old_value=None,
-            #             ),
-            #         )
-            #     )
         return curData
 
     async def processRequest(

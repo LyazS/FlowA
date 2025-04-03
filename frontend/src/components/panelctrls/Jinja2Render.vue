@@ -72,7 +72,7 @@ import type {
   FAReleaseWorkflowInfo,
   JinjaRefTriggerData,
 } from '@/schemas/vflow_schemas'
-import {type VFNode} from '@/components/nodes/VFNodeClass'
+import { type VFNode } from '@/components/nodes/VFNodeClass'
 import { FAProgressRequestType } from '@/schemas/vflow_schemas'
 
 // 类型定义
@@ -179,7 +179,7 @@ const { subscribe: subscribeJinja, unsubscribe: unsubscribeJinja } = SubscribeSS
         Jinja2RenderData.value[nid].isdirty = true
 
         updateDatas.forEach((updateData) => {
-          const { path, operation, new_value, old_value } = updateData.data!
+          const { path, operation, new_value, old_value } = updateData.data! as JinjaRefTriggerData
           let current = Jinja2RenderData.value[nid].content
           const combinedPath = [...updateData.path!, ...path]
 
@@ -191,13 +191,29 @@ const { subscribe: subscribeJinja, unsubscribe: unsubscribeJinja } = SubscribeSS
 
           const lastKey = combinedPath[combinedPath.length - 1]
           switch (operation) {
-            case 'set':
+            case 'Set':
               current[lastKey] = new_value
               break
-            case 'append':
+            case 'Append':
               current[lastKey] = Array.isArray(current[lastKey])
                 ? [...current[lastKey], new_value]
                 : [new_value]
+              break
+            case 'DelItem':
+              if (Array.isArray(current)) {
+                current = current.filter((v) => v !== lastKey)
+              }
+              else if (typeof current === 'object') {
+                delete current[lastKey]
+              }
+              break
+            case 'SetItem':
+              current[lastKey] = new_value
+              break
+            case 'Pop':
+              current[lastKey] = Array.isArray(current[lastKey])
+                ? current[lastKey].slice(0, -1)
+                : null
               break
           }
         })

@@ -13,11 +13,11 @@ from pydantic.json_schema import JsonSchemaValue
 
 
 class RefOptions(Enum):
-    set = "set"
-    setitem = "setitem"
-    delitem = "delitem"
-    append = "append"
-    pop = "pop"
+    Set = "Set"
+    SetItem = "SetItem"
+    DelItem = "DelItem"
+    Append = "Append"
+    Pop = "Pop"
     pass
 
 
@@ -71,7 +71,7 @@ class Ref:
             self._trigger(
                 RefTriggerData(
                     path=[],
-                    operation=RefOptions.set,
+                    operation=RefOptions.Set,
                     new_value=new_value,
                     old_value=old_value,
                 )
@@ -143,7 +143,7 @@ class ReactiveDict(dict):
         self._trigger_callback(
             RefTriggerData(
                 path=[key],
-                operation=RefOptions.setitem,
+                operation=RefOptions.SetItem,
                 new_value=value,
                 old_value=old_value,
             )
@@ -161,7 +161,7 @@ class ReactiveDict(dict):
         self._trigger_callback(
             RefTriggerData(
                 path=[key],
-                operation=RefOptions.delitem,
+                operation=RefOptions.DelItem,
                 new_value=None,
                 old_value=old_value,
             )
@@ -216,7 +216,7 @@ class ReactiveList(list):
         self._trigger_callback(
             RefTriggerData(
                 path=[key],
-                operation=RefOptions.setitem,
+                operation=RefOptions.SetItem,
                 new_value=value,
                 old_value=old_value,
             )
@@ -234,7 +234,7 @@ class ReactiveList(list):
         self._trigger_callback(
             RefTriggerData(
                 path=[key],
-                operation=RefOptions.delitem,
+                operation=RefOptions.DelItem,
                 new_value=None,
                 old_value=old_value,
             )
@@ -257,7 +257,7 @@ class ReactiveList(list):
         self._trigger_callback(
             RefTriggerData(
                 path=[],
-                operation=RefOptions.append,
+                operation=RefOptions.Append,
                 new_value=value,
                 old_value=None,
             )
@@ -269,7 +269,7 @@ class ReactiveList(list):
         self._trigger_callback(
             RefTriggerData(
                 path=[],
-                operation=RefOptions.pop,
+                operation=RefOptions.Pop,
                 new_value=None,
                 old_value=old_value,
             )

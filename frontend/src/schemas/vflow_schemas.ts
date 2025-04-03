@@ -30,7 +30,7 @@ export interface SSEResponseData<T = any> {
 
 export interface JinjaRefTriggerData {
   path: string[]
-  operation: string
+  operation: 'Set' | 'SetItem' | 'DelItem' | 'Append' | 'Pop'
   new_value: any
   old_value: any
 }
