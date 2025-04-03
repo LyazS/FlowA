@@ -14,6 +14,7 @@ from app.schemas.VFNodeInterface import VFNodeFlag
 
 FLOWA_PROVIDER_REGISTRY: Dict[str, VFProvider] = {}
 FANODE_REGISTRY: Dict[str, FABaseNode] = {}  # 节点类型
+FANODE_CONFIG_REGISTRY: Dict[str, Any] = {}  # 节点配置
 
 
 def path_to_module_str(path):
@@ -55,7 +56,10 @@ async def register_plugins():
                     node_init = getattr(module, "EXPORT_INIT", None)
                     if node_init is not None:
                         await node_init()
-
+                    pass
+                    FANODE_CONFIG_REGISTRY[plugin.Name] = (
+                        await node_class.getNodeConfig()
+                    )
                     logger.info(f"Register NODE [{plugin.Name}].")
             pass
             # 注册UI组件

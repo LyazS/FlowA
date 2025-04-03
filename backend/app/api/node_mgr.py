@@ -40,7 +40,7 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
-from app.nodes import FLOWA_PROVIDER_REGISTRY, FANODE_REGISTRY
+from app.nodes import FLOWA_PROVIDER_REGISTRY, FANODE_REGISTRY, FANODE_CONFIG_REGISTRY
 from app.nodes.BaseNode import FABaseNode
 
 
@@ -60,14 +60,39 @@ async def get_initinfo():
 
 @router.get("/config")
 async def nodeconfig(ntype: str):
-    if ntype in FANODE_REGISTRY:
-        node: "FABaseNode" = FANODE_REGISTRY[ntype]
+    if ntype in FANODE_CONFIG_REGISTRY:
+        node_cfg = FANODE_CONFIG_REGISTRY[ntype]
         return FAWorkflowOperationResponse(
             type=FAWorkflowOperationType.success,
-            data=node.getNodeConfig(),
+            data=node_cfg,
         )
     else:
         return FAWorkflowOperationResponse(
             type=FAWorkflowOperationType.error,
             message=f"Node type {ntype} not found in FANODECOLLECTION",
         )
+
+
+@router.get("/allconfig")
+async def allnodeconfig():
+    return FAWorkflowOperationResponse(
+        type=FAWorkflowOperationType.success,
+        data=FANODE_CONFIG_REGISTRY,
+    )
+
+
+@router.post("/refreshconfig")
+async def refreshconfig(ntype: str):
+    if ntype in FANODE_REGISTRY:
+        FANODE_CONFIG_REGISTRY[ntype] =await FANODE_REGISTRY[ntype].getNodeConfig()
+        return FAWorkflowOperationResponse(
+            type=FAWorkflowOperationType.success,
+            message=f"Node type {ntype} config refreshed",
+            data=FANODE_CONFIG_REGISTRY[ntype],
+        )
+    else:
+        return FAWorkflowOperationResponse(
+            type=FAWorkflowOperationType.error,
+            message=f"Node type {ntype} not found in FANODECOLLECTION",
+        )
+    pass

@@ -18,6 +18,7 @@ interface VFlowInitInstance {
   AllNodeNeedOptions: Ref<Record<string, any>>
   AllTestNodes: Ref<Record<string, VFNode>>
   AllUIComponents: Ref<Record<string, BaseComponent>>
+  AllNodeConfig: Ref<Record<string, any>>
   importAllNodes: () => Promise<void>
   createVFNode: (ntype: string) => VFNode
 }
@@ -35,26 +36,9 @@ export const useVFlowInitial = (): VFlowInitInstance => {
   const AllNodeNeedOptions = ref<Record<string, any>>({})
   const AllTestNodes = ref<Record<string, VFNode>>({})
   const AllUIComponents = ref<Record<string, BaseComponent>>({})
+  const AllNodeConfig = ref<Record<string, any>>({})
 
   const importAllNodes = async () => {
-    // const modules = import.meta.glob('../components/nodes/all_nodes_ts/**.ts') as Record<
-    //   string,
-    //   () => Promise<NodeModule>
-    // >
-
-    // const promises = Object.keys(modules).map(async (key) => {
-    //   const module = await modules[key]()
-    //   const test_node = module.createNode()
-    //   AllNodeCreateFuncs.value[test_node.ntype] = module.createNode
-    //   AllTestNodes.value[test_node.ntype] = test_node
-    //   if (!AllVFNodeTypes.hasOwnProperty(test_node.vtype)) {
-    //     AllVFNodeTypes[test_node.vtype] = markRaw(module.NodeVue)
-    //   }
-    // })
-
-    // await Promise.all(promises)
-    // logger.debug('All nodes imported')
-
     const response = await getData<Record<string, VFProvider>>('node/initinfo')
     logger.debug('getCreateInfo', response)
     for (const provider in response) {
@@ -84,9 +68,14 @@ export const useVFlowInitial = (): VFlowInitInstance => {
         }
       }
     }
+
+    const allconfig_response = await getData<Record<string, any>>('node/allconfig')
+    AllNodeConfig.value = allconfig_response
+
     logger.debug('AllNodeCreateFuncs', AllNodeCreateFuncs.value)
     logger.debug('AllTestNodes', AllTestNodes.value)
     logger.debug('AllUIComponents', AllUIComponents.value)
+    logger.debug('AllNodeConfig', AllNodeConfig.value)
   }
 
   const createVFNode = (ntype: string) => {
@@ -99,6 +88,7 @@ export const useVFlowInitial = (): VFlowInitInstance => {
     AllNodeNeedOptions,
     AllTestNodes,
     AllUIComponents,
+    AllNodeConfig,
     importAllNodes,
     createVFNode,
   }

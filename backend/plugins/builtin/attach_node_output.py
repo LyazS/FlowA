@@ -26,7 +26,7 @@ class ExamNode(FATaskNode):
         pass
 
     @staticmethod
-    def getNodeConfig():
+    async def getNodeConfig():
         return {}
 
     @staticmethod

@@ -58,7 +58,7 @@ class LLMSettings(BaseModel):
     Stream: LLMSetting
     MaxTokens: LLMSetting
     Temperature: LLMSetting
-    Temperature: LLMSetting
+    TopP: LLMSetting
     FrequencyPenalty: LLMSetting
     ResponseFormat: LLMSetting
     Stop: LLMSetting
@@ -133,7 +133,6 @@ async def init_node_class():
         SelectOptions(label=m["name"], value=m["name"]) for m in NODE_CONFIG["models"]
     ]
     AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
-
     pass
 
 
@@ -352,7 +351,7 @@ class LLMInference(FATaskNode):
             pass
 
     @staticmethod
-    def getNodeConfig():
+    async def getNodeConfig():
         return {
             "models": MODELS,
             "models_select": MODELS_SELECT,

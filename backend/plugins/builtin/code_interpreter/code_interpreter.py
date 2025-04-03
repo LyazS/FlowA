@@ -263,7 +263,7 @@ class CodeInterpreter(FATaskNode):
         pass
 
     @staticmethod
-    def getNodeConfig():
+    async def getNodeConfig():
         return {}
 
     @staticmethod

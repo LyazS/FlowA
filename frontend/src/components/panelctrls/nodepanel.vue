@@ -73,7 +73,7 @@ const { findNode, getHandleConnections } = useVueFlow()
 const nodeId = computed(() => selectedNodeId.value as string)
 // 获取节点
 const { curSelectedNode } = useCurSelectedNode()
-const { AllUIComponents } = useVFlowInitial()
+const { AllUIComponents, AllNodeConfig } = useVFlowInitial()
 watch(
   () => curSelectedNode.value.data,
   () => {
@@ -184,16 +184,10 @@ const getOrCreateVarSelectionWHandle = (path: string[]) => {
 provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
 
 // 节点config相关
-const _NodeConfig: Record<string, any> = {}
-const getNodeConfig =  (nid: string) => {
-  if (nid in _NodeConfig) return _NodeConfig[nid]
+const getNodeConfig = (nid: string) => {
   const node = findNode(nid) as NodeWithVFData
-  if (!node) return {}
-  const res = getData(`node/config?ntype=${encodeURIComponent(node.data.NType)}`).then((res) => {
-    return res
-  })
-  _NodeConfig[nid] = res
-  return res
+  if (!node) return null
+  return AllNodeConfig.value[node.data.NType]
 }
 provide('getNodeConfig', getNodeConfig)
 
@@ -207,9 +201,6 @@ watch(
       })
       Object.keys(_VarSelectionWHandle).forEach((key) => {
         delete _VarSelectionWHandle[key]
-      })
-      Object.keys(_NodeConfig).forEach((key) => {
-        delete _NodeConfig[key]
       })
     }
   },

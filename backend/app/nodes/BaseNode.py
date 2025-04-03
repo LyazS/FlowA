@@ -100,7 +100,7 @@ class FABaseNode(ABC):
         return None
 
     @staticmethod
-    def getNodeConfig():
+    async def getNodeConfig():
         """
         节点的配置信息，例如可以获取LLM的模型列表
         """
