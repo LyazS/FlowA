@@ -65,7 +65,6 @@ import {
 const { recursiveFindVariables, mapVarItemToSelect } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
 
-const editable_header = defineAsyncComponent(() => import('./editables/common/header.vue'))
 const DynamicComponent = defineAsyncComponent(() => import('./editables/DynamicComponent.vue'))
 
 const { findNode, getHandleConnections } = useVueFlow()

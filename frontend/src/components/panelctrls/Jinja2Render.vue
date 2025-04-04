@@ -55,7 +55,7 @@ import {
   NTransfer,
   NTag,
 } from 'naive-ui'
-import editable_header from '@/components/panelctrls/editables/common/header.vue'
+import editable_header from '@/components/panelctrls/editables/header.vue'
 import { debounce, throttle } from 'lodash'
 import {
   isEditing,
@@ -72,7 +72,6 @@ import type {
   FAReleaseWorkflowInfo,
   JinjaRefTriggerData,
 } from '@/schemas/vflow_schemas'
-import { type VFNode } from '@/components/nodes/VFNodeClass'
 import { FAProgressRequestType } from '@/schemas/vflow_schemas'
 
 // 类型定义
