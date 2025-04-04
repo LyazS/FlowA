@@ -10,6 +10,7 @@ from .LLM_inference import (
     LLMTypeOptions,
     LLMTypeOptionsWnull,
 )
+from app.schemas.VFNodeInterface import VFNodeConnectionType
 
 
 class SingleAttrBoolean(NFlex):
@@ -58,7 +59,7 @@ class SingleAttrBoolean(NFlex):
                         options=VBindProp(
                             Data=[
                                 CONNECT_DATA_TO_SELECT,
-                                "Self",
+                                VFNodeConnectionType.Self,
                                 "self",
                             ]
                         ),
@@ -134,7 +135,7 @@ class SingleAttrNumber(NFlex):
                         options=VBindProp(
                             Data=[
                                 CONNECT_DATA_TO_SELECT,
-                                "Self",
+                                VFNodeConnectionType.Self,
                                 "self",
                             ]
                         ),
@@ -214,7 +215,7 @@ class SingleAttrSelect(NFlex):
                         options=VBindProp(
                             Data=[
                                 CONNECT_DATA_TO_SELECT,
-                                "Self",
+                                VFNodeConnectionType.Self,
                                 "self",
                             ]
                         ),

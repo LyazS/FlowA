@@ -160,7 +160,7 @@ class Jinja2Template(FATaskNode):
                 self.id,
                 [
                     CONNECT_DATA_TO_SELECT,
-                    "Self",
+                    VFNodeConnectionType.Self,
                     "self",
                 ],
             )

@@ -157,7 +157,7 @@ class CodeInterpreter(FATaskNode):
                 self.id,
                 [
                     CONNECT_DATA_TO_SELECT,
-                    "Self",
+                    VFNodeConnectionType.Self,
                     "self",
                 ],
             )

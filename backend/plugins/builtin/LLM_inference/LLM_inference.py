@@ -170,7 +170,7 @@ class LLMInference(FATaskNode):
                 self.id,
                 [
                     CONNECT_DATA_TO_SELECT,
-                    "Self",
+                    VFNodeConnectionType.Self,
                     "self",
                 ],
             )

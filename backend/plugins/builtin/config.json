@@ -54,6 +54,14 @@
       "Description": "LLM inference",
       "Execute": "LLM_inference/LLM_inference.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/IterRun",
+      "Label": "迭代运行",
+      "Description": "迭代运行，可以嵌套",
+      "Execute": "iter_run/iter_run.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
@@ -86,6 +94,21 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_TAG_OUTPUTS",
       "Component": "UI_Components/UI_TagOutput.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
+      "Component": "iter_run/UI_Iter_Run_Inner_Var.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RUN_ITER_ARRAY",
+      "Component": "iter_run/UI_Iter_Run_Iter_Array.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RUN_OUTPUT",
+      "Component": "iter_run/UI_Iter_Run_Output.py"
     }
   ]
 }

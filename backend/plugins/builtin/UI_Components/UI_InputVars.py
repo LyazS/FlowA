@@ -5,6 +5,7 @@ from app.uisdk import *
 from .Header import Header
 from .RefVarSelect import UI_RefVarSelect
 from app.schemas.vfnode_contentdata import VarType
+from app.schemas.VFNodeInterface import VFNodeConnectionType
 
 
 class InputVarModel(BaseModel):
@@ -257,7 +258,7 @@ class UI_SingleInputVars(NFlex):
                         options=VBindProp(
                             Data=[
                                 CONNECT_DATA_TO_SELECT,
-                                "Self",
+                                VFNodeConnectionType.Self,
                                 "self",
                             ]
                         ),
