@@ -44,6 +44,9 @@ class UI_CodeEditor(NFlex):
                                             Language="python",
                                         )
                                     ),
+                                    otherProps={
+                                        "disabled": False,
+                                    },
                                     slots={
                                         "default": SpanComponent(
                                             Type=ComponentType.VALUE, Data="编辑"

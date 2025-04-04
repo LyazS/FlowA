@@ -123,7 +123,7 @@ class FATaskNode(FABaseNode):
                 nodeUpdateDatas.extend(updateDatas)
                 pass
             ALL_MESSAGES_MGR.put(
-                f"{self.wid}/{FAProgressRequestType.VFlowUI.value}",
+                f"{self.wid}/{FAProgressRequestType.VFlowUI}",
                 SSEResponse(
                     event=SSEResponseType.updatenode,
                     data=SSEResponseData(
@@ -167,7 +167,7 @@ class FATaskNode(FABaseNode):
     def putNodeStatus(self, status: FARunStatus):
         self.runStatus = status
         ALL_MESSAGES_MGR.put(
-            f"{self.wid}/{FAProgressRequestType.VFlowUI.value}",
+            f"{self.wid}/{FAProgressRequestType.VFlowUI}",
             SSEResponse(
                 event=SSEResponseType.updatenode,
                 data=SSEResponseData(
@@ -198,7 +198,7 @@ class FATaskNode(FABaseNode):
         return [
             FANodeUpdateData(
                 type=FANodeUpdateType.overwrite,
-                path=["state", "status"],
+                path=["State", "Status"],
                 data=self.runStatus,
             )
         ]

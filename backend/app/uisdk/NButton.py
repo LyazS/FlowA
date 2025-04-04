@@ -39,6 +39,7 @@ class NButton(NormalComponent):
         ) = "default",
         level: Optional[Literal["secondary", "tertiary", "quaternary"]] = None,
         onClick: Optional[FunctionProp] = None,
+        otherProps: Dict = {},
         style: Optional[Dict] = None,
         slots: Optional[Dict] = None,
         IfCondition: Optional[Condition] = None,
@@ -59,6 +60,7 @@ class NButton(NormalComponent):
             "type": type,
             "onClick": onClick,
             "style": style,
+            **otherProps,
         }
         if level == "secondary":
             Props["secondary"] = True

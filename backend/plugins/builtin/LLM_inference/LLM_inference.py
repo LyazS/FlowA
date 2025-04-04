@@ -237,6 +237,7 @@ class LLMInference(FATaskNode):
                 ]
                 D_PROMPTS: VFNodeContentData = node_payloads.ById["D_PROMPTS"]
                 D_ANSWER: VFNodeContentData = node_results.ById["D_ANSWER"]
+                D_THOUGHT: VFNodeContentData = node_results.ById["D_THOUGHT"]
                 D_MODEL: VFNodeContentData = node_results.ById["D_MODEL"]
                 D_IN_TOKEN: VFNodeContentData = node_results.ById["D_IN_TOKEN"]
                 D_OUT_TOKEN: VFNodeContentData = node_results.ById["D_OUT_TOKEN"]
@@ -283,12 +284,19 @@ class LLMInference(FATaskNode):
                     max_retries=10
                 ).chat.completions.create(**completions_params)
                 D_ANSWER.Data.value = ""
+                D_THOUGHT.Data.value = ""
                 if isStream:
                     async for chunk in chat_completion:
                         chunk = cast(ChatCompletionChunk, chunk)
                         if len(chunk.choices) > 0:
                             content = chunk.choices[0].delta.content
-                            D_ANSWER.Data.value += content
+                            if content is not None:
+                                D_ANSWER.Data.value += content
+                            reasoning_content = chunk.choices[0].delta.model_extra.get(
+                                "reasoning_content", None
+                            )
+                            if reasoning_content is not None:
+                                D_THOUGHT.Data.value += reasoning_content
                             D_STOP_REASON.Data.value = chunk.choices[0].finish_reason
                             pass
                         if chunk.usage is not None:
@@ -297,6 +305,9 @@ class LLMInference(FATaskNode):
                             pass
                 else:
                     D_ANSWER.Data.value = chat_completion.choices[0].message.content
+                    D_THOUGHT.Data.value = chat_completion.choices[
+                        0
+                    ].message.model_extra.get("reasoning_content", None)
                     D_IN_TOKEN.Data.value = chat_completion.usage.prompt_tokens
                     D_OUT_TOKEN.Data.value = chat_completion.usage.completion_tokens
                     D_STOP_REASON.Data.value = chat_completion.choices[0].finish_reason
@@ -352,6 +363,9 @@ class LLMInference(FATaskNode):
 
     @staticmethod
     async def getNodeConfig():
+        modellist = (await AsyncOAIClient.models.list()).data
+        MODELS_SELECT = [SelectOptions(label=m.id, value=m.id) for m in modellist]
+        MODELS_SELECT = sorted(MODELS_SELECT, key=lambda x: x.label.lower())
         return {
             "models": MODELS,
             "models_select": MODELS_SELECT,
@@ -451,6 +465,15 @@ class LLMInference(FATaskNode):
             payload_id="D_PROMPTS",
         )
 
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="思考结果",
+                Type="String",
+                Data="",
+            ),
+            handle_id="output_res",
+            result_id="D_THOUGHT",
+        )
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="推理结果",

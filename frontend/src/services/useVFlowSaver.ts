@@ -3,8 +3,10 @@ import { postData, getData } from '@/utils/requestMethod'
 import { useVueFlow, type FlowExportObject } from '@vue-flow/core'
 
 import {
+  WorkflowModeType,
   WorkflowID,
   WorkflowName,
+  WorkflowMode,
   AutoSaveMessage,
   Jinja2RenderNodeIDs,
   isEditorMode,
@@ -30,7 +32,7 @@ export const useVFlowSaver = () => {
   }, 500)
 
   const autoSaveWorkflow = () => {
-    if (!isEditorMode.value) return
+    if (WorkflowMode.value == WorkflowModeType.View) return
     console.log('try to autoSaveWorkflow')
     debouncedAutoSaveWorkflow()
   }
