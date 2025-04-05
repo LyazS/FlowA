@@ -28,6 +28,10 @@ export interface NodeAddInfo {
   pos: XYPosition
 }
 
+export interface FAEdgeData {
+  isHovered: boolean
+}
+
 interface NestedNodeType {
   parentNode: string | null
   children: string[]
@@ -337,6 +341,8 @@ export const useVFlowManager = (): NodeManagementInstance => {
     if (is_match_port && is_diff_node && !!is_same_parent && !is_all_attached) {
       logger.debug('add edge')
       params.type = 'normal'
+      params.data = { isHovered: false }
+      logger.debug('edge params', params)
       addEdges(params)
       autoSaveWorkflow()
     }

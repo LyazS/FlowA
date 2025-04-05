@@ -9,7 +9,7 @@ import {
   type Connection,
   type NodeDragEvent,
 } from '@vue-flow/core'
-import { useVFlowManager } from '@/hooks/useVFlowManager'
+import { type FAEdgeData, useVFlowManager } from '@/hooks/useVFlowManager'
 import {
   useContextMenu,
   type NodeContextMenuEvent,
@@ -48,6 +48,8 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
     onPaneContextMenu,
     onPaneClick,
     onEdgeContextMenu,
+    onEdgeMouseEnter,
+    onEdgeMouseLeave,
   } = useVueFlow()
 
   const { autoSaveWorkflow } = useVFlowSaver()
@@ -132,6 +134,18 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
 
   onConnect((connection: Connection) => {
     addEdgeToVFlow(connection as GraphEdge)
+  })
+
+  onEdgeMouseEnter((event: EdgeMouseEvent) => {
+    if (event.edge.data?.hasOwnProperty('isHovered')) {
+      event.edge.data.isHovered = true
+    }
+  })
+
+  onEdgeMouseLeave((event: EdgeMouseEvent) => {
+    if (event.edge.data?.hasOwnProperty('isHovered')) {
+      event.edge.data.isHovered = false
+    }
   })
 
   instance = {}

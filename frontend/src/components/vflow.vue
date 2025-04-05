@@ -39,6 +39,7 @@
         :target-position="customEdgeProps.targetPosition"
         :marker-end="customEdgeProps.markerEnd"
         :style="customEdgeProps.style"
+        :data="customEdgeProps.data"
       />
     </template>
     <template #connection-line="{ sourceX, sourceY, targetX, targetY }">
