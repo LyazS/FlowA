@@ -100,8 +100,9 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   NCheckbox: NCheckbox,
   NCheckboxGroup: NCheckboxGroup,
   NDatePicker: NDatePicker,
-  NDynamicInput: NDynamicInput,
-  NDynamicTags: NDynamicTags,
+  // 太复杂，不支持
+  // NDynamicInput: NDynamicInput,
+  // NDynamicTags: NDynamicTags,
   // NForm: NForm,
   // NFormItem: NFormItem,
   NInput: NInput,
