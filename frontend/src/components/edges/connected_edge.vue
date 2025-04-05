@@ -26,7 +26,7 @@ const path = computed(() => getBezierPath(props))
     :style="{
       ...style,
       stroke: isHovered ? '#FFDF00' : 'rgb(138, 203, 236)',
-      strokeWidth: isHovered ? 4 : 2,
+      strokeWidth: 2,
       filter: isHovered
         ? `
         drop-shadow(0 0 4px rgba(255, 215, 0, 0.7))
