@@ -222,17 +222,17 @@ const hiddenText: Ref<HTMLDivElement | null> = ref(null)
 
 const isShowCopyCount = computed(() => Object.keys(thisnodedata.State.Copy).length > 0)
 
-const countCopy = (statecopy: Record<string, { status: string }>) => {
+const countCopy = (statecopy: Record<string, { Status: string }>) => {
   let copyRunning = 0
   let copySuccess = 0
   let copyError = 0
 
   Object.values(statecopy).forEach((sc) => {
-    if (sc.status === 'Running' || sc.status === 'Pending') {
+    if (sc.Status === 'Running' || sc.Status === 'Pending') {
       copyRunning++
-    } else if (sc.status === 'Success') {
+    } else if (sc.Status === 'Success') {
       copySuccess++
-    } else if (sc.status === 'Error' || sc.status === 'Canceled') {
+    } else if (sc.Status === 'Error' || sc.Status === 'Canceled') {
       copyError++
     }
   })

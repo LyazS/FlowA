@@ -97,16 +97,16 @@ export const useVFlowRequest = () => {
 
   const message = useMessage()
 
-  const updateNodeFromSSE = (data: SSEResponseData) => {
-    const { nid, oriid, data: updatedatas } = data
+  const updateNodeFromSSE = (ssedata: SSEResponseData) => {
+    const { nid, oriid, data: updatedatas } = ssedata
     for (const udata of updatedatas) {
       const { data, path, type } = udata
       if (type === 'overwrite') {
         // 更新状态
-        if (nid.includes('#') && path?.[0] === 'state' && path?.[1] === 'status') {
-          const vf_node = findNode(oriid)
-          if (vf_node && !(vf_node as NodeWithVFData).data.isAttachedNode()) {
-            vf_node.data.state.copy[nid] = { status: data }
+        if (nid.includes('#') && path?.[0] === 'State' && path?.[1] === 'Status') {
+          const vf_node = findNode(oriid) as NodeWithVFData
+          if (vf_node && !vf_node.data.isAttachedNode()) {
+            vf_node.data.State.Copy[nid] = { Status: data }
           }
         } else {
           // 更新其他数据
@@ -831,7 +831,7 @@ export const useVFlowRequest = () => {
             for (const error of response.validation_errors) {
               const node = findNode(error.nid) as NodeWithVFData
               if (node) {
-                node.data.state.validation_errors = [...error.errors]
+                node.data.State.Errors = [...error.errors]
               }
             }
           }

@@ -1,10 +1,16 @@
-from enum import Enum, StrEnum, IntEnum
+from enum import StrEnum, IntEnum
 from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field, model_validator
 from app.utils.vueRef import RefType
 
 
-class VFNodeConnectionDataType(str, Enum):
+class FromInnerPath(BaseModel):
+    ContentName: Literal["Payloads", "Results"]
+    ContentId: str
+    pass
+
+
+class VFNodeConnectionDataType(StrEnum):
     FromOuter = "FromOuter"
     FromAttached = "FromAttached"
     FromParent = "FromParent"
@@ -77,7 +83,7 @@ class VFNodeHandleData(BaseModel):
     Type: VFNodeConnectionDataType
     HandleId: Optional[str] = None
     ANode: Optional[Dict[str, VFNodeHandleDataANode]] = None
-    Path: Optional[List[Union[str, int]]] = None
+    Path: Optional[FromInnerPath] = None
     UseIds: Optional[List[str]] = None
 
     @model_validator(mode="after")

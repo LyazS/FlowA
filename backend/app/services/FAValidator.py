@@ -232,9 +232,9 @@ class FAValidator:
 
         for c_data in connection.values():
             if c_data.Type == VFNodeConnectionDataType.FromInner and c_data.Path:
-                path_data: VFNodeContentData = self.resolve_value_by_path(
-                    c_data.Path, thenode.data
-                )
+                path_data: VFNodeContentData = thenode.data.getContent(
+                    c_data.Path.ContentName
+                ).ById[c_data.Path.ContentId]
                 if path_data:
                     result.append(
                         VarItem(
@@ -255,8 +255,8 @@ class FAValidator:
                     )
             elif c_data.Type == VFNodeConnectionDataType.FromAttached and c_data.ANode:
                 for aname, hdata in c_data.ANode.items():
-                    anode_nid = thenode.data.Nesting.ANodes.get(aname, {}).get("Nid")
-                    if anode := self.nodes.get(anode_nid):
+                    anode_nid = thenode.data.Nesting.ANodes[aname].Nid
+                    if anode := self.nodes.get(anode_nid, None):
                         result.extend(
                             self.recursive_find_variables(
                                 anode.id, hdata.ConnectionType, [hdata.HandleId]
@@ -326,7 +326,10 @@ class FAValidator:
                 else:
                     tmp_vars = self.recursive_find_variables(nid, ctype)
 
-                return [f"{item.NodeId}/{'/'.join(item.DataPath)}" for item in tmp_vars]
+                return [
+                    f"{item.NodeId}/{item.DataPath.ContentName}/{item.DataPath.ContentId}"
+                    for item in tmp_vars
+                ]
 
         logger.error(f"Nid: {nid} [getConnectionByPath] with Invalid path: {path}")
         return None

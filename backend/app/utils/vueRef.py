@@ -290,7 +290,7 @@ def serialize_ref(value):
         return {key: serialize_ref(val) for key, val in value.items()}
     elif isinstance(value, Ref):
         return serialize_ref(value.value)
-    elif isinstance(value,BaseModel):
+    elif isinstance(value, BaseModel):
         return serialize_ref(value.model_dump())
     else:
         return str(value)  # 默认转换为字符串
@@ -311,18 +311,6 @@ class _RefTypePydanticAnnotation:
         from_any_schema = core_schema.no_info_plain_validator_function(
             validate_from_any
         )
-
-        # def serialize_value(value):
-        #     if isinstance(value, (str, int, float, bool)):
-        #         return value
-        #     elif isinstance(value, list):
-        #         return [serialize_value(item) for item in value]
-        #     elif isinstance(value, dict):
-        #         return {key: serialize_value(val) for key, val in value.items()}
-        #     elif isinstance(value, Ref):
-        #         return serialize_value(value.value)
-        #     else:
-        #         return str(value)  # 默认转换为字符串
 
         return core_schema.json_or_python_schema(
             json_schema=from_any_schema,

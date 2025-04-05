@@ -4,6 +4,7 @@ import {
   type VFNodeHandleData,
   VFNodeConnectionDataType,
   type VFNodeContentData,
+  type FromInnerPath,
 } from '@/components/nodes/VFNodeInterface'
 import { type SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
@@ -12,7 +13,7 @@ import type { NodeWithVFData } from '@/schemas/schemas'
 export interface VarItem {
   NodeId: string | number
   NodeLabel: string
-  DataPath: (string | number)[]
+  DataPath: FromInnerPath
   DataLabel: string
   DataType: string
 }
@@ -21,11 +22,7 @@ export interface HandleVarItem4Selects {
   Data: VarItem[]
 }
 interface NodeUtilsInstance {
-  findVarFromIO: (
-    nid: string,
-    findconnect: VFNodeConnectionType,
-    hid: string,
-  ) => VarItem[]
+  findVarFromIO: (nid: string, findconnect: VFNodeConnectionType, hid: string) => VarItem[]
   recursiveFindVariables: (
     nid: string,
     handleType: VFNodeConnectionType,
@@ -57,7 +54,8 @@ export const useNodeUtils = () => {
 
     for (const c_data of Object.values(connection) as Array<VFNodeHandleData>) {
       if (c_data.Type === VFNodeConnectionDataType.FromInner && c_data.Path) {
-        const pathData:VFNodeContentData = resolveValueByPath(c_data.Path, thenode.data)
+        const pathData: VFNodeContentData =
+          thenode.data[c_data.Path.ContentName].ById[c_data.Path.ContentId]
         if (pathData) {
           result.push({
             NodeId: nid,
@@ -133,9 +131,8 @@ export const useNodeUtils = () => {
 
   const mapVarItemToSelect = (item: VarItem): SelectOption => {
     return {
-      // label: `${item.nlabel}/${item.dlabel}/${item.dkey}/${item.dtype}`,
       label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,
-      value: `${item.NodeId}/${item.DataPath.join('/')}`,
+      value: `${item.NodeId}/${item.DataPath.ContentName}/${item.DataPath.ContentId}`,
     }
   }
 

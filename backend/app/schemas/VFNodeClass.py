@@ -90,6 +90,18 @@ class VFNode(VFNodeData):
         return (self.Flag & VFNodeFlag.IsNested) != 0
 
     # 属性操作方法 ==================================================
+    def getContent(
+        self,
+        content_name: Literal["Payloads", "Results"],
+    ) -> Union[VFNodeContents, None]:
+        if content_name == "Payloads":
+            return self.Payloads
+        elif content_name == "Results":
+            return self.Results
+        else:
+            return None
+        pass
+
     def set_node_type(self, n_type: str) -> "VFNode":
         self.NType = n_type
         return self
@@ -187,7 +199,7 @@ class VFNode(VFNodeData):
             handle_id,
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromInner,
-                Path=["Results", "ById", rid],
+                Path=FromInnerPath(ContentName="Results", ContentId=rid),
                 UseIds=[],
             ),
             data_id,
@@ -287,7 +299,9 @@ class VFNode(VFNodeData):
 def create_vf_node_from_data(
     data: VFNodeData,
 ) -> VFNode:
-    node = VFNode(data.NType, data.VType, data.Label)
+    node = VFNode(data.VType)
+    node.set_node_type(data.NType)
+    node.set_label(data.Label)
 
     # 使用反射设置属性
     for field in data.model_fields_set:

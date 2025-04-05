@@ -1,3 +1,8 @@
+interface FromInnerPath {
+  ContentName: 'Payloads' | 'Results'
+  ContentId: string
+}
+
 enum VFNodeConnectionDataType {
   FromOuter = 'FromOuter',
   FromAttached = 'FromAttached',
@@ -64,7 +69,7 @@ interface VFNodeHandleData {
   Type: VFNodeConnectionDataType
   HandleId?: string
   ANode?: Record<string, VFNodeHandleDataANode>
-  Path?: (string | number)[]
+  Path?: FromInnerPath
   UseIds?: string[]
 }
 
@@ -177,6 +182,7 @@ function isNestedNode(node: VFNodeData): node is NestedVFNodeData {
 }
 
 export type {
+  FromInnerPath,
   VFNodeContentData,
   VFNodeContents,
   VFNodeHandleData,

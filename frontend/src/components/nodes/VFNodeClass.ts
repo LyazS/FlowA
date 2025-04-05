@@ -230,7 +230,7 @@ class VFNode implements BaseVFNodeData {
       handleId,
       {
         Type: VFNodeConnectionDataType.FromInner,
-        Path: ['Results', 'ById', _rid],
+        Path: { ContentName: 'Results', ContentId: _rid },
         UseIds: [],
       },
       did,

@@ -31,6 +31,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
+    FromInnerPath,
 )
 from app.utils.tools import read_yaml, reduceGet
 from app.utils.db4node import loadNodeConfig, setNodeConfig

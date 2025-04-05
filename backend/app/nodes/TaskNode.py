@@ -7,6 +7,7 @@ import traceback
 import json
 import copy
 from loguru import logger
+from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData
 from app.schemas.fanode import FARunStatus, FANodeWaitType
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.farequest import (
@@ -187,8 +188,10 @@ class FATaskNode(FABaseNode):
 
     # 需要子类实现的函数 ===============================================================
 
-    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
-        return reduceGet(self.data, path)
+    async def getContentByPath(
+        self, request_nid: str, path: FromInnerPath
+    ) -> VFNodeContentData:
+        return self.data.getContent(path.ContentName).ById[path.ContentId]
 
     async def run(self) -> List[FANodeUpdateData]:
         self.setAllOutputStatus(FARunStatus.Success)

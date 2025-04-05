@@ -16,6 +16,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
+    FromInnerPath,
 )
 from app.schemas.farequest import (
     ValidationError,
@@ -95,9 +96,16 @@ class Jinja2Template(FATaskNode):
                     refdata: str = var.valueStr
                     nid, path = refdata.split("/", 1)
                     thenode = runner.getNode(nid)
+                    path_split = path.split("/")
                     (
-                        await thenode.getContentByPath(path.split("/") + ["Data"])
-                    ).add_dependency(
+                        await thenode.getContentByPath(
+                            self.id,
+                            FromInnerPath(
+                                ContentName=path_split[0],
+                                ContentId=path_split[1],
+                            ),
+                        )
+                    ).Data.add_dependency(
                         lambda triggerdata, key=var.key, wid=self.wid, nid=self.id, oriid=self.oriid: (
                             self.report(
                                 triggerdata,

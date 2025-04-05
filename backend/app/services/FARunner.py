@@ -31,7 +31,9 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
-from app.schemas.VFNodeInterface import VFNodeFlag
+from app.utils.tools import getNestedLayout
+from app.utils.vueRef import serialize_ref
+from app.schemas.VFNodeInterface import VFNodeFlag, FromInnerPath, VFNodeContentData
 from sqlalchemy import select, update, exc, exists, delete
 from sqlalchemy.orm import selectinload
 
@@ -69,27 +71,30 @@ class FARunner:
     async def getRefData(self, curnid: str, refdata: str):
         """
         根据curnid获取相对应层级的refdata数据
+        针对Ref数据会自动解包，返回原始数据
         """
-        cur_pattern = r"#([0-9]+)"
-        Niter_pattern = r"#(\w+)"
         # 获取cur节点的层级 =======================================
-        cur_matches = re.findall(cur_pattern, curnid)
-        cur_level = list(map(int, cur_matches))
+        cur_level = getNestedLayout(curnid)
         # 获取ref节点的层级 =======================================
         ref_nid, ref_path = refdata.split("/", 1)
-        ref_level = re.findall(Niter_pattern, ref_nid)
+        ref_level = getNestedLayout(ref_nid)
 
-        assert len(ref_level) <= len(cur_level)  # 层级不匹配
+        assert len(ref_level) <= len(cur_level), "层级不匹配"
         for i in range(len(ref_level)):
             ref_level[i] = cur_level[i]
         ref_replace_nid = ref_nid.split("#", 1)[0] + "".join(
             map(lambda x: "#" + str(x), ref_level)
         )
         ref_node = self.getNode(ref_replace_nid)
-        ref_data: RefType = await ref_node.getContentByPath(
-            ref_path.split("/") + ["Data"]
+        ref_path_split = ref_path.split("/")
+        ref_data: VFNodeContentData = await ref_node.getContentByPath(
+            curnid,
+            FromInnerPath(
+                ContentName=ref_path_split[0],
+                ContentId=ref_path_split[1],
+            ),
         )
-        return ref_data.value
+        return serialize_ref(ref_data.Data.value)
 
     def buildNodes(self):
         from app.nodes.TaskNode import FANodeWaitStatus

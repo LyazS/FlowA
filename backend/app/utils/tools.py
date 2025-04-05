@@ -60,3 +60,8 @@ def reduceGet(data, path):
             return None
 
     return reduce(safe_get, path, data)
+
+
+def getNestedLayout(nid: str):
+    matches = re.findall(r"#(\w+)", nid)
+    return [int(x) if x.isdigit() else x for x in matches]

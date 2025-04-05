@@ -5,12 +5,12 @@ from pydantic import BaseModel
 from enum import StrEnum
 from .vfnode import VFlowData, VFNodeData
 from .fanode import FARunStatus
-
+from app.schemas.VFNodeInterface import FromInnerPath
 
 class VarItem(BaseModel):
     NodeId: str
     NodeLabel: str
-    DataPath: List[str]
+    DataPath: FromInnerPath
     DataLabel: str
     DataType: str
 

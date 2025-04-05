@@ -9,7 +9,8 @@ from app.schemas.fanode import (
     ConnectOption_Var,
     ConnectOption_Node,
 )
-from app.schemas.VFNodeClass import VFNode
+from app.schemas.VFNodeClass import VFNode, create_vf_node_from_data
+from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData
 from app.schemas.VFlowData import VFNodeInfo
 from app.schemas.farequest import (
     ValidationError,
@@ -39,7 +40,7 @@ class FABaseNode(ABC):
         self.wid = wid
         self.id = cpnodeinfo.id
         self.oriid = copy.deepcopy(cpnodeinfo.id)
-        self.data: VFNode = copy.deepcopy(cpnodeinfo.data)
+        self.data: VFNode = create_vf_node_from_data(cpnodeinfo.data)
         self.ntype: str = cpnodeinfo.data.NType
         self.parentNode = cpnodeinfo.parentNode
 
@@ -82,7 +83,12 @@ class FABaseNode(ABC):
         return []
 
     @abstractmethod
-    async def getContentByPath(self, path: List[Union[str, int]]) -> Any:
+    async def getContentByPath(
+        self, request_nid: str, path: FromInnerPath
+    ) -> VFNodeContentData:
+        """
+        返回Payloads或Results的内容，为VFNodeContentData结构
+        """
         return None
 
     @abstractmethod

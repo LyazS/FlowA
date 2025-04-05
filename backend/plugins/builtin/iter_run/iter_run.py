@@ -11,8 +11,14 @@ import base64
 from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
+from app.utils.vueRef import RefType
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import VFNodeInfo
+from app.schemas.vfnode import (
+    VFNodeInfo,
+    VFEdgeInfo,
+    VFNodeData,
+    VFlowData,
+)
 from app.schemas.fanode import FARunStatus
 from app.schemas.farequest import (
     ValidationError,
@@ -32,8 +38,9 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
+    FromInnerPath,
 )
-from app.utils.tools import read_yaml, reduceGet
+from app.utils.tools import read_yaml, reduceGet, getNestedLayout
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 
 
@@ -57,7 +64,27 @@ class IterRun(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
-            pass
+            aoutputVars = await validator.getConnectionByPath(
+                self.id,
+                [
+                    CONNECT_DATA_TO_SELECT,
+                    VFNodeConnectionType.Self,
+                    "attach_output",
+                ],
+            )
+            node_results = self.data.Results
+            for rid in node_results.Order:
+                ref_data = node_results.ById[rid].Config.Ref
+                if (
+                    ref_data is None
+                    or not isinstance(ref_data, str)
+                    or len(ref_data) <= 0
+                ):
+                    error_msgs.append(f"结果{rid}没有配置输出选项")
+                else:
+                    if ref_data not in aoutputVars:
+                        error_msgs.append(f"没有该输出选项{ref_data}")
+                pass
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -68,7 +95,218 @@ class IterRun(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
+        from app.nodes.TaskNode import FANodeWaitStatus
+        from app.nodes import FANODE_REGISTRY
+
+        nest_layout = getNestedLayout(self.id)
+        node_payloads = self.data.Payloads
+        node_results = self.data.Results
+
+        # 获取迭代数组 ===============================================
+        D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
+        D_ITER_INDEX: VFNodeContentData = node_payloads.ById["D_ITER_INDEX"]
+        self.iter_array = await self.runner().getRefData(
+            self.id, D_ITER_ARRAY.Data.value
+        )
+        self.iter_array_len = len(self.iter_array)
+
+        # 构建子图 ================================================
+        flowdata: VFlowData = self.runner().flowdata
+        child_node_infos: Dict[str, VFNodeInfo] = {}
+        child_edge_infos: Dict[str, VFEdgeInfo] = {}
+        # 收集所有子节点
+        for nodeinfo in flowdata.nodes:
+            if nodeinfo.parentNode == self.oriid and (
+                VFNodeFlag.IsTask & nodeinfo.data.Flag
+                or VFNodeFlag.IsAttached & nodeinfo.data.Flag
+            ):
+                child_node_infos[nodeinfo.id] = nodeinfo
+            pass
         pass
+        for edgeinfo in flowdata.edges:
+            if (
+                edgeinfo.source in child_node_infos
+                and edgeinfo.target in child_node_infos
+            ):
+                child_edge_infos[edgeinfo.id] = edgeinfo
+            pass
+        pass
+
+        # 收集附属节点
+        input_anode_info = None
+        output_anode_info = None
+        next_anode_info = None
+        for nodeinfo in flowdata.nodes:
+            if nodeinfo.id == self.data.Nesting.ANodes["input"].Nid:
+                input_anode_info = nodeinfo
+            elif nodeinfo.id == self.data.Nesting.ANodes["output"].Nid:
+                output_anode_info = nodeinfo
+            elif nodeinfo.id == self.data.Nesting.ANodes["next"].Nid:
+                next_anode_info = nodeinfo
+            pass
+        assert (
+            input_anode_info is not None
+            and output_anode_info is not None
+            and next_anode_info is not None
+        )
+        pass
+        input_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+            self.wid,
+            input_anode_info,
+            self.runner(),
+        )
+        output_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+            self.wid,
+            output_anode_info,
+            self.runner(),
+        )
+        for node in [input_anode, output_anode]:
+            new_nid = node.id.split("#", 1)[0] + "".join(
+                map(lambda x: "#" + str(x), nest_layout)
+            )
+            node.setNewID(new_nid)
+            self.runner().addNode(node.id, node)
+        asyncio.create_task(self.runner().getNode(input_anode.id).invoke())
+        logger.info(f"启动附属节点{input_anode.data.Label} {node.id}")
+        pass
+        # 开始迭代
+        for iter_idx in range(self.iter_array_len):
+            # 构建next附属节点
+            next_anode: FATaskNode = (FANODE_REGISTRY[next_anode_info.data.NType])(
+                self.wid,
+                next_anode_info,
+                self.runner(),
+            )
+            new_nid = next_anode.id.split("#", 1)[0] + "".join(
+                map(lambda x: "#" + str(x), nest_layout + [iter_idx])
+            )
+            next_anode.setNewID(new_nid)
+            self.runner().addNode(next_anode.id, next_anode)
+            pass
+
+            # 根据结果数组搜寻目标输出节点
+            node_results_dict = {}
+            for rid in node_results.Order:
+                item: VFNodeContentData = node_results.ById[rid]
+                item_ref = item.Config.Ref
+                item_nid, ref_contentpath = item_ref.split("/", 1)
+                nid_layout = getNestedLayout(item_nid)
+                assert len(nest_layout) == len(nid_layout) - 1, "迭代节点嵌套层数不匹配"
+                item_nid_pattern = (
+                    item_nid.split("#", 1)[0]
+                    + "".join(map(lambda x: "#" + str(x), nest_layout))
+                    + "#"
+                )
+                contentpath_split = ref_contentpath.split("/")
+                node_results_dict[rid] = {
+                    "item_nid_pattern": item_nid_pattern,
+                    "contentpath": FromInnerPath(
+                        ContentName=contentpath_split[0],
+                        ContentId=contentpath_split[1],
+                    ),
+                }
+            # 构建其余子节点
+            anode_ids = set([input_anode.oriid, output_anode.oriid, next_anode.oriid])
+            child_nodes: Dict[str, FATaskNode] = {}
+            for child_id, child_info in child_node_infos.items():
+                if child_info.id in anode_ids:
+                    continue
+                child_node: FATaskNode = (FANODE_REGISTRY[child_info.data.NType])(
+                    self.wid,
+                    child_info,
+                    self.runner(),
+                )
+                new_nid = child_node.id.split("#", 1)[0] + "".join(
+                    map(lambda x: "#" + str(x), nest_layout + [iter_idx])
+                )
+                child_node.setNewID(new_nid)
+                self.runner().addNode(new_nid, child_node)
+                child_nodes[child_node.id] = child_node
+                pass
+                # 真正将结果加入数组
+                for rid in node_results_dict.keys():
+                    nid_pattern = node_results_dict[rid]["item_nid_pattern"]
+                    if child_node.id.startswith(nid_pattern):
+                        contentpath: FromInnerPath = node_results_dict[rid][
+                            "contentpath"
+                        ]
+                        node_results.ById[rid].Data.value.append(
+                            (
+                                await child_node.getContentByPath(self.id, contentpath)
+                            ).Data
+                        )
+            # 构建节点连接关系
+            for edgeinfo in child_edge_infos.values():
+                src_node_info = child_node_infos[edgeinfo.source]
+                tgt_node_info = child_node_infos[edgeinfo.target]
+                if src_node_info.id == input_anode.oriid:
+                    src_node = input_anode
+                    pass
+                else:
+                    src_nid = edgeinfo.source.split("#", 1)[0] + "".join(
+                        map(lambda x: "#" + str(x), nest_layout + [iter_idx])
+                    )
+                    src_node = self.runner().getNode(src_nid)
+                if tgt_node_info.id == output_anode.oriid:
+                    tgt_node = output_anode
+                    pass
+                elif tgt_node_info.id == next_anode.oriid:
+                    tgt_node = next_anode
+                    pass
+                else:
+                    tgt_nid = edgeinfo.target.split("#", 1)[0] + "".join(
+                        map(lambda x: "#" + str(x), nest_layout + [iter_idx])
+                    )
+                    tgt_node = self.runner().getNode(tgt_nid)
+                    pass
+
+                source_handle = edgeinfo.sourceHandle
+                target_handle = edgeinfo.targetHandle
+                tgt_node.waitEvents.append(src_node.doneEvent)
+                tgt_node.waitStatus.append(
+                    FANodeWaitStatus(
+                        nid=src_node.id,
+                        output=source_handle,
+                    )
+                )
+            pass
+            # 启动子节点
+            for nid in child_nodes.keys():
+                asyncio.create_task(child_nodes[nid].invoke())
+            # 启动next附属节点
+            task_next = asyncio.create_task(next_anode.invoke())
+            await task_next
+            pass
+        task_output = asyncio.create_task(output_anode.invoke())
+        await task_output
+        if output_anode.runStatus == FARunStatus.Success:
+            self.setAllOutputStatus(FARunStatus.Success)
+            return []
+        else:
+            raise Exception(f"内部节点存在运行错误，迭代节点执行失败")
+
+    async def getContentByPath(
+        self, request_nid: str, path: FromInnerPath
+    ) -> VFNodeContentData:
+        req_layout = getNestedLayout(request_nid)
+        self_layout = getNestedLayout(self.id)
+        assert len(req_layout) >= len(self_layout), "子节点应该比父节点更深"
+        node_payloads = self.data.Payloads
+        if path.ContentId == "D_ITER_INDEX":
+            D_ITER_INDEX: VFNodeContentData = node_payloads.ById["D_ITER_INDEX"]
+            return VFNodeContentData(
+                Label=D_ITER_INDEX.Label,
+                Type=D_ITER_INDEX.Type,
+                Data=RefType(req_layout[len(self_layout)]),
+            )
+        elif path.ContentId == "D_ITER_ITEM":
+            D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
+            return VFNodeContentData(
+                Label=D_ITER_ARRAY.Label,
+                Type=D_ITER_ARRAY.Type,
+                Data=RefType(self.iter_array[req_layout[len(self_layout)]]),
+            )
+        return self.data.getContent(path.ContentName).ById[path.ContentId]
 
     @staticmethod
     def getNodeCreateInfo():
@@ -141,7 +379,7 @@ class IterRun(FATaskNode):
             "Attach",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromInner,
-                Path=["Payloads", "ById", pid_D_ITER_ITEM],
+                Path=FromInnerPath(ContentName="Payloads", ContentId=pid_D_ITER_ITEM),
             ),
         )
         thisnode.add_handle_data(
@@ -149,7 +387,7 @@ class IterRun(FATaskNode):
             "Attach",
             VFNodeHandleData(
                 Type=VFNodeConnectionDataType.FromInner,
-                Path=["Payloads", "ById", pid_D_ITER_INDEX],
+                Path=FromInnerPath(ContentName="Payloads", ContentId=pid_D_ITER_INDEX),
             ),
         )
 
@@ -157,7 +395,7 @@ class IterRun(FATaskNode):
             VFNodeContentData(
                 Label="迭代数组",
                 Type="String",
-                Data='',
+                Data="",
                 UiType="@/FlowABuiltin/UI_ITER_RUN_ITER_ARRAY",
             ),
             payload_id="D_ITER_ARRAY",
