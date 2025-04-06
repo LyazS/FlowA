@@ -51,7 +51,6 @@ import { VFNode } from '@/components/nodes/VFNodeClass'
 import {
   selectedNodeId,
   isEditorMode,
-  isEditing,
   isShowCodeEditor,
   CodeEditorPath,
   CodeEditorLangType,
@@ -244,18 +243,6 @@ const processedProps = computed(() => {
     disabled: !isEditorMode.value,
   }
   const eventsObj: Record<string, Function> = {}
-  if (
-    props.componentData.Type == 'NInput' ||
-    props.componentData.Type == 'NInputNumber' ||
-    props.componentData.Type == 'NAutoComplete'
-  ) {
-    eventsObj['onFocus'] = () => {
-      isEditing.value = true
-    }
-    eventsObj['onBlur'] = () => {
-      isEditing.value = false
-    }
-  }
 
   for (const [propName, propVar] of Object.entries(
     (props.componentData as NormalComponent).Props || {},

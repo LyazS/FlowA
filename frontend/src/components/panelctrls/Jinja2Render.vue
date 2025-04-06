@@ -58,7 +58,6 @@ import {
 import editable_header from '@/components/panelctrls/editables/header.vue'
 import { debounce, throttle } from 'lodash'
 import {
-  isEditing,
   isShowJinja2Render,
   Jinja2RenderNodeIDs,
   WorkflowID,

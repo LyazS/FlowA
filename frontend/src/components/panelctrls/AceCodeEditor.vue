@@ -7,7 +7,6 @@ import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
 import {
   selectedNodeId,
   isEditorMode,
-  isEditing,
   isShowCodeEditor,
   CodeEditorPath,
   CodeEditorLangType,
@@ -99,8 +98,6 @@ const isShow = computed(() => {
         theme="tomorrow_night_bright"
         :options="options"
         style="height: calc(100vh - 200px)"
-        @blur="isEditing = false"
-        @focus="isEditing = true"
       />
     </n-card>
   </n-modal>

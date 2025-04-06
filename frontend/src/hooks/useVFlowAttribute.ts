@@ -2,7 +2,6 @@ import { ref, computed } from 'vue'
 import type { CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
 
 export const selectedNodeId = ref<string | null>(null)
-export const isEditing = ref(false)
 
 export const isShowCodeEditor = ref(false)
 export const CodeEditorPath = ref<(string | number)[]>([])

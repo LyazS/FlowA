@@ -18,7 +18,6 @@ import { Panel, useVueFlow } from '@vue-flow/core'
 import {
   selectedNodeId,
   isEditorMode,
-  isEditing,
   isShowCodeEditor,
   isShowJinja2Render,
   AutoSaveMessage,

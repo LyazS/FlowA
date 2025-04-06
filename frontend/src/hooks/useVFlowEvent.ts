@@ -40,6 +40,7 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
 
   const { showContextMenu } = useContextMenu()
   const {
+    getSelectedNodes,
     findNode,
     onConnect,
     onNodeDrag,
@@ -50,12 +51,19 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
     onEdgeContextMenu,
     onEdgeMouseEnter,
     onEdgeMouseLeave,
+    screenToFlowCoordinate,
   } = useVueFlow()
 
   const { autoSaveWorkflow } = useVFlowSaver()
 
   // 节点选择事件
   const selcetNodeEvent = (event: NodeMouseEvent) => {
+    if (getSelectedNodes.value.length > 1) {
+      console.debug('多选模式下不支持单选')
+      selectedNodeId.value = null
+      return
+    }
+
     const node = event.node
     const nodedata = node.data as VFNode
     if (nodedata.isAttachedNode()) return
@@ -81,10 +89,17 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
 
   // vueflow事件监听
   onPaneClick((event: MouseEvent) => {
+    console.log(
+      '点击位置 ',
+      event.clientX,
+      event.clientY,
+      screenToFlowCoordinate({ x: event.clientX, y: event.clientY }),
+    )
     deselcetNodeEvent()
   })
 
   onNodeClick((event: NodeMouseEvent) => {
+    console.log('节点位置 ', event.node.position)
     selcetNodeEvent(event)
   })
 

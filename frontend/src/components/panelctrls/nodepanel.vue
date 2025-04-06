@@ -33,7 +33,7 @@ import { CreateOutline } from '@vicons/ionicons5'
 import { useNodeUtils, type VarItem, type HandleVarItem4Selects } from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
-import { selectedNodeId, isEditorMode, isEditing } from '@/hooks/useVFlowAttribute'
+import { selectedNodeId, isEditorMode } from '@/hooks/useVFlowAttribute'
 import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
 import { getData } from '@/utils/requestMethod'
 import { type InputNode, type NodeWithVFData } from '@/schemas/schemas'
@@ -96,14 +96,12 @@ watch(
 const startEditTilte = () => {
   if (!isEditorMode.value) return
   isEditingTitle.value = true
-  isEditing!.value = true
   nextTick(() => {
     titleInputRef.value?.focus()
   })
 }
 
 const saveTitle = () => {
-  isEditing!.value = false
   isEditingTitle.value = false
   const newLabel = titleInputText.value.trim()
   if (curSelectedNode.value) {
@@ -255,9 +253,7 @@ const showErrors = computed(() => {
   return curSelectedNode.value ? curSelectedNode.value.data.State.Errors : []
 })
 onMounted(() => {})
-onUnmounted(() => {
-  if (isEditing) isEditing.value = false
-})
+onUnmounted(() => {})
 </script>
 
 <template>

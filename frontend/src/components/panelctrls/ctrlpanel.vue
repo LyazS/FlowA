@@ -30,7 +30,6 @@ import {
   WorkflowModeType,
   selectedNodeId,
   isEditorMode,
-  isEditing,
   isShowCodeEditor,
   WorkflowID,
   WorkflowMode,

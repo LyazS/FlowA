@@ -42,7 +42,6 @@ import {
   type WorkflowModeType,
   selectedNodeId,
   isEditorMode,
-  isEditing,
   isShowCodeEditor,
   WorkflowID,
   WorkflowMode,
@@ -121,12 +120,6 @@ const createNewWorkflowAction = async () => {
           autofocus: true,
           maxlength: 20,
           showCount: true,
-          onFocus: () => {
-            isEditing.value = true
-          },
-          onBlur: () => {
-            isEditing.value = false
-          },
         },
         {},
       ),
@@ -162,8 +155,6 @@ const createNewWorkflowAction = async () => {
         }
       } catch (error) {
         message.error(`创建失败: ${getErrorMessage(error)}`)
-      } finally {
-        isEditing.value = false
       }
     },
   })
@@ -180,12 +171,6 @@ const renameWorkflowAction = async (wid: string, originalName: string) => {
         value: newName.value,
         placeholder: '请输入新名称',
         autofocus: true,
-        onFocus: () => {
-          isEditing.value = true
-        },
-        onBlur: () => {
-          isEditing.value = false
-        },
         onUpdateValue: (val: string) => (newName.value = val),
         onKeydown: (e: KeyboardEvent) => e.stopPropagation(), // 防止冒泡
       }),
@@ -216,13 +201,9 @@ const renameWorkflowAction = async (wid: string, originalName: string) => {
         }
       } catch (error) {
         message.error(`重命名操作失败: ${getErrorMessage(error)}`)
-      } finally {
-        isEditing.value = false
       }
     },
-    onNegativeClick: () => {
-      isEditing.value = false
-    },
+    onNegativeClick: () => {},
   })
 }
 
@@ -375,12 +356,6 @@ const recordReleaseWFAction = async () => {
                 record_name.value = value
               },
               placeholder: '版本名称',
-              onFocus: () => {
-                isEditing.value = true
-              },
-              onBlur: () => {
-                isEditing.value = false
-              },
             }),
             h(NInput, {
               type: 'textarea',
@@ -390,12 +365,6 @@ const recordReleaseWFAction = async () => {
                 record_desc.value = value
               },
               placeholder: '版本描述',
-              onFocus: () => {
-                isEditing.value = true
-              },
-              onBlur: () => {
-                isEditing.value = false
-              },
             }),
           ],
         },
@@ -424,8 +393,6 @@ const recordReleaseWFAction = async () => {
         }
       } catch (error) {
         message.error(`记录失败: ${getErrorMessage(error)}`)
-      } finally {
-        isEditing.value = false
       }
     },
   })
@@ -482,12 +449,6 @@ const editReleaseWorkflowAction = async (
                 editState.name = value
               },
               placeholder: '版本名称',
-              onFocus: () => {
-                isEditing.value = true
-              },
-              onBlur: () => {
-                isEditing.value = false
-              },
             }),
             h(NInput, {
               type: 'textarea',
@@ -497,12 +458,6 @@ const editReleaseWorkflowAction = async (
                 editState.desc = value
               },
               placeholder: '版本描述',
-              onFocus: () => {
-                isEditing.value = true
-              },
-              onBlur: () => {
-                isEditing.value = false
-              },
             }),
           ],
         },
