@@ -106,9 +106,6 @@ export const useContextMenu = (): ContextMenuInstance => {
     logger.debug('删除节点')
     const node = event_cm.node
     const parent_id = node.parentNode
-    if (node.id == selectedNodeId.value) {
-      selectedNodeId.value = null
-    }
     removeNodeFromVFlow(node)
     buildNestedNodeGraph()
     recursiveUpdateNodeSize(parent_id)

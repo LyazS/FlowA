@@ -5,7 +5,8 @@ import { type NodeWithVFData } from '@/schemas/schemas'
 import { useMessage } from 'naive-ui'
 import { generateNodeId, regexMatchNodeId, concatNestedNodeId, setValueByPath } from '@/utils/tools'
 import { useVFlowManager } from '@/hooks/useVFlowManager'
-import { find } from 'lodash'
+import { useVFlowSaver } from '@/services/useVFlowSaver'
+
 interface CopyPasteInstance {
   copyNode: (node?: GraphNode) => void
   pasteNode: (parentNode: string | null, position: XYPosition) => void
@@ -27,8 +28,11 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     getHandleConnections,
     findNode,
     addNodes,
+    addEdges,
   } = useVueFlow()
   const { buildNestedNodeGraph, recursiveUpdateNodeSize } = useVFlowManager()
+  const { autoSaveWorkflow } = useVFlowSaver()
+
   let copiedDataJson: string = ''
 
   const copyNode = (node?: GraphNode) => {
@@ -102,8 +106,6 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     }
     pastedNodesCenter.x /= centerCount
     pastedNodesCenter.y /= centerCount
-    console.log('pastedNodesCenter', pastedNodesCenter)
-    console.log('centerCount', centerCount)
     const position = screenToFlowCoordinate(clientPosition)
     const offsetX = position.x - pastedNodesCenter.x
     const offsetY = position.y - pastedNodesCenter.y
@@ -117,12 +119,6 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
       pNodeOffset.y += pNode_parent.position.y
       pNode_parent = findNode(pNode_parent.parentNode) as NodeWithVFData | null
     }
-    // if (pNode?.data.Nesting?.Pad.Top) {
-    //   pNodeOffset.x += pNode.data.Nesting.Pad.Top
-    // }
-    // if (pNode?.data.Nesting?.Pad.Left) {
-    //   pNodeOffset.y += pNode.data.Nesting.Pad.Left
-    // }
 
     // 按照顺序修正节点id
     const nodeMapOld2New = new Map<string, string>()
@@ -170,6 +166,7 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     for (const node of Object.values(pastedDatasParsed.nodes)) {
       node.data = createVFNodeFromData(node.data)
     }
+    // 最终添加
     addNodes(Object.values(pastedDatasParsed.nodes))
     buildNestedNodeGraph()
     for (const node of Object.values(pastedDatasParsed.nodes)) {
@@ -179,6 +176,10 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
         recursiveUpdateNodeSize(node.id)
       }
     }
+    addEdges(pastedDatasParsed.edges)
+
+    autoSaveWorkflow()
+
     message.success(`已粘贴${Object.keys(pastedDatasParsed.nodes).length}个节点`)
   }
 

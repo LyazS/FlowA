@@ -2,6 +2,9 @@
 import { ref, provide, watch, onBeforeMount, onBeforeUnmount } from 'vue'
 import { useVueFlow, type ViewportTransform } from '@vue-flow/core'
 import { useCopyPasteNode } from './useCopyPasteNode'
+import { useVFlowManager } from './useVFlowManager'
+import { useMessage } from 'naive-ui'
+
 // 定义鼠标位置的类型
 interface MousePosition {
   x: number
@@ -16,6 +19,8 @@ export const useKeyboardControls = () => {
 
   const { getSelectedNodes, getViewport, setViewport } = useVueFlow()
   const { copyNode, pasteNode } = useCopyPasteNode()
+  const { removeNodeFromVFlow } = useVFlowManager()
+  const message = useMessage()
 
   const isSpacePressed = ref<boolean>(false)
   const lastMousePosition = ref<MousePosition>({ x: 0, y: 0 })
@@ -62,6 +67,13 @@ export const useKeyboardControls = () => {
       }
       pasteNode(null, position)
     }
+
+    if (event.code === 'Delete') {
+      event.preventDefault()
+      const deleteNum = getSelectedNodes.value.length
+      removeNodeFromVFlow(getSelectedNodes.value)
+      message.error(`已删除${deleteNum}个节点`)
+    }
   }
 
   const handleKeyUp = (event: KeyboardEvent) => {
@@ -82,7 +94,6 @@ export const useKeyboardControls = () => {
       const deltaY = event.clientY - lastMousePosition.value.y
 
       const cur_viewport: ViewportTransform = getViewport()
-      console.log('cur_viewport', cur_viewport.x, cur_viewport.y)
       setViewport({
         x: cur_viewport.x + deltaX,
         y: cur_viewport.y + deltaY,

@@ -89,17 +89,10 @@ export const useVFlowEvents = (): VFlowEventsInstance => {
 
   // vueflow事件监听
   onPaneClick((event: MouseEvent) => {
-    console.log(
-      '点击位置 ',
-      event.clientX,
-      event.clientY,
-      screenToFlowCoordinate({ x: event.clientX, y: event.clientY }),
-    )
     deselcetNodeEvent()
   })
 
   onNodeClick((event: NodeMouseEvent) => {
-    console.log('节点位置 ', event.node.position)
     selcetNodeEvent(event)
   })
 

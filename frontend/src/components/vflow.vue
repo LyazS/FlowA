@@ -22,7 +22,6 @@
     :select-nodes-on-drag="false"
     elevate-edges-on-select
     multi-selection-key-code="Control"
-    delete-key-code="Delete"
   >
     <Background />
     <miniMapCtrl />

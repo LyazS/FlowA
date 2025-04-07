@@ -18,6 +18,7 @@ import {
 } from '@/components/nodes/VFNodeInterface'
 import type { NodeWithVFData } from '@/schemas/schemas'
 import { type VFNode, createVFNodeFromData } from '@/components/nodes/VFNodeClass'
+import { selectedNodeId } from '@/hooks/useVFlowAttribute'
 import Logger from '@/utils/Logger'
 
 export interface NodeAddInfo {
@@ -44,7 +45,7 @@ interface NodeManagementInstance {
   buildNestedNodeGraph: () => void
   recursiveUpdateNodeSize: (nodeId: string | null | undefined) => void
   addNodeToVFlow: (info: NodeAddInfo) => void
-  removeNodeFromVFlow: (node: GraphNode) => void
+  removeNodeFromVFlow: (node: GraphNode | GraphNode[]) => void
   resetNodeState: (node: GraphNode) => void
   addEdgeToVFlow: (params: GraphEdge) => void
   removeEdgeFromVFlow: (edges: GraphEdge[]) => void
@@ -298,7 +299,15 @@ export const useVFlowManager = (): NodeManagementInstance => {
     autoSaveWorkflow()
   }
 
-  const removeNodeFromVFlow = (node: GraphNode) => {
+  const removeNodeFromVFlow = (node: GraphNode | GraphNode[]) => {
+    // 如果selectedNodeId在其中getSelectedNodes其中，则需要先设置selectedNodeId为空
+    if (Array.isArray(node)) {
+      if (node.some((item) => item.id === selectedNodeId.value)) {
+        selectedNodeId.value = null
+      }
+    } else if (node.id === selectedNodeId.value) {
+      selectedNodeId.value = null
+    }
     removeNodes(node, true, true)
     autoSaveWorkflow()
   }
