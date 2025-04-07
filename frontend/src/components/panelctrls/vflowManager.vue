@@ -106,25 +106,7 @@ const updateReleaseWorkflowsAction = async () => {
 
 const createNewWorkflowAction = async () => {
   const new_name = ref('')
-  dialog.warning({
-    title: '新建工作流',
-    content: () =>
-      h(
-        NInput,
-        {
-          value: new_name.value,
-          onUpdateValue: (value) => {
-            new_name.value = value.trimStart()
-          },
-          placeholder: '请输入工作流名称（1-20个字符）',
-          autofocus: true,
-          maxlength: 20,
-          showCount: true,
-        },
-        {},
-      ),
-    positiveText: '确定',
-    negativeText: '取消',
+  const dialogOptions = {
     onPositiveClick: async () => {
       if (new_name.value.trim() === '') {
         message.error('名称不能为空')
@@ -150,6 +132,7 @@ const createNewWorkflowAction = async () => {
           message.success(`工作流【${finalName}】创建成功`)
           await updateWorkflowsAction() // 刷新列表
           isShowVFlowMgr.value = false
+          dialogReactive.destroy() // 手动关闭对话框
         } else {
           message.error(`创建失败: ${res.message}`)
         }
@@ -157,25 +140,36 @@ const createNewWorkflowAction = async () => {
         message.error(`创建失败: ${getErrorMessage(error)}`)
       }
     },
+  }
+
+  const dialogReactive = dialog.warning({
+    title: '新建工作流',
+    content: () =>
+      h(NInput, {
+        value: new_name.value,
+        onUpdateValue: (value) => {
+          new_name.value = value.trimStart()
+        },
+        placeholder: '请输入工作流名称（1-20个字符）',
+        autofocus: true,
+        maxlength: 20,
+        showCount: true,
+        onKeydown: (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault() // 防止默认行为
+            dialogOptions.onPositiveClick?.() // 手动触发确定按钮
+          }
+        },
+      }),
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: dialogOptions.onPositiveClick,
   })
 }
 
 const renameWorkflowAction = async (wid: string, originalName: string) => {
   const newName = ref(originalName.trim())
-
-  // 创建响应式对话框
-  dialog.info({
-    title: '重命名工作流',
-    content: () =>
-      h(NInput, {
-        value: newName.value,
-        placeholder: '请输入新名称',
-        autofocus: true,
-        onUpdateValue: (val: string) => (newName.value = val),
-        onKeydown: (e: KeyboardEvent) => e.stopPropagation(), // 防止冒泡
-      }),
-    positiveText: '确认',
-    negativeText: '取消',
+  const dialogOptions = {
     onPositiveClick: async () => {
       try {
         const finalName = newName.value.trim()
@@ -196,6 +190,7 @@ const renameWorkflowAction = async (wid: string, originalName: string) => {
         if (res.type === 'success') {
           message.success(`已重命名为【${finalName}】`)
           await updateWorkflowsAction() // 刷新列表
+          dialogReactive.destroy() // 手动关闭对话框
         } else {
           message.error('重命名失败，请检查网络')
         }
@@ -203,7 +198,26 @@ const renameWorkflowAction = async (wid: string, originalName: string) => {
         message.error(`重命名操作失败: ${getErrorMessage(error)}`)
       }
     },
-    onNegativeClick: () => {},
+  }
+
+  const dialogReactive = dialog.info({
+    title: '重命名工作流',
+    content: () =>
+      h(NInput, {
+        value: newName.value,
+        placeholder: '请输入新名称',
+        autofocus: true,
+        onUpdateValue: (val: string) => (newName.value = val),
+        onKeydown: (e: KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            e.preventDefault() // 防止默认行为
+            dialogOptions.onPositiveClick?.() // 手动触发确定按钮
+          }
+        },
+      }),
+    positiveText: '确认',
+    negativeText: '取消',
+    onPositiveClick: dialogOptions.onPositiveClick,
   })
 }
 
@@ -339,38 +353,7 @@ const viewReleaseWorkflowAction = async (rwid: string, rname: string) => {
 const recordReleaseWFAction = async () => {
   const record_name = ref('')
   const record_desc = ref('')
-  dialog.warning({
-    title: '记录当前版本工作流',
-    content: () =>
-      h(
-        NFlex,
-        {
-          vertical: true,
-          size: 'medium', // 可调整间距大小或使用[水平间距, 垂直间距]格式
-        },
-        {
-          default: () => [
-            h(NInput, {
-              value: record_name.value,
-              onUpdateValue: (value) => {
-                record_name.value = value
-              },
-              placeholder: '版本名称',
-            }),
-            h(NInput, {
-              type: 'textarea',
-              autosize: { minRows: 3, maxRows: 5 },
-              value: record_desc.value,
-              onUpdateValue: (value) => {
-                record_desc.value = value
-              },
-              placeholder: '版本描述',
-            }),
-          ],
-        },
-      ),
-    positiveText: '确定',
-    negativeText: '取消',
+  const dialogOptions = {
     onPositiveClick: async () => {
       try {
         const finalName = record_name.value.trim()
@@ -388,6 +371,7 @@ const recordReleaseWFAction = async () => {
         if (res.type === 'success') {
           message.success(`版本【${finalName}】记录成功`)
           await updateReleaseWorkflowsAction()
+          dialogReactive.destroy() // 手动关闭对话框
         } else {
           message.error(`记录失败: ${res.message}`)
         }
@@ -395,6 +379,53 @@ const recordReleaseWFAction = async () => {
         message.error(`记录失败: ${getErrorMessage(error)}`)
       }
     },
+  }
+
+  const dialogReactive = dialog.warning({
+    title: '记录当前版本工作流',
+    content: () =>
+      h(
+        NFlex,
+        {
+          vertical: true,
+          size: 'medium', // 可调整间距大小或使用[水平间距, 垂直间距]格式
+        },
+        {
+          default: () => [
+            h(NInput, {
+              value: record_name.value,
+              onUpdateValue: (value) => {
+                record_name.value = value
+              },
+              placeholder: '版本名称',
+              onKeydown: (e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault() // 防止默认行为
+                  dialogOptions.onPositiveClick?.() // 手动触发确定按钮
+                }
+              },
+            }),
+            h(NInput, {
+              type: 'textarea',
+              autosize: { minRows: 3, maxRows: 5 },
+              value: record_desc.value,
+              onUpdateValue: (value) => {
+                record_desc.value = value
+              },
+              placeholder: '版本描述',
+              onKeydown: (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  dialogOptions.onPositiveClick?.()
+                }
+              },
+            }),
+          ],
+        },
+      ),
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: dialogOptions.onPositiveClick,
   })
 }
 
@@ -432,38 +463,8 @@ const editReleaseWorkflowAction = async (
     desc: originalDesc.trim(),
     processing: false,
   })
-  dialog.info({
-    title: '编辑版本记录',
-    content: () =>
-      h(
-        NFlex,
-        {
-          vertical: true,
-          size: 'medium', // 可调整间距大小或使用[水平间距, 垂直间距]格式
-        },
-        {
-          default: () => [
-            h(NInput, {
-              value: editState.name,
-              onUpdateValue: (value) => {
-                editState.name = value
-              },
-              placeholder: '版本名称',
-            }),
-            h(NInput, {
-              type: 'textarea',
-              autosize: { minRows: 3, maxRows: 5 },
-              value: editState.desc,
-              onUpdateValue: (value) => {
-                editState.desc = value
-              },
-              placeholder: '版本描述',
-            }),
-          ],
-        },
-      ),
-    positiveText: '确定',
-    negativeText: '取消',
+
+  const dialogOptions = {
     onPositiveClick: async () => {
       if (!WorkflowID.value) return
       try {
@@ -483,6 +484,7 @@ const editReleaseWorkflowAction = async (
         if (success) {
           message.success('版本信息编辑成功')
           await updateReleaseWorkflowsAction() // 刷新版本列表
+          dialogReactive.destroy() // 手动关闭对话框
         } else {
           message.error('版本信息编辑失败')
         }
@@ -490,6 +492,53 @@ const editReleaseWorkflowAction = async (
         message.error(`操作失败: ${getErrorMessage(error)}`)
       }
     },
+  }
+
+  const dialogReactive = dialog.info({
+    title: '编辑版本记录',
+    content: () =>
+      h(
+        NFlex,
+        {
+          vertical: true,
+          size: 'medium', // 可调整间距大小或使用[水平间距, 垂直间距]格式
+        },
+        {
+          default: () => [
+            h(NInput, {
+              value: editState.name,
+              onUpdateValue: (value) => {
+                editState.name = value
+              },
+              placeholder: '版本名称',
+              onKeydown: (e: KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault() // 防止默认行为
+                  dialogOptions.onPositiveClick?.() // 手动触发确定按钮
+                }
+              },
+            }),
+            h(NInput, {
+              type: 'textarea',
+              autosize: { minRows: 3, maxRows: 5 },
+              value: editState.desc,
+              onUpdateValue: (value) => {
+                editState.desc = value
+              },
+              placeholder: '版本描述',
+              onKeydown: (e: KeyboardEvent) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  dialogOptions.onPositiveClick?.()
+                }
+              },
+            }),
+          ],
+        },
+      ),
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: dialogOptions.onPositiveClick,
   })
 }
 
