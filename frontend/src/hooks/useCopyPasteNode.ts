@@ -5,8 +5,9 @@ import { type NodeWithVFData } from '@/schemas/schemas'
 import { useMessage } from 'naive-ui'
 import { generateNodeId, regexMatchNodeId, concatNestedNodeId, setValueByPath } from '@/utils/tools'
 import { useVFlowManager } from '@/hooks/useVFlowManager'
+import { find } from 'lodash'
 interface CopyPasteInstance {
-  copyNode: () => void
+  copyNode: (node?: GraphNode) => void
   pasteNode: (parentNode: string | null, position: XYPosition) => void
 }
 interface CopyPasteData {
@@ -30,20 +31,24 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
   const { buildNestedNodeGraph, recursiveUpdateNodeSize } = useVFlowManager()
   let copiedDataJson: string = ''
 
-  const copyNode = () => {
+  const copyNode = (node?: GraphNode) => {
     const copiedDatas: CopyPasteData = {
       nodes: {},
       edges: [],
     }
-    for (const node of getSelectedNodes.value) {
+    if (node) {
       copiedDatas.nodes[node.id] = node
-    }
-    const edges = getConnectedEdges(getSelectedNodes.value)
-    for (const edge of edges) {
-      const srcid = edge.source
-      const tgtid = edge.target
-      if (srcid in copiedDatas.nodes && tgtid in copiedDatas.nodes) {
-        copiedDatas.edges.push(edge)
+    } else {
+      for (const node of getSelectedNodes.value) {
+        copiedDatas.nodes[node.id] = node
+      }
+      const edges = getConnectedEdges(getSelectedNodes.value)
+      for (const edge of edges) {
+        const srcid = edge.source
+        const tgtid = edge.target
+        if (srcid in copiedDatas.nodes && tgtid in copiedDatas.nodes) {
+          copiedDatas.edges.push(edge)
+        }
       }
     }
     const copiedDataStore: CopyPasteData = JSON.parse(JSON.stringify(copiedDatas))
@@ -52,8 +57,8 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
       if (!(parentId && parentId in copiedDataStore.nodes)) {
         let curPNode = findNode(parentId)
         while (curPNode) {
-          node.position.x -= curPNode.position.x
-          node.position.y -= curPNode.position.y
+          node.position.x += curPNode.position.x
+          node.position.y += curPNode.position.y
           curPNode = findNode(curPNode.parentNode)
         }
       }
@@ -103,9 +108,25 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     const offsetX = position.x - pastedNodesCenter.x
     const offsetY = position.y - pastedNodesCenter.y
 
+    // 提取父节点的偏移
+    const pNode = findNode(parentNode) as NodeWithVFData | null
+    const pNodeOffset = { x: 0, y: 0 }
+    let pNode_parent = pNode as NodeWithVFData | null
+    while (pNode_parent) {
+      pNodeOffset.x += pNode_parent.position.x
+      pNodeOffset.y += pNode_parent.position.y
+      pNode_parent = findNode(pNode_parent.parentNode) as NodeWithVFData | null
+    }
+    // if (pNode?.data.Nesting?.Pad.Top) {
+    //   pNodeOffset.x += pNode.data.Nesting.Pad.Top
+    // }
+    // if (pNode?.data.Nesting?.Pad.Left) {
+    //   pNodeOffset.y += pNode.data.Nesting.Pad.Left
+    // }
+
     // 按照顺序修正节点id
     const nodeMapOld2New = new Map<string, string>()
-    const pNode = findNode(parentNode) as NodeWithVFData | null
+
     const pastedNodes: GraphNode[] = []
     for (const { layout, node } of layoutNodes) {
       // 如果父节点在copy数据里，则说明是子节点
@@ -133,8 +154,8 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
         } else {
           node.parentNode = undefined
         }
-        node.position.x += offsetX
-        node.position.y += offsetY
+        node.position.x += offsetX - pNodeOffset.x
+        node.position.y += offsetY - pNodeOffset.y
       }
 
       pastedNodes.push(node)
@@ -148,10 +169,6 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     const pastedDatasParsed = JSON.parse(pastedDatasJSON) as CopyPasteData
     for (const node of Object.values(pastedDatasParsed.nodes)) {
       node.data = createVFNodeFromData(node.data)
-      if (!node.data.isNestedNode()) {
-        node.position.x += 20
-        node.position.y += 20
-      }
     }
     addNodes(Object.values(pastedDatasParsed.nodes))
     buildNestedNodeGraph()

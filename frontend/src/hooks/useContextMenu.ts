@@ -8,6 +8,7 @@ import { VFNodeFlag } from '@/components/nodes/VFNodeInterface'
 import { VFNode } from '@/components/nodes/VFNodeClass'
 import Logger from '@/utils/Logger'
 import { selectedNodeId } from '@/hooks/useVFlowAttribute'
+import { useCopyPasteNode } from './useCopyPasteNode'
 
 // 定义菜单项类型
 interface MenuItem {
@@ -74,6 +75,7 @@ export const useContextMenu = (): ContextMenuInstance => {
     recursiveUpdateNodeSize,
     addNodeToVFlow,
   } = useVFlowManager()
+  const { copyNode, pasteNode } = useCopyPasteNode()
 
   const AddNodesInPane = ref<VFNode[]>([])
   const AddNodesInNest = ref<VFNode[]>([])
@@ -156,6 +158,9 @@ export const useContextMenu = (): ContextMenuInstance => {
       event_cm.type === 'pane'
     let show_rm_node = event_cm.type === 'node' && !(event_cm.node.data as VFNode).isAttachedNode()
     let show_rm_edge = event_cm.type === 'edge'
+    let show_copy = event_cm.type === 'node' && !(event_cm.node.data as VFNode).isAttachedNode()
+    let show_paste_root = event_cm.type === 'pane'
+    let show_paste_nest = event_cm.type === 'node' && (event_cm.node.data as VFNode).isNestedNode()
     menuOptions.items = []
 
     if (show_add_node) {
@@ -174,6 +179,36 @@ export const useContextMenu = (): ContextMenuInstance => {
       menuOptions.items.push({
         label: '删除边',
         onClick: () => onClickContextMenuRmEdge(event_cm as EdgeContextMenuEvent),
+      })
+    }
+    if (show_copy) {
+      menuOptions.items.push({
+        label: '复制节点',
+        onClick: () => {
+          copyNode((event_cm as NodeContextMenuEvent).node)
+        },
+      })
+    }
+    if (show_paste_nest) {
+      menuOptions.items.push({
+        label: '粘贴节点',
+        onClick: () => {
+          pasteNode((event_cm as NodeContextMenuEvent).node.id, {
+            x: event_cm.event.clientX,
+            y: event_cm.event.clientY,
+          })
+        },
+      })
+    }
+    if (show_paste_root) {
+      menuOptions.items.push({
+        label: '粘贴节点',
+        onClick: () => {
+          pasteNode(null, {
+            x: event_cm.event.clientX,
+            y: event_cm.event.clientY,
+          })
+        },
       })
     }
   }
