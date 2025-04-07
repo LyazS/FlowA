@@ -126,7 +126,6 @@ export const useContextMenu = (): ContextMenuInstance => {
         const node_info: NodeAddInfo = {
           type: 'client',
           ntype: item.NType,
-          nid: null,
           parentNodeId: event_cm.node?.id,
           pos: {
             ...screenToFlowCoordinate({

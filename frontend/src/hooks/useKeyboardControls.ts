@@ -1,7 +1,6 @@
 // hooks/useKeyboardControls.ts
 import { ref, provide, watch, onBeforeMount, onBeforeUnmount } from 'vue'
 import { useVueFlow, type ViewportTransform } from '@vue-flow/core'
-import { useMessage } from 'naive-ui'
 import { useCopyPasteNode } from './useCopyPasteNode'
 // 定义鼠标位置的类型
 interface MousePosition {
@@ -17,7 +16,6 @@ export const useKeyboardControls = () => {
 
   const { getSelectedNodes, getViewport, setViewport } = useVueFlow()
   const { copyNode, pasteNode } = useCopyPasteNode()
-  const message = useMessage()
 
   const isSpacePressed = ref<boolean>(false)
   const lastMousePosition = ref<MousePosition>({ x: 0, y: 0 })
@@ -54,7 +52,6 @@ export const useKeyboardControls = () => {
     const isPaste = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v'
     if (isCopy) {
       event.preventDefault()
-      message.info(`已复制${getSelectedNodes.value.length}个节点`)
       copyNode()
     } else if (isPaste) {
       event.preventDefault()
@@ -63,8 +60,7 @@ export const useKeyboardControls = () => {
         x: window.innerWidth / 2,
         y: window.innerHeight / 2,
       }
-      const pasteNum = pasteNode(null, position)
-      message.success(`已粘贴${pasteNum}个节点`)
+      pasteNode(null, position)
     }
   }
 

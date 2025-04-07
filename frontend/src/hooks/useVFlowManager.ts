@@ -9,7 +9,7 @@ import {
 } from '@vue-flow/core'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
-import { getUuid, setValueByPath } from '@/utils/tools'
+import { generateNodeId, regexMatchNodeId, concatNestedNodeId, setValueByPath } from '@/utils/tools'
 import {
   VFNodeFlag,
   type NestedVFNodeData,
@@ -23,7 +23,6 @@ import Logger from '@/utils/Logger'
 export interface NodeAddInfo {
   type: 'client' | 'attached'
   ntype: string
-  nid: string | null
   parentNodeId: string | null | undefined
   pos: XYPosition
 }
@@ -201,17 +200,12 @@ export const useVFlowManager = (): NodeManagementInstance => {
       Width: initnode.Size.Width + 8,
       Height: initnode.Size.Height + 8,
     }
-    let new_node_id = nodeinfo.nid || getUuid()
+    let new_node_id = generateNodeId()
     if (parentNode) {
       const pdata = parentNode.data as VFNode
       if (pdata.isNestedNode()) {
-        const nest_regex = /#(\w+)/g
-        const pid_matches = parentNode.id.match(nest_regex) || []
-        logger.debug('parentNode id matches', pid_matches)
-        new_node_id += pid_matches.join('')
-        if (pdata.Nesting.Tag) {
-          new_node_id += `#${pdata.Nesting.Tag}`
-        }
+        const { id: pid, nested: pnested } = regexMatchNodeId(parentNode.id)
+        new_node_id = concatNestedNodeId(new_node_id, [...pnested, pdata.Nesting.Tag])
       }
     }
 
@@ -274,10 +268,8 @@ export const useVFlowManager = (): NodeManagementInstance => {
       new_node.parentNode = nodeinfo.parentNodeId
       let curparentnode: string | null = nodeinfo.parentNodeId
       while (curparentnode) {
-        if (curparentnode) {
-          new_node.position.x -= findNode(curparentnode)!.position.x
-          new_node.position.y -= findNode(curparentnode)!.position.y
-        }
+        new_node.position.x -= findNode(curparentnode)!.position.x
+        new_node.position.y -= findNode(curparentnode)!.position.y
         curparentnode = getNestedNodeById(curparentnode)?.parentNode
       }
     }
@@ -289,7 +281,6 @@ export const useVFlowManager = (): NodeManagementInstance => {
       for (const [aname, anode] of Object.entries(initnode.Nesting.ANodes)) {
         const anid = recursiveAddNodeToVFlow({
           ntype: anode.NType,
-          nid: null,
           type: 'attached',
           parentNodeId: new_node.id,
           pos: { x: 0, y: 0 },

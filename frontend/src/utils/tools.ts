@@ -49,6 +49,47 @@ const getFullUuid = (): string => {
 export const getUuid = (): string => {
   return getFullUuid().replace(/-/g, '')
 }
+/**
+ * Generates a unique node ID in the format 'NID{...}'.
+ * This format is used to distinguish node IDs from traditional UUIDs.
+ * Example: NID{123e4567e89b12d3a456426655440000}
+ */
+export const generateNodeId = (): string => {
+  return `NID{${getUuid()}}`
+}
+export const regexMatchNodeId = (nid: string): { id: string; nested: string[] } => {
+  // 匹配整个字符串结构，并提取中间内容
+  const mainMatch = /^NID\{([^}]+)}/.exec(nid)
+  if (!mainMatch) {
+    console.error('Invalid node id:', nid)
+    throw new Error('Invalid node id')
+  }
+
+  const content = mainMatch[1]
+  const id = content.split('#')[0] // 提取 id（第一个 # 之前的部分）
+
+  // 匹配所有非空的嵌套说明（# 后至少一个字符）
+  const nested = Array.from(content.matchAll(/#([^#]+)/g), (match) => match[1])
+
+  return { id, nested }
+}
+export const concatNestedNodeId = (id: string, nested: string[]): string => {
+  // Step 1: 验证并提取原始 id 的内容
+  const idMatch = /^NID\{([^}]+)}/.exec(id)
+  if (!idMatch) {
+    console.error('Invalid node id:', id)
+    throw new Error('Invalid node id')
+  }
+
+  // Step 2: 获取基础内容
+  const baseContent = idMatch[1]
+
+  // Step 3: 拼接 nested 参数
+  const nestedPart = nested.length > 0 ? `#${nested.join('#')}` : ''
+
+  // Step 4: 组装完整结构
+  return `NID{${baseContent}${nestedPart}}`
+}
 
 export const sortKeys = (obj: Record<string, any>): string[] =>
   Object.keys(obj).sort((a, b) => a.localeCompare(b))

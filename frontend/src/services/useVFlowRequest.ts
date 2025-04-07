@@ -1,7 +1,7 @@
 import { ref, watch, inject, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { type EventSourceMessage } from '@microsoft/fetch-event-source'
 import { useVueFlow, type FlowExportObject } from '@vue-flow/core'
-import { getUuid, setValueByPath, downloadJson, formatDateString } from '@/utils/tools'
+import { setValueByPath, downloadJson, formatDateString } from '@/utils/tools'
 import { postData, getData, type FAWorkflowOperationResponse } from '@/utils/requestMethod'
 import { useVFlowManager } from '@/hooks/useVFlowManager'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
