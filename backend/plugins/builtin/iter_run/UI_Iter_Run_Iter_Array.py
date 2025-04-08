@@ -1,10 +1,10 @@
 from typing import List, Dict, Union, Literal, Any
 from pydantic import BaseModel
 from app.uisdk import *
+from app.schemas.VFNodeInterface import VFNodeConnectionType
 from ..UI_Components.Header import Header
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
-from app.schemas.VFNodeInterface import VFNodeConnectionType
-
+from ..UI_Components.NFlex import NFlex
 
 class UI_Iter_Run_Iter_Array(NFlex):
     def __init__(self):

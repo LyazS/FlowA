@@ -2,8 +2,6 @@ from typing import List, Dict, Union, Literal, Optional
 from pydantic import BaseModel
 from app.schemas.VFNodeInterface import VFNodeContentData
 from app.uisdk import *
-from ..UI_Components.Header import Header
-from ..UI_Components.RefVarSelect import UI_RefVarSelect
 from .LLM_inference import (
     LLMSettingType,
     LLMSetting,
@@ -11,6 +9,10 @@ from .LLM_inference import (
     LLMTypeOptionsWnull,
 )
 from app.schemas.VFNodeInterface import VFNodeConnectionType
+from ..UI_Components.Header import Header
+from ..UI_Components.RefVarSelect import UI_RefVarSelect
+from ..UI_Components.NSwitch import NSwitch
+from ..UI_Components.NFlex import NFlex
 
 
 class SingleAttrBoolean(NFlex):

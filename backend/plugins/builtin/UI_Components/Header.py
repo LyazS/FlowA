@@ -1,5 +1,6 @@
 from app.uisdk import *
 from typing import Literal
+from .NText import NText
 
 
 class Header(NormalComponent):

@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 from app.schemas.VFNodeInterface import VFNodeContentData
 from app.uisdk import *
-from ..UI_Components.Header import Header
+from .Header import Header
+from .NFlex import NFlex
+from .NButton import NButton
 
 
 class UI_CodeEditor(NFlex):

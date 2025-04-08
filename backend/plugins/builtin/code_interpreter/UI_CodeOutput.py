@@ -2,7 +2,9 @@ from pydantic import BaseModel
 from app.schemas.VFNodeInterface import VFNodeContentData
 from app.uisdk import *
 from ..UI_Components.Header import Header
-from ..UI_Components.RefVarSelect import UI_RefVarSelect
+from ..UI_Components.NInput import NInput
+from ..UI_Components.NButton import NButton
+from ..UI_Components.NFlex import NFlex
 
 
 class VarNameInput(NInput):

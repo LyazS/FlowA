@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from app.uisdk import *
-from .Header import Header
-from .RefVarSelect import UI_RefVarSelect
 from app.schemas.VFNodeInterface import VFNodeConnectionType
+from .Header import Header
+from .NText import NText
+from .NFlex import NFlex
 
 
 class handleTag(NormalComponent):
