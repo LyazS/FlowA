@@ -1,5 +1,6 @@
 from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
 from weakref import ref
 import copy
 from loguru import logger
@@ -31,6 +32,12 @@ if TYPE_CHECKING:
     from app.services.FAValidator import FAValidator
 
 
+class FAPreNodeModel(BaseModel):
+    nid: str
+    handle: str
+    pass
+
+
 class FABaseNode(ABC):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         if runner:
@@ -47,6 +54,9 @@ class FABaseNode(ABC):
 
         # 该节点的运行状态
         self.runStatus = FARunStatus.Pending
+
+        # 该节点的前导节点
+        self.preNodes: List[FAPreNodeModel] = []
 
         """
         节点的缓存键，需要包括的内容
@@ -72,6 +82,11 @@ class FABaseNode(ABC):
             return self.cacheKey
         parentNode = self.runner().getNode(self.parentNode)
         parentCacheKey = parentNode.getCacheKey() if parentNode else None
+        preNodeCacheKeys = {}
+        for prenode in self.preNodes:
+            if preNode := self.runner().getNode(prenode.nid):
+                if preNodeCacheKey := preNode.getCacheKey():
+                    preNodeCacheKeys[prenode.nid] = preNodeCacheKey
         data = {
             "wid": self.wid,
             "id": self.id,
@@ -88,7 +103,7 @@ class FABaseNode(ABC):
                 ),
             },
             "parentCacheKey": parentCacheKey,
-            "preNodeCacheKeys": {},
+            "preNodeCacheKeys": preNodeCacheKeys,
         }
         self.cacheKey = generateCacheKey(data)
         return self.cacheKey
@@ -114,8 +129,8 @@ class FABaseNode(ABC):
         self.runStatus = data.runStatus
         pass
 
-    @abstractmethod
-    def addPreNode(self, prenode: "FABaseNode"):
+    def addPreNode(self, prenode: "FABaseNode", outhandle: str):
+        self.preNodes.append(FAPreNodeModel(nid=prenode.id, handle=outhandle))
         pass
 
     @abstractmethod

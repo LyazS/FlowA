@@ -28,6 +28,7 @@ from app.utils.tools import reduceGet
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.BaseNode import FABaseNode
+from .testdb4cache import GLOBAL_CACHE
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
@@ -49,8 +50,6 @@ class NodeCancelException(asyncio.CancelledError):
 class FATaskNode(FABaseNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
-        # 前导节点集合
-        self.preNodeIDs: List[str] = []
         # 本节点的完成事件
         self.doneEvent = asyncio.Event()
         # 其他节点的输出handle的状态
@@ -69,6 +68,8 @@ class FATaskNode(FABaseNode):
         pass
 
     def addPreNode(self, prenode: "FATaskNode", outhandle: str):
+        # 在处理之前记得调用父类的addPreNode方法
+        super().addPreNode(prenode, outhandle)
         """
         这里FATaskNode只接受前导节点也是FATaskNode
         """
@@ -113,7 +114,7 @@ class FATaskNode(FABaseNode):
                 waitFunc = all if self.waitType == FANodeWaitType.AND else any
                 preNodeSuccess = []
                 for thiswstatus in self.waitStatus:
-                    thenode = runner.getNode(thiswstatus.nid)
+                    thenode: FATaskNode = runner.getNode(thiswstatus.nid)
                     thisowstatus = thenode.outputStatus[thiswstatus.output]
                     preNodeSuccess.append(thisowstatus == FARunStatus.Success)
 
@@ -122,7 +123,7 @@ class FATaskNode(FABaseNode):
                 if not canRunNode:
                     # 找出是哪个节点出错或取消
                     for thiswstatus in self.waitStatus:
-                        thenode = runner.getNode(thiswstatus.nid)
+                        thenode: FATaskNode = runner.getNode(thiswstatus.nid)
                         thisowstatus = thenode.outputStatus[thiswstatus.output]
                         logger.debug(
                             f"pre node error or cancel {self.data.Label} {self.id} due to {thiswstatus.nid} {thiswstatus.output} {thisowstatus}"
@@ -130,6 +131,17 @@ class FATaskNode(FABaseNode):
 
                     raise NodeCancelException("前置节点出错或取消，本节点取消运行")
             logger.debug(f"can run {self.data.Label} {self.id}")
+            # ===============================================================
+            # 这里读取缓存 ===============================================================
+            if not self.data.is_nested_node():
+                cacheKey = self.getCacheKey()
+                if cacheKey not in GLOBAL_CACHE:
+                    GLOBAL_CACHE[cacheKey] = True
+                else:
+                    logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
+                # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
+            # ===============================================================
+
             self.setAllOutputStatus(FARunStatus.Running)
             self.putNodeStatus(FARunStatus.Running)
 

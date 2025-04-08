@@ -81,11 +81,9 @@ class VFNode(VFNodeData):
         return self
 
     # 类型守卫 ======================================================
-    @property
     def is_attached_node(self) -> bool:
         return (self.Flag & VFNodeFlag.IsAttached) != 0
 
-    @property
     def is_nested_node(self) -> bool:
         return (self.Flag & VFNodeFlag.IsNested) != 0
 

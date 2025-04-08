@@ -38,7 +38,7 @@ from sqlalchemy import select, update, exc, exists, delete
 from sqlalchemy.orm import selectinload
 
 if TYPE_CHECKING:
-    from app.nodes import FATaskNode
+    from app.nodes import FABaseNode
 
 
 class FARunner:
@@ -46,7 +46,7 @@ class FARunner:
         self.wid = wid
         self.oriflowdata = vflowdata
         self.flowdata: VFlowData = VFlowData.model_validate(vflowdata)
-        self.nodes: Dict[str, "FATaskNode"] = {}
+        self.nodes: Dict[str, "FABaseNode"] = {}
         self.status: FARunStatus = FARunStatus.Pending
         # 时间戳
         self.starttime = None
@@ -56,7 +56,7 @@ class FARunner:
         self.running_tasks: Set[asyncio.Task] = set()  # 跟踪所有节点任务
         pass
 
-    def addNode(self, nid, node: "FATaskNode"):
+    def addNode(self, nid, node: "FABaseNode"):
         self.nodes[nid] = node
         pass
 
@@ -65,7 +65,7 @@ class FARunner:
             del self.nodes[nid]
         pass
 
-    def getNode(self, nid: str) -> Union["FATaskNode", None]:
+    def getNode(self, nid: str) -> Union["FABaseNode", None]:
         return self.nodes.get(nid, None)
 
     async def getRefData(self, curnid: str, refdata: str):
@@ -244,7 +244,7 @@ class FARunner:
                     nodeinfo_dict[nodeinfo.id] = nodeinfo
                     pass
                 for noderesult in store.noderesults:
-                    thenode: "FATaskNode" = FANODECOLLECTION[noderesult.ntype](
+                    thenode: "FABaseNode" = FANODECOLLECTION[noderesult.ntype](
                         self.tid, nodeinfo_dict[noderesult.oriid]
                     )
 
