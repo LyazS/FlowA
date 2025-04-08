@@ -24,6 +24,7 @@ import {
   RocketSharp,
   ArrowUndo,
   ArrowBack,
+  ReloadOutline,
   GitCommit,
   PlayCircleOutline,
   Stop,
@@ -107,12 +108,12 @@ const loadReleaseWorkflowAction = async () => {
           <n-button class="glow-btn" circle tertiary type="success" @click="runFullFlowAction">
             <template #icon>
               <n-icon>
-                <PlayCircleOutline />
+                <ReloadOutline />
               </n-icon>
             </template>
           </n-button>
         </template>
-        <span>全量运行</span>
+        <span>全量运行，将会清空所有节点缓存，重新运行工作流</span>
       </n-popover>
     </template>
     <template v-else-if="WorkflowMode === WorkflowModeType.View">
