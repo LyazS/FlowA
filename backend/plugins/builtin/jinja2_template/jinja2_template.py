@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 from ..UI_Components.UI_InputVars import InputVarModel
 
 
-class Jinja2Template(FATaskNode):
+class Jinja2Template(FABaseNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         self.runStatus = FARunStatus.Passive
@@ -80,6 +80,14 @@ class Jinja2Template(FATaskNode):
             ),
         )
         pass
+
+    def addPreNode(self, prenode: "FABaseNode"):
+        pass
+
+    async def getContentByPath(
+        self, request_nid: str, path: FromInnerPath
+    ) -> VFNodeContentData:
+        return None
 
     async def invoke(self):
         try:

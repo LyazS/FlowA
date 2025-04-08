@@ -3,6 +3,8 @@ import re
 from typing import Dict, Any, List
 from uuid_extensions import uuid7str
 from functools import reduce
+import hashlib
+import json
 
 
 def read_yaml(file_path):
@@ -109,3 +111,16 @@ def concatNestedNodeId(id_str: str, nested: list) -> str:
 
     # Step 4: 组装完整结构
     return f"NID{{{base_content}{nested_part}}}"
+
+
+def generateCacheKey(data: Dict) -> str:
+    """
+    生成节点的缓存键
+    :param data: 任意字典
+    :return: 缓存键字符串
+    """
+    # 将输入参数序列化为字符串
+    request_str = json.dumps(data, sort_keys=True)
+    # 计算哈希值以确保唯一性
+    cache_key = hashlib.sha256(request_str.encode()).hexdigest()
+    return cache_key

@@ -49,6 +49,8 @@ class NodeCancelException(asyncio.CancelledError):
 class FATaskNode(FABaseNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
+        # 前导节点集合
+        self.preNodeIDs: List[str] = []
         # 本节点的完成事件
         self.doneEvent = asyncio.Event()
         # 其他节点的输出handle的状态
@@ -56,10 +58,29 @@ class FATaskNode(FABaseNode):
         # 其他节点的doneEvent会存在该节点的waitEvents列表里
         self.waitEvents: List[asyncio.Event] = []
         self.waitType = FANodeWaitType.AND
+        # 该节点的输出handle的状态
+        self.outputStatus: Dict[str, FARunStatus] = {
+            oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.keys()
+        }
         pass
 
     def setNewID(self, newid: str):
         self.id = newid
+        pass
+
+    def addPreNode(self, prenode: "FATaskNode", outhandle: str):
+        """
+        这里FATaskNode只接受前导节点也是FATaskNode
+        """
+        if not isinstance(prenode, FATaskNode):
+            raise TypeError("前导节点必须是FATaskNode")
+        self.waitEvents.append(prenode.doneEvent)
+        self.waitStatus.append(
+            FANodeWaitStatus(
+                nid=prenode.id,
+                output=outhandle,
+            )
+        )
         pass
 
     async def invoke(self):

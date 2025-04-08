@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from weakref import ref
 import copy
 from loguru import logger
+from app.utils.tools import generateCacheKey
 from app.schemas.fanode import (
     FARunStatus,
     FANodeWaitType,
@@ -44,14 +45,53 @@ class FABaseNode(ABC):
         self.ntype: str = cpnodeinfo.data.NType
         self.parentNode = cpnodeinfo.parentNode
 
-        # 该节点的输出handle的状态
-        self.outputStatus: Dict[str, FARunStatus] = {
-            oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.keys()
-        }
         # 该节点的运行状态
         self.runStatus = FARunStatus.Pending
 
+        """
+        节点的缓存键，需要包括的内容
+        wid
+        id
+        data里的
+            Connections
+            Payloads
+            Results
+                这里要去掉Data
+            Config
+            Attaching
+            Nesting
+        parentNode的缓存键
+        前导节点的缓存键
+        """
+        self.cacheKey = None
+
         pass
+
+    def getCacheKey(self):
+        if self.cacheKey:
+            return self.cacheKey
+        parentNode = self.runner().getNode(self.parentNode)
+        parentCacheKey = parentNode.getCacheKey() if parentNode else None
+        data = {
+            "wid": self.wid,
+            "id": self.id,
+            "data": {
+                "Connections": self.data.Connections.model_dump(),
+                "Payloads": self.data.Payloads.model_dump(),
+                "Results": None,
+                "Config": self.data.Config.model_dump(),
+                "Attaching": (
+                    self.data.Attaching.model_dump() if self.data.Attaching else None
+                ),
+                "Nesting": (
+                    self.data.Nesting.model_dump() if self.data.Nesting else None
+                ),
+            },
+            "parentCacheKey": parentCacheKey,
+            "preNodeCacheKeys": {},
+        }
+        self.cacheKey = generateCacheKey(data)
+        return self.cacheKey
 
     def store(self):
         return FAWorkflowNodeResult(
@@ -72,6 +112,10 @@ class FABaseNode(ABC):
         self.ntype = data.ntype
         self.parentNode = data.parentNode
         self.runStatus = data.runStatus
+        pass
+
+    @abstractmethod
+    def addPreNode(self, prenode: "FABaseNode"):
         pass
 
     @abstractmethod

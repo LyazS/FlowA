@@ -1,4 +1,4 @@
-from typing import Dict, List, TYPE_CHECKING, Set
+from typing import Dict, List, TYPE_CHECKING, Set, Union
 import asyncio
 import re
 import aiofiles
@@ -65,8 +65,8 @@ class FARunner:
             del self.nodes[nid]
         pass
 
-    def getNode(self, nid: str) -> "FATaskNode":
-        return self.nodes[nid]
+    def getNode(self, nid: str) -> Union["FATaskNode", None]:
+        return self.nodes.get(nid, None)
 
     async def getRefData(self, curnid: str, refdata: str):
         """
@@ -127,14 +127,17 @@ class FARunner:
                     continue
                 source_handle = edgeinfo.sourceHandle
                 target_handle = edgeinfo.targetHandle
-                self.getNode(edgeinfo.target).waitEvents.append(
-                    self.getNode(edgeinfo.source).doneEvent
-                )
-                self.getNode(edgeinfo.target).waitStatus.append(
-                    FANodeWaitStatus(
-                        nid=edgeinfo.source,
-                        output=source_handle,
-                    )
+                # self.getNode(edgeinfo.target).waitEvents.append(
+                #     self.getNode(edgeinfo.source).doneEvent
+                # )
+                # self.getNode(edgeinfo.target).waitStatus.append(
+                #     FANodeWaitStatus(
+                #         nid=edgeinfo.source,
+                #         output=source_handle,
+                #     )
+                # )
+                self.getNode(edgeinfo.target).addPreNode(
+                    self.getNode(edgeinfo.source), source_handle
                 )
         pass
 
