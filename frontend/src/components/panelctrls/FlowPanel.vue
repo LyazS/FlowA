@@ -24,13 +24,13 @@ import {
   WorkflowMode,
   WorkflowModeType,
 } from '@/hooks/useVFlowAttribute'
-import nodeAttribute from './nodeAttribute.vue'
+import NodeAttribute from './NodeAttribute.vue'
 import CtrlPanel from './CtrlPanel.vue'
 import MgrPanel from './MgrPanel.vue'
 import MapPanel from './MapPanel.vue'
 
 const AceCodeEditor = defineAsyncComponent(() => import('./AceCodeEditor.vue'))
-const vflowManager = defineAsyncComponent(() => import('./vflowManager.vue'))
+const VFlowManager = defineAsyncComponent(() => import('./VFlowManager.vue'))
 const Jinja2Render = defineAsyncComponent(() => import('./Jinja2Render.vue'))
 </script>
 
@@ -60,10 +60,10 @@ const Jinja2Render = defineAsyncComponent(() => import('./Jinja2Render.vue'))
   </Panel>
 
   <Panel class="nodepanel" position="top-right">
-    <nodeAttribute v-if="!!selectedNodeId" />
+    <NodeAttribute v-if="!!selectedNodeId" />
   </Panel>
   <AceCodeEditor />
-  <vflowManager />
+  <VFlowManager />
   <Jinja2Render v-if="WorkflowMode === WorkflowModeType.Run" />
 </template>
 

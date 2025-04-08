@@ -35,9 +35,7 @@ import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode } from '@/hooks/useVFlowAttribute'
 import { useCurSelectedNode } from '@/hooks/useCurSelectedNode'
-import { getData } from '@/utils/requestMethod'
 import { type InputNode, type NodeWithVFData } from '@/schemas/schemas'
-import { type BaseComponent } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
   THIS_NODE_DATA,
