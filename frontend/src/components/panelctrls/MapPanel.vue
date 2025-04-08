@@ -75,7 +75,7 @@ const maxZoomReached = computed(() => viewport.value.zoom >= maxZoom.value)
       </template>
       <span>视图适应</span>
     </n-popover>
-    <n-popover trigger="hover">
+    <!-- <n-popover trigger="hover">
       <template #trigger>
         <n-button
           class="glow-btn"
@@ -97,7 +97,7 @@ const maxZoomReached = computed(() => viewport.value.zoom >= maxZoom.value)
         </n-button>
       </template>
       <span>锁定</span>
-    </n-popover>
+    </n-popover> -->
   </n-flex>
 </template>
 

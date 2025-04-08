@@ -130,10 +130,6 @@ class VFNodeAttaching(BaseModel):
 class VFNodeAttachedNode(BaseModel):
     Nid: Optional[str] = None
     NType: str
-    # Type: VFNodeAttachingType
-    # Pos: VFNodeAttachingPos
-    # Label: str
-
 
 class VFNodePadding(BaseModel):
     Top: int

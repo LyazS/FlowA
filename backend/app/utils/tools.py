@@ -1,6 +1,6 @@
 import yaml
 import re
-from typing import Dict, Any
+from typing import Dict, Any, List
 from uuid_extensions import uuid7str
 from functools import reduce
 
@@ -63,5 +63,49 @@ def reduceGet(data, path):
 
 
 def getNestedLayout(nid: str):
-    matches = re.findall(r"#(\w+)", nid)
-    return [int(x) if x.isdigit() else x for x in matches]
+    # matches = re.findall(r"#(\w+)", nid)
+    # return [int(x) if x.isdigit() else x for x in matches]
+    _, nested = regexMatchNodeId(nid)
+    return nested
+
+
+def generateNodeId() -> str:
+    return f"NID{{{getUuid()}}}"
+
+
+def regexMatchOriginalNodeId(nid: str) -> str:
+    main_match = re.match(r"^NID\{([^}]+)\}", nid)
+    if not main_match:
+        raise ValueError(f"Invalid node id {nid}")
+    return main_match.group(1)
+
+
+def regexMatchNodeId(nid: str) -> tuple[str | Any, List[Any]]:
+    # 匹配整个字符串结构，并提取中间内容
+    main_match = re.match(r"^NID\{([^}]+)\}", nid)
+    if not main_match:
+        raise ValueError(f"Invalid node id {nid}")
+
+    content = main_match.group(1)
+    id_part = content.split("#")[0]  # 提取 id（第一个 # 之前的部分）
+
+    # 匹配所有非空的嵌套说明（# 后至少一个字符）
+    nested = re.findall(r"#([^#]+)", content)
+    nested = [int(x) if x.isdigit() else x for x in nested]
+    return (f"NID{{{id_part}}}", nested)
+
+
+def concatNestedNodeId(id_str: str, nested: list) -> str:
+    # Step 1: 验证并提取原始 id 的内容
+    id_match = re.match(r"^NID\{([^}]+)\}", id_str)
+    if not id_match:
+        raise ValueError(f"Invalid node id {id_str}")
+
+    # Step 2: 获取基础内容
+    base_content = id_match.group(1)
+
+    # Step 3: 拼接 nested 参数
+    nested_part = "#" + "#".join(map(str, nested)) if nested else ""
+
+    # Step 4: 组装完整结构
+    return f"NID{{{base_content}{nested_part}}}"

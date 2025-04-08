@@ -127,7 +127,7 @@ const runFullFlowAction = async (): Promise<void> => {
         <template #trigger>
           <n-button
             class="glow-btn"
-            circle
+            round
             tertiary
             type="warning"
             @click="isShowJinja2Render = true"
@@ -137,18 +137,20 @@ const runFullFlowAction = async (): Promise<void> => {
                 <DocumentText />
               </n-icon>
             </template>
+            Jinja渲染
           </n-button>
         </template>
-        <span>Jinja2渲染</span>
+        <span>打开Jinja2渲染面板</span>
       </n-popover>
       <n-popover trigger="hover">
         <template #trigger>
-          <n-button class="glow-btn" tertiary circle type="error" @click="stopflow()">
+          <n-button class="glow-btn" tertiary round type="error" @click="stopflow()">
             <template #icon>
               <n-icon>
                 <Stop />
               </n-icon>
             </template>
+            停止
           </n-button>
         </template>
         <span>中止运行</span>
