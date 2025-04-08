@@ -45,6 +45,16 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
     } else {
       for (const node of getSelectedNodes.value) {
         copiedDatas.nodes[node.id] = node
+        // 如果是嵌套节点，则还要把附属节点也要加进来
+        const nestedNode = node as NodeWithVFData
+        if (nestedNode.data.isNestedNode()) {
+          for (const { Nid, NType } of Object.values(nestedNode.data.Nesting.ANodes)) {
+            const anode = findNode(Nid)
+            if (anode) {
+              copiedDatas.nodes[anode.id] = anode
+            }
+          }
+        }
       }
       const edges = getConnectedEdges(getSelectedNodes.value)
       for (const edge of edges) {
