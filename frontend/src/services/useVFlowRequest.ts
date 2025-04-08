@@ -12,6 +12,8 @@ import { selectedNodeId } from '@/hooks/useVFlowAttribute'
 import {
   WorkflowID,
   WorkflowName,
+  ReleaseWorkflowID,
+  ReleaseWorkflowName,
   AutoSaveMessage,
   Jinja2RenderNodeIDs,
   isEditorMode,
@@ -156,6 +158,8 @@ export const useVFlowRequest = () => {
       nodesConnectable.value = true
       nodesDraggable.value = true
       WorkflowMode.value = WorkflowModeType.Edit
+      ReleaseWorkflowID.value = null
+      ReleaseWorkflowName.value = null
     } else if (mode === WorkflowModeType.View) {
       nodesConnectable.value = false
       nodesDraggable.value = false
@@ -164,6 +168,8 @@ export const useVFlowRequest = () => {
       nodesConnectable.value = false
       nodesDraggable.value = false
       WorkflowMode.value = WorkflowModeType.Run
+      ReleaseWorkflowID.value = null
+      ReleaseWorkflowName.value = null
     }
   }
 
@@ -486,10 +492,15 @@ export const useVFlowRequest = () => {
       const params = {
         wid,
         rwid,
-        locations: ['release'] as const,
+        locations: ['release', 'rwfname'] as const,
       }
-      const response = await postData<{ release: FlowExportObject }>('workflow/read', params)
+      const response = await postData<{ release: FlowExportObject; rwfname: string }>(
+        'workflow/read',
+        params,
+      )
       loadVflow(response.release)
+      ReleaseWorkflowID.value = rwid
+      ReleaseWorkflowName.value = response.rwfname
       setWFMode(WorkflowModeType.View)
       // 记录成功日志
       console.debug('[Release] 版本加载成功', {

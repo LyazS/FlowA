@@ -24,6 +24,7 @@ import {
   RocketSharp,
   ArrowUndo,
   ArrowBack,
+  GitCommit,
   PlayCircleOutline,
   Stop,
   DocumentText,
@@ -36,11 +37,13 @@ import {
   isShowCodeEditor,
   WorkflowID,
   WorkflowMode,
+  ReleaseWorkflowID,
+  ReleaseWorkflowName,
   WorkflowName,
   isShowVFlowMgr,
   isShowJinja2Render,
 } from '@/hooks/useVFlowAttribute'
-const { switchWorkflow, runflow, stopflow } = useVFlowRequest()
+const { switchWorkflow, runflow, stopflow, loadReleaseWorkflow } = useVFlowRequest()
 
 const message = useMessage()
 
@@ -63,6 +66,16 @@ const runFullFlowAction = async (): Promise<void> => {
     message.success('开始运行')
   } else {
     message.error(`运行失败：${res.message}`)
+  }
+}
+const loadReleaseWorkflowAction = async () => {
+  const storeRWName = ReleaseWorkflowName.value
+  const res = await loadReleaseWorkflow(WorkflowID.value, ReleaseWorkflowID.value)
+  if (res.type === 'success') {
+    isShowVFlowMgr.value = false
+    message.success(`已加载版本【${storeRWName}】`)
+  } else {
+    message.error(`版本加载失败: ${res.message}`)
   }
 }
 </script>
@@ -105,21 +118,35 @@ const runFullFlowAction = async (): Promise<void> => {
     <template v-else-if="WorkflowMode === WorkflowModeType.View">
       <n-popover trigger="hover">
         <template #trigger>
-          <n-button
-            class="glow-btn"
-            circle
-            tertiary
-            type="success"
-            @click="switchWorkflow(WorkflowID)"
-          >
+          <n-button class="glow-btn" round tertiary type="info" @click="switchWorkflow(WorkflowID)">
             <template #icon>
               <n-icon>
                 <ArrowBack />
               </n-icon>
             </template>
+            返回编辑
           </n-button>
         </template>
-        <span>返回编辑</span>
+        <span>返回编辑界面</span>
+      </n-popover>
+      <n-popover trigger="hover">
+        <template #trigger>
+          <n-button
+            class="glow-btn"
+            round
+            tertiary
+            type="warning"
+            @click="loadReleaseWorkflowAction()"
+          >
+            <template #icon>
+              <n-icon>
+                <GitCommit />
+              </n-icon>
+            </template>
+            加载
+          </n-button>
+        </template>
+        <span>⚠️⚠️⚠️将会覆盖掉当前的工作流⚠️⚠️⚠️</span>
       </n-popover>
     </template>
     <template v-else-if="WorkflowMode === WorkflowModeType.Run">
