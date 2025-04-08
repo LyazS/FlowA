@@ -24,7 +24,7 @@
     multi-selection-key-code="Control"
   >
     <Background />
-    <nuipanel />
+    <FlowPanel />
 
     <template #edge-normal="customEdgeProps">
       <connected_edge
@@ -70,7 +70,7 @@ import { Background } from '@vue-flow/background'
 import { ContextMenu } from '@imengyu/vue3-context-menu'
 import connected_edge from '@/components/edges/connected_edge.vue'
 import connecting_edge from '@/components/edges/connecting_edge.vue'
-import nuipanel from '@/components/panelctrls/nuipanel.vue'
+import FlowPanel from '@/components/panelctrls/FlowPanel.vue'
 
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowManager } from '@/hooks/useVFlowManager'
