@@ -85,3 +85,8 @@ body,
   width: 5px;
   height: 5px;
 }
+
+.glow-btn:hover {
+  box-shadow: 0 0 20px rgb(138, 203, 236);
+  transition: box-shadow 0.2s ease;
+}

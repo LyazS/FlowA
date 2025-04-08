@@ -24,7 +24,6 @@
     multi-selection-key-code="Control"
   >
     <Background />
-    <miniMapCtrl />
     <nuipanel />
 
     <template #edge-normal="customEdgeProps">
@@ -64,23 +63,13 @@
 </style>
 
 <script setup lang="ts">
-import {
-  ref,
-  markRaw,
-  onMounted,
-  onBeforeMount,
-  onBeforeUnmount,
-  reactive,
-  watch,
-  provide,
-} from 'vue'
+import { ref, onMounted } from 'vue'
 import { NSpin, NText, NModal } from 'naive-ui'
 import { ConnectionMode, VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { ContextMenu } from '@imengyu/vue3-context-menu'
 import connected_edge from '@/components/edges/connected_edge.vue'
 import connecting_edge from '@/components/edges/connecting_edge.vue'
-import miniMapCtrl from '@/components/panelctrls/miniMapCtrl.vue'
 import nuipanel from '@/components/panelctrls/nuipanel.vue'
 
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'

@@ -17,8 +17,11 @@ import {
   NEllipsis,
 } from 'naive-ui'
 import {
-  Add,
+  AddSharp,
   Play,
+  RemoveSharp,
+  ScanSharp,
+  RocketSharp,
   ArrowUndo,
   ArrowBack,
   PlayCircleOutline,
@@ -40,7 +43,6 @@ import {
 const { switchWorkflow, runflow, stopflow } = useVFlowRequest()
 
 const message = useMessage()
-const dialog = useDialog()
 
 const run_loading = ref<boolean>(false)
 const runIncrementalFlowAction = async (): Promise<void> => {
@@ -67,32 +69,22 @@ const runFullFlowAction = async (): Promise<void> => {
 
 <template>
   <n-flex justify="flex-end">
-    <n-button
-      class="glow-btn"
-      round
-      tertiary
-      type="primary"
-      style="min-width: 200px"
-      @click="isShowVFlowMgr = true"
-    >
-      <n-ellipsis v-if="WorkflowName" style="max-width: 240px"> - {{ WorkflowName }} - </n-ellipsis>
-      <n-ellipsis v-else style="max-width: 240px"> - 工作流管理器 - </n-ellipsis>
-    </n-button>
     <template v-if="WorkflowMode === WorkflowModeType.Edit">
       <n-popover trigger="hover">
         <template #trigger>
           <n-button
             class="glow-btn"
-            circle
+            round
             tertiary
             type="success"
             @click="runIncrementalFlowAction"
           >
             <template #icon>
               <n-icon>
-                <Play />
+                <RocketSharp />
               </n-icon>
             </template>
+            运行
           </n-button>
         </template>
         <span>增量运行</span>
@@ -164,9 +156,5 @@ const runFullFlowAction = async (): Promise<void> => {
     </template>
   </n-flex>
 </template>
-<style scoped>
-.glow-btn:hover {
-  box-shadow: 0 0 20px rgb(138, 203, 236);
-  transition: box-shadow 0.2s ease;
-}
-</style>
+
+<style scoped></style>
