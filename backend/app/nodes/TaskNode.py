@@ -28,7 +28,7 @@ from app.utils.tools import reduceGet, generateCacheKey
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.BaseNode import FABaseNode
-from .testdb4cache import GLOBAL_CACHE
+from app.services.CacheMgr import GOLBAL_CACHE_MGR
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
@@ -88,7 +88,9 @@ class FATaskNode(FABaseNode):
             if runner is None:
                 logger.error(f"runner is None {self.data.Label} {self.id}")
                 raise NodeCancelException("runner is None")
-
+            # ===============================================================
+            # 等待前导节点完成 ================================================
+            # ===============================================================
             all_events_task = asyncio.gather(
                 *(event.wait() for event in self.waitEvents),
                 return_exceptions=False,  # 如果任一事件抛出异常，则整体失败
@@ -128,22 +130,35 @@ class FATaskNode(FABaseNode):
                     raise NodeCancelException("前置节点出错或取消，本节点取消运行")
             logger.debug(f"can run {self.data.Label} {self.id}")
             # ===============================================================
-            # 这里读取缓存 ===============================================================
-            # 嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
-            if not self.data.is_nested_node():
-                cacheKey = self.getCacheKey(self.id)
-                if cacheKey and cacheKey not in GLOBAL_CACHE:
-                    GLOBAL_CACHE[cacheKey] = True
-                else:
-                    logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
-                # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
-            # ===============================================================
 
+            # ===============================================================
+            # 设置运行状态（Running） ========================================
+            # ===============================================================
             self.setAllOutputStatus(FARunStatus.Running)
             self.putNodeStatus(FARunStatus.Running)
+            updateDatas = None
 
-            # 前置节点全部成功，本节点开始运行
-            updateDatas = await self.run()
+            # ===============================================================
+            # 读取缓存 =======================================================
+            # 决定新运行还是使用缓存
+            # ===============================================================
+            # 嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
+            isUseCache = False
+            cacheKey = self.getCacheKey(self.id)
+            if cacheKey and not self.data.is_nested_node():
+                if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, cacheKey):
+                    self.loadCache(nodecache)
+                    isUseCache = True
+                logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
+
+            # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
+            if not isUseCache:
+                # 前置节点全部成功，本节点开始运行
+                updateDatas = await self.run()
+                if cacheKey:
+                    await GOLBAL_CACHE_MGR.set(self.wid, cacheKey, self.generateCache())
+            # ===============================================================
+
             # 运行成功
             logger.debug(f"run success {self.data.Label} {self.id}")
             # self.setAllOutputStatus(FANodeStatus.Success)
@@ -153,17 +168,18 @@ class FATaskNode(FABaseNode):
             if updateDatas:
                 nodeUpdateDatas.extend(updateDatas)
                 pass
-            ALL_MESSAGES_MGR.put(
-                f"{self.wid}/{FAProgressRequestType.VFlowUI}",
-                SSEResponse(
-                    event=SSEResponseType.updatenode,
-                    data=SSEResponseData(
-                        nid=self.id,
-                        oriid=self.oriid,
-                        data=nodeUpdateDatas,
+            if len(nodeUpdateDatas) > 0:
+                ALL_MESSAGES_MGR.put(
+                    f"{self.wid}/{FAProgressRequestType.VFlowUI}",
+                    SSEResponse(
+                        event=SSEResponseType.updatenode,
+                        data=SSEResponseData(
+                            nid=self.id,
+                            oriid=self.oriid,
+                            data=nodeUpdateDatas,
+                        ),
                     ),
-                ),
-            )
+                )
             pass
         except asyncio.CancelledError as e:
             if isinstance(e, NodeCancelException):
@@ -235,6 +251,9 @@ class FATaskNode(FABaseNode):
             if preNode := self.runner().getNode(prenode.nid):
                 if preNodeCacheKey := preNode.getCacheKey(self.id):
                     preNodeCacheKeys[prenode.nid] = preNodeCacheKey
+                else:
+                    # 如果前置节点没有缓存键，则后续也要跳过缓存
+                    return None
         data = {
             "wid": self.wid,
             "id": self.id,

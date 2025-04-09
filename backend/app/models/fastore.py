@@ -78,13 +78,12 @@ class FAReleasedWorkflowModel(Base):
 class FANodeCacheModel(Base):
     __tablename__ = "fa_node_cache"
 
-    cid: Mapped[str] = mapped_column(String(255), primary_key=True)
-    nid: Mapped[str] = mapped_column(String(255), primary_key=True)
-    oriid: Mapped[str] = mapped_column(String(255))
-    data: Mapped[dict] = mapped_column(BigJSONType, nullable=False)
-    ntype: Mapped[str] = mapped_column(String(255))
-    parentNode: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    runStatus: Mapped[str] = mapped_column(String(255))
+    key: Mapped[str] = mapped_column(
+        String(255), primary_key=True, index=True, description="缓存键"
+    )
+    data: Mapped[dict] = mapped_column(
+        BigJSONType, nullable=False, description="缓存数据"
+    )
 
     # 修改: 添加 ondelete="CASCADE"
     wid: Mapped[str] = mapped_column(
