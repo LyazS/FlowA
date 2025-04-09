@@ -291,6 +291,9 @@ class IterRun(FATaskNode):
         if output_anode.runStatus == FARunStatus.Success:
             self.setAllOutputStatus(FARunStatus.Success)
             return []
+        elif output_anode.runStatus == FARunStatus.Canceled:
+            self.setAllOutputStatus(FARunStatus.Canceled)
+            return []
         else:
             raise Exception(f"内部节点存在运行错误，迭代节点执行失败")
 

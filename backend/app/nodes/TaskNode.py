@@ -63,8 +63,6 @@ class FATaskNode(FABaseNode):
         }
         pass
 
-
-
     def addPreNode(self, prenode: "FATaskNode", outhandle: str):
         # 在处理之前记得调用父类的addPreNode方法
         super().addPreNode(prenode, outhandle)
@@ -184,6 +182,14 @@ class FATaskNode(FABaseNode):
             self.setAllOutputStatus(FARunStatus.Error)
             self.putNodeStatus(FARunStatus.Error)
         finally:
+            # 确保挂起任务被取消
+            if all_events_task and not all_events_task.done():
+                logger.debug(f"cancel all_events_task {self.data.Label} {self.id}")
+                all_events_task.cancel()
+                try:
+                    await all_events_task
+                except asyncio.CancelledError:
+                    pass
             self.doneEvent.set()
         pass
 

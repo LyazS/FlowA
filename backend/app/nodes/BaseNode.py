@@ -122,10 +122,16 @@ class FABaseNode(ABC):
 
     @abstractmethod
     async def invoke(self):
+        """
+        调用节点的逻辑
+        """
         pass
 
     @abstractmethod
     async def getCurData(self) -> Optional[List[FANodeUpdateData]]:
+        """
+        获取当前节点的数据，用于前端展示
+        """
         return []
 
     @abstractmethod
@@ -141,6 +147,9 @@ class FABaseNode(ABC):
 
     @abstractmethod
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
+        """
+        验证节点的配置是否正确
+        """
         return None
 
     @abstractmethod
