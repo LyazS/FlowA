@@ -54,7 +54,6 @@ const renderLabel = (option: SelectOption) => {
       throw new Error('value not in options')
     }
     const [nlabel, dlabel, dtype] = option.label.split('/')
-    // const [nlabel, dlabel, dkey, dtype] = option.label.split('/')
     return [
       h(NText, { type: 'default', strong: true }, { default: () => `${nlabel}` }),
       h(NText, { type: 'default' }, { default: () => '/ ' }),

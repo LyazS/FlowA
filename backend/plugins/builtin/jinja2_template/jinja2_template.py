@@ -17,6 +17,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
     FromInnerPath,
+    RefItemValue,
 )
 from app.schemas.farequest import (
     ValidationError,
@@ -84,6 +85,9 @@ class Jinja2Template(FABaseNode):
     def addPreNode(self, prenode: "FABaseNode"):
         pass
 
+    def getCacheKey(self, request_nid):
+        return None
+
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath
     ) -> VFNodeContentData:
@@ -101,17 +105,12 @@ class Jinja2Template(FABaseNode):
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
                 if var.type == VarType.Ref:
-                    refdata: str = var.valueStr
-                    nid, path = refdata.split("/", 1)
-                    thenode = runner.getNode(nid)
-                    path_split = path.split("/")
+                    refdata = RefItemValue.model_validate_json(var.valueStr)
+                    thenode = runner.getNode(refdata.nid)
                     (
                         await thenode.getContentByPath(
                             self.id,
-                            FromInnerPath(
-                                ContentName=path_split[0],
-                                ContentId=path_split[1],
-                            ),
+                            refdata.path,
                         )
                     ).Data.add_dependency(
                         lambda triggerdata, key=var.key, wid=self.wid, nid=self.id, oriid=self.oriid: (

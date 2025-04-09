@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from weakref import ref
 import copy
 from loguru import logger
-from app.utils.tools import generateCacheKey
 from app.schemas.fanode import (
     FARunStatus,
     FANodeWaitType,
@@ -50,16 +49,17 @@ class FABaseNode(ABC):
         self.oriid = copy.deepcopy(cpnodeinfo.id)
         self.data: VFNode = create_vf_node_from_data(cpnodeinfo.data)
         self.ntype: str = cpnodeinfo.data.NType
-        self.parentNode = cpnodeinfo.parentNode
 
         # 该节点的运行状态
         self.runStatus = FARunStatus.Pending
 
+        # 父节点原始id
+        self.parentNode = cpnodeinfo.parentNode
         # 该节点的前导节点
         self.preNodes: List[FAPreNodeModel] = []
 
         """
-        节点的缓存键，需要包括的内容
+        节点的缓存键，可能需要包括的内容
         wid
         id
         data里的
@@ -77,36 +77,16 @@ class FABaseNode(ABC):
 
         pass
 
-    def getCacheKey(self):
-        if self.cacheKey:
-            return self.cacheKey
-        parentNode = self.runner().getNode(self.parentNode)
-        parentCacheKey = parentNode.getCacheKey() if parentNode else None
-        preNodeCacheKeys = {}
-        for prenode in self.preNodes:
-            if preNode := self.runner().getNode(prenode.nid):
-                if preNodeCacheKey := preNode.getCacheKey():
-                    preNodeCacheKeys[prenode.nid] = preNodeCacheKey
-        data = {
-            "wid": self.wid,
-            "id": self.id,
-            "data": {
-                "Connections": self.data.Connections.model_dump(),
-                "Payloads": self.data.Payloads.model_dump(),
-                "Results": None,
-                "Config": self.data.Config.model_dump(),
-                "Attaching": (
-                    self.data.Attaching.model_dump() if self.data.Attaching else None
-                ),
-                "Nesting": (
-                    self.data.Nesting.model_dump() if self.data.Nesting else None
-                ),
-            },
-            "parentCacheKey": parentCacheKey,
-            "preNodeCacheKeys": preNodeCacheKeys,
-        }
-        self.cacheKey = generateCacheKey(data)
-        return self.cacheKey
+    def setNodeID(self, nodeid: str):
+        """
+        设置节点id，针对嵌套内的子节点很有用，可以重新设置id
+        """
+        self.id = nodeid
+        pass
+
+    def setParentNodeID(self, parentid: str):
+        self.parentNode = parentid
+        pass
 
     def store(self):
         return FAWorkflowNodeResult(
@@ -134,6 +114,13 @@ class FABaseNode(ABC):
         pass
 
     @abstractmethod
+    def getCacheKey(self, request_nid: str):
+        """
+        针对请求节点，返回相应的缓存键
+        """
+        return None
+
+    @abstractmethod
     async def invoke(self):
         pass
 
@@ -143,7 +130,9 @@ class FABaseNode(ABC):
 
     @abstractmethod
     async def getContentByPath(
-        self, request_nid: str, path: FromInnerPath
+        self,
+        request_nid: str,
+        path: FromInnerPath,
     ) -> VFNodeContentData:
         """
         返回Payloads或Results的内容，为VFNodeContentData结构

@@ -7,12 +7,18 @@ export interface FAWorkflowOperationResponse<T = any> {
 }
 
 // 统一请求函数
-async function axiosRequest<T = any>(url: string, method: 'get' | 'post', data?: any): Promise<T> {
+async function axiosRequest<T = any>(
+  url: string,
+  method: 'get' | 'post',
+  data?: any,
+  timeout?: number,
+): Promise<T> {
   try {
     const response = await axios({
       method,
       url: `${import.meta.env.VITE_API_URL}/${url}`,
       data: method === 'post' ? data : undefined,
+      timeout: timeout || 0, // 设置超时时间为 0，表示无限等待
     })
 
     const result: FAWorkflowOperationResponse = response.data
@@ -39,5 +45,7 @@ async function axiosRequest<T = any>(url: string, method: 'get' | 'post', data?:
 }
 
 // 封装GET/POST方法
-export const getData = <T = any>(url: string) => axiosRequest<T>(url, 'get')
-export const postData = <T = any>(url: string, data?: any) => axiosRequest<T>(url, 'post', data)
+export const getData = <T = any>(url: string, timeout?: number) =>
+  axiosRequest<T>(url, 'get', undefined, timeout)
+export const postData = <T = any>(url: string, data?: any, timeout?: number) =>
+  axiosRequest<T>(url, 'post', data, timeout)

@@ -21,6 +21,11 @@ export interface HandleVarItem4Selects {
   Label: string
   Data: VarItem[]
 }
+export interface RefItemValue {
+  nid: string
+  path: FromInnerPath
+}
+
 interface NodeUtilsInstance {
   findVarFromIO: (nid: string, findconnect: VFNodeConnectionType, hid: string) => VarItem[]
   recursiveFindVariables: (
@@ -132,7 +137,12 @@ export const useNodeUtils = () => {
   const mapVarItemToSelect = (item: VarItem): SelectOption => {
     return {
       label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,
-      value: `${item.NodeId}/${item.DataPath.ContentName}/${item.DataPath.ContentId}`,
+      // value: `${item.NodeId}/${item.DataPath.ContentName}/${item.DataPath.ContentId}`,
+      value: JSON.stringify({
+        // 符合 RefItemValue 类型
+        nid: item.NodeId,
+        path: item.DataPath,
+      }),
     }
   }
 

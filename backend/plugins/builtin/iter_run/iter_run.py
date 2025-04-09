@@ -39,6 +39,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
+    RefItemValue,
 )
 from app.utils.tools import (
     read_yaml,
@@ -56,6 +57,8 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
 
+from ..UI_Components.UI_InputVars import InputVarModel
+
 
 async def init_node_class():
     pass
@@ -69,6 +72,19 @@ class IterRun(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
+            selfVars = await validator.getConnectionByPath(
+                self.id,
+                [
+                    CONNECT_DATA_TO_SELECT,
+                    VFNodeConnectionType.Self,
+                    "self",
+                ],
+            )
+            node_payloads = self.data.Payloads
+            D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
+            if D_ITER_ARRAY.Data.value not in selfVars:
+                error_msgs.append(f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}")
+
             aoutputVars = await validator.getConnectionByPath(
                 self.id,
                 [
@@ -168,10 +184,7 @@ class IterRun(FATaskNode):
         for node in [input_anode, output_anode]:
             re_nid, _ = regexMatchNodeId(node.id)
             new_nid = concatNestedNodeId(re_nid, nest_layout)
-            # new_nid = node.id.split("#", 1)[0] + "".join(
-            #     map(lambda x: "#" + str(x), nest_layout)
-            # )
-            node.setNewID(new_nid)
+            node.setNodeID(new_nid)
             self.runner().addNode(node.id, node)
         asyncio.create_task(self.runner().getNode(input_anode.id).invoke())
         logger.info(f"启动附属节点{input_anode.data.Label} {node.id}")
@@ -186,10 +199,7 @@ class IterRun(FATaskNode):
             )
             re_nid, _ = regexMatchNodeId(next_anode.id)
             new_nid = concatNestedNodeId(re_nid, nest_layout + [iter_idx])
-            # new_nid = next_anode.id.split("#", 1)[0] + "".join(
-            #     map(lambda x: "#" + str(x), nest_layout + [iter_idx])
-            # )
-            next_anode.setNewID(new_nid)
+            next_anode.setNodeID(new_nid)
             self.runner().addNode(next_anode.id, next_anode)
             pass
 
@@ -197,25 +207,15 @@ class IterRun(FATaskNode):
             node_results_dict = {}
             for rid in node_results.Order:
                 item: VFNodeContentData = node_results.ById[rid]
-                item_ref = item.Config.Ref
-                item_nid, ref_contentpath = item_ref.split("/", 1)
-                nid_layout = getNestedLayout(item_nid)
+                item_ref = RefItemValue.model_validate_json(item.Config.Ref)
+                nid_layout = getNestedLayout(item_ref.nid)
                 assert len(nest_layout) == len(nid_layout) - 1, "迭代节点嵌套层数不匹配"
-                re_nid, _ = regexMatchNodeId(item_nid)
+                re_nid, _ = regexMatchNodeId(item_ref.nid)
                 item_nid_pattern = concatNestedNodeId(re_nid, nest_layout)
                 item_nid_pattern = regexMatchOriginalNodeId(item_nid_pattern)
-                # item_nid_pattern = (
-                #     item_nid.split("#", 1)[0]
-                #     + "".join(map(lambda x: "#" + str(x), nest_layout))
-                #     + "#"
-                # )
-                contentpath_split = ref_contentpath.split("/")
                 node_results_dict[rid] = {
                     "item_nid_pattern": item_nid_pattern,
-                    "contentpath": FromInnerPath(
-                        ContentName=contentpath_split[0],
-                        ContentId=contentpath_split[1],
-                    ),
+                    "contentpath": item_ref.path,
                 }
             # 构建其余子节点
             anode_ids = set([input_anode.oriid, output_anode.oriid, next_anode.oriid])
@@ -230,17 +230,13 @@ class IterRun(FATaskNode):
                 )
                 re_nid, _ = regexMatchNodeId(child_node.id)
                 new_nid = concatNestedNodeId(re_nid, nest_layout + [iter_idx])
-                # new_nid = child_node.id.split("#", 1)[0] + "".join(
-                #     map(lambda x: "#" + str(x), nest_layout + [iter_idx])
-                # )
-                child_node.setNewID(new_nid)
+                child_node.setNodeID(new_nid)
                 self.runner().addNode(new_nid, child_node)
                 child_nodes[child_node.id] = child_node
                 pass
                 # 真正将结果加入数组
                 for rid in node_results_dict.keys():
                     nid_pattern = node_results_dict[rid]["item_nid_pattern"]
-                    # if child_node.id.startswith(nid_pattern):
                     if nid_pattern in child_node.id:
                         contentpath: FromInnerPath = node_results_dict[rid][
                             "contentpath"
@@ -260,9 +256,6 @@ class IterRun(FATaskNode):
                 else:
                     re_nid, _ = regexMatchNodeId(edgeinfo.source)
                     src_nid = concatNestedNodeId(re_nid, nest_layout + [iter_idx])
-                    # src_nid = edgeinfo.source.split("#", 1)[0] + "".join(
-                    #     map(lambda x: "#" + str(x), nest_layout + [iter_idx])
-                    # )
                     src_node = self.runner().getNode(src_nid)
                 if tgt_node_info.id == output_anode.oriid:
                     tgt_node = output_anode
@@ -273,9 +266,6 @@ class IterRun(FATaskNode):
                 else:
                     re_nid, _ = regexMatchNodeId(edgeinfo.target)
                     tgt_nid = concatNestedNodeId(re_nid, nest_layout + [iter_idx])
-                    # tgt_nid = edgeinfo.target.split("#", 1)[0] + "".join(
-                    #     map(lambda x: "#" + str(x), nest_layout + [iter_idx])
-                    # )
                     tgt_node = self.runner().getNode(tgt_nid)
                     pass
 

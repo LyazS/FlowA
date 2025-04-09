@@ -24,7 +24,7 @@ from app.schemas.farequest import (
     FAWorkflowOperationResponse,
     FAProgressRequestType,
 )
-from app.utils.tools import reduceGet
+from app.utils.tools import reduceGet, generateCacheKey
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.BaseNode import FABaseNode
@@ -63,9 +63,7 @@ class FATaskNode(FABaseNode):
         }
         pass
 
-    def setNewID(self, newid: str):
-        self.id = newid
-        pass
+
 
     def addPreNode(self, prenode: "FATaskNode", outhandle: str):
         # 在处理之前记得调用父类的addPreNode方法
@@ -134,7 +132,7 @@ class FATaskNode(FABaseNode):
             # ===============================================================
             # 这里读取缓存 ===============================================================
             if not self.data.is_nested_node():
-                cacheKey = self.getCacheKey()
+                cacheKey = self.getCacheKey(self.id)
                 if cacheKey not in GLOBAL_CACHE:
                     GLOBAL_CACHE[cacheKey] = True
                 else:
@@ -220,6 +218,36 @@ class FATaskNode(FABaseNode):
         pass
 
     # 需要子类实现的函数 ===============================================================
+    def getCacheKey(self, request_nid: str):
+        if self.cacheKey:
+            return self.cacheKey
+        parentNode = self.runner().getNode(self.parentNode)
+        parentCacheKey = parentNode.getCacheKey(self.id) if parentNode else None
+        preNodeCacheKeys = {}
+        for prenode in self.preNodes:
+            if preNode := self.runner().getNode(prenode.nid):
+                if preNodeCacheKey := preNode.getCacheKey(self.id):
+                    preNodeCacheKeys[prenode.nid] = preNodeCacheKey
+        data = {
+            "wid": self.wid,
+            "id": self.id,
+            "data": {
+                "Connections": self.data.Connections.model_dump(),
+                "Payloads": self.data.Payloads.model_dump(),
+                "Results": None,
+                "Config": self.data.Config.model_dump(),
+                "Attaching": (
+                    self.data.Attaching.model_dump() if self.data.Attaching else None
+                ),
+                "Nesting": (
+                    self.data.Nesting.model_dump() if self.data.Nesting else None
+                ),
+            },
+            "parentCacheKey": parentCacheKey,
+            "preNodeCacheKeys": preNodeCacheKeys,
+        }
+        self.cacheKey = generateCacheKey(data)
+        return self.cacheKey
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath

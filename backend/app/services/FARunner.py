@@ -31,9 +31,19 @@ from app.models.fastore import (
     FAReleasedWorkflowModel,
     FANodeCacheModel,
 )
-from app.utils.tools import getNestedLayout
+from app.utils.tools import (
+    getNestedLayout,
+    regexMatchOriginalNodeId,
+    regexMatchNodeId,
+    concatNestedNodeId,
+)
 from app.utils.vueRef import serialize_ref
-from app.schemas.VFNodeInterface import VFNodeFlag, FromInnerPath, VFNodeContentData
+from app.schemas.VFNodeInterface import (
+    VFNodeFlag,
+    FromInnerPath,
+    VFNodeContentData,
+    RefItemValue,
+)
 from sqlalchemy import select, update, exc, exists, delete
 from sqlalchemy.orm import selectinload
 
@@ -65,42 +75,36 @@ class FARunner:
             del self.nodes[nid]
         pass
 
-    def getNode(self, nid: str) -> Union["FABaseNode", None]:
-        return self.nodes.get(nid, None)
+    def getNode(self, request_nid: str) -> Union["FABaseNode", None]:
+        return self.nodes.get(request_nid, None)
 
-    async def getRefData(self, curnid: str, refdata: str):
+    async def getRefData(self, request_nid: str, refvalue: str):
         """
         根据curnid获取相对应层级的refdata数据
         针对Ref数据会自动解包，返回原始数据
         """
         # 获取cur节点的层级 =======================================
-        cur_level = getNestedLayout(curnid)
+        cur_level = getNestedLayout(request_nid)
         # 获取ref节点的层级 =======================================
-        ref_nid, ref_path = refdata.split("/", 1)
-        ref_level = getNestedLayout(ref_nid)
+        refdata = RefItemValue.model_validate_json(refvalue)
+        ref_level = getNestedLayout(refdata.nid)
 
         assert len(ref_level) <= len(cur_level), "层级不匹配"
         for i in range(len(ref_level)):
             ref_level[i] = cur_level[i]
-        ref_replace_nid = ref_nid.split("#", 1)[0] + "".join(
-            map(lambda x: "#" + str(x), ref_level)
-        )
+        re_nid, _ = regexMatchNodeId(refdata.nid)
+        ref_replace_nid = concatNestedNodeId(re_nid, ref_level)
         ref_node = self.getNode(ref_replace_nid)
-        ref_path_split = ref_path.split("/")
         ref_data: VFNodeContentData = await ref_node.getContentByPath(
-            curnid,
-            FromInnerPath(
-                ContentName=ref_path_split[0],
-                ContentId=ref_path_split[1],
-            ),
+            request_nid,
+            refdata.path,
         )
         return serialize_ref(ref_data.Data.value)
 
     def buildNodes(self):
-        from app.nodes.TaskNode import FANodeWaitStatus
         from app.nodes import FANODE_REGISTRY
 
-        # 初始化大图节点，即parentNode == None
+        # 初始化顶层节点
         for nodeinfo in self.flowdata.nodes:
             if nodeinfo.parentNode == None:
                 self.addNode(
@@ -127,15 +131,6 @@ class FARunner:
                     continue
                 source_handle = edgeinfo.sourceHandle
                 target_handle = edgeinfo.targetHandle
-                # self.getNode(edgeinfo.target).waitEvents.append(
-                #     self.getNode(edgeinfo.source).doneEvent
-                # )
-                # self.getNode(edgeinfo.target).waitStatus.append(
-                #     FANodeWaitStatus(
-                #         nid=edgeinfo.source,
-                #         output=source_handle,
-                #     )
-                # )
                 self.getNode(edgeinfo.target).addPreNode(
                     self.getNode(edgeinfo.source), source_handle
                 )
@@ -146,11 +141,11 @@ class FARunner:
             self.starttime = datetime.now(ZoneInfo("Asia/Shanghai"))
             logger.info(f"workflow {self.wid} run start")
             self.buildNodes()
-            # 启动所有节点
-            self.status = FARunStatus.Running
+            # 启动所有顶层节点
             self.running_tasks = {
                 asyncio.create_task(node.invoke()) for node in self.nodes.values()
             }
+            self.status = FARunStatus.Running
             await asyncio.gather(*self.running_tasks)
 
             self.endtime = datetime.now(ZoneInfo("Asia/Shanghai"))
@@ -179,92 +174,4 @@ class FARunner:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-
-    async def saveResult(self) -> FAWorkflow:
-        try:
-            async with get_db_ctxmgr() as db:
-                stmt = select(exists().where(FAWorkflowModel.wid == self.wid))
-                db_result = await db.execute(stmt)
-                db_exists = db_result.scalar()
-                if not db_exists:
-                    raise ValidationError("workflow not found")
-                theresult = FAWorkflowResultModel(
-                    tid=self.tid,
-                    usedvflow=self.oriflowdata,
-                    status=self.status.value,
-                    starttime=self.starttime,
-                    endtime=self.endtime,
-                    wid=self.wid,
-                )
-                db.add(theresult)
-                for nid in self.nodes.keys():
-                    thenode = self.nodes[nid]
-                    noderesult = FAWorkflowNodeResultModel(
-                        nid=nid,
-                        oriid=thenode.oriid,
-                        data=thenode.store().model_dump_json(),
-                        ntype=thenode.ntype,
-                        parentNode=thenode.parentNode,
-                        runStatus=thenode.runStatus.value,
-                        tid=self.tid,
-                    )
-                    db.add(noderesult)
-                await db.commit()
-                logger.info(f"save result to db, wid: {self.wid}")
-                pass
-        except Exception as e:
-            errmsg = traceback.format_exc()
-            logger.error(f"save result error: {errmsg}")
-            pass
-
-    async def loadResult(self, wid: int, tid: str):
-        from app.nodes import FANODECOLLECTION
-
-        try:
-            async with get_db_ctxmgr() as db:
-                stmt = (
-                    select(FAWorkflowResultModel)
-                    .filter(FAWorkflowResultModel.wid == wid)
-                    .filter(FAWorkflowResultModel.tid == tid)
-                    .options(selectinload(FAWorkflowResultModel.noderesults))
-                )
-                db_result = await db.execute(stmt)
-                store = db_result.scalars().first()
-                if store is None:
-                    raise ValidationError("workflow result not found")
-                self.wid = wid
-                self.oriflowdata = store.usedvflow
-                self.flowdata: VFlowData = VFlowData.model_validate(self.oriflowdata)
-                self.status = store.status
-                self.starttime = store.starttime
-                self.endtime = store.endtime
-
-                nodeinfo_dict = {}
-                for nodeinfo in self.flowdata.nodes:
-                    nodeinfo_dict[nodeinfo.id] = nodeinfo
-                    pass
-                for noderesult in store.noderesults:
-                    thenode: "FABaseNode" = FANODECOLLECTION[noderesult.ntype](
-                        self.tid, nodeinfo_dict[noderesult.oriid]
-                    )
-
-                    thenodedata = noderesult.data
-                    if isinstance(thenodedata, str):
-                        thenodedata = json.loads(thenodedata)
-                    thenodedata = FAWorkflowNodeResult(
-                        tid=thenodedata["tid"],
-                        id=thenodedata["id"],
-                        oriid=thenodedata["oriid"],
-                        ntype=thenodedata["ntype"],
-                        parentNode=thenodedata["parentNode"],
-                        runStatus=thenodedata["runStatus"],
-                        data=thenodedata["data"],
-                    )
-                    thenode.restore(thenodedata)
-                    self.addNode(noderesult.nid, thenode)
-                    pass
-                return True
-        except Exception as e:
-            errmsg = traceback.format_exc()
-            logger.error(f"load result error: {errmsg}")
-            return False
+        pass

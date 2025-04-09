@@ -52,6 +52,12 @@ class VFNodeAttachingPosType(StrEnum):
 CodeEditorLanguage = Literal["python", "json", "django", "text"]
 
 
+class RefItemValue(BaseModel):
+    nid: str
+    path: FromInnerPath
+    pass
+
+
 class VFNodeContentDataConfig(BaseModel):
     Language: Optional[CodeEditorLanguage] = None
     Ref: Optional[str] = None
@@ -130,6 +136,7 @@ class VFNodeAttaching(BaseModel):
 class VFNodeAttachedNode(BaseModel):
     Nid: Optional[str] = None
     NType: str
+
 
 class VFNodePadding(BaseModel):
     Top: int
