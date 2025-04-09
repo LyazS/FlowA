@@ -83,7 +83,9 @@ class IterRun(FATaskNode):
             node_payloads = self.data.Payloads
             D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
             if D_ITER_ARRAY.Data.value not in selfVars:
-                error_msgs.append(f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}")
+                error_msgs.append(
+                    f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}"
+                )
 
             aoutputVars = await validator.getConnectionByPath(
                 self.id,
@@ -319,6 +321,12 @@ class IterRun(FATaskNode):
                 Data=RefType(self.iter_array[req_layout[len(self_layout)]]),
             )
         return self.data.getContent(path.ContentName).ById[path.ContentId]
+
+    def getCacheKey(self, request_nid: str):
+        if request_nid == self.id:
+            return None
+        return super().getCacheKey(request_nid)
+        pass
 
     @staticmethod
     def getNodeCreateInfo():

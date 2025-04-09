@@ -142,10 +142,10 @@ class FATaskNode(FABaseNode):
             # 读取缓存 =======================================================
             # 决定新运行还是使用缓存
             # ===============================================================
-            # 嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
+            # 一般来说嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
             isUseCache = False
             cacheKey = self.getCacheKey(self.id)
-            if cacheKey and not self.data.is_nested_node():
+            if cacheKey:
                 if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, cacheKey):
                     self.loadCache(nodecache)
                     isUseCache = True
