@@ -25,6 +25,12 @@ class ExamNode(FATaskNode):
         super().__init__(wid, nodeinfo, runner)
         pass
 
+    def getCacheKey(self, request_nid: str):
+        if pNode := self.runner().getNode(self.parentNode):
+            return pNode.getCacheKey(request_nid)
+        return None
+        pass
+
     @staticmethod
     async def getNodeConfig():
         return {}
@@ -42,7 +48,7 @@ class ExamNode(FATaskNode):
                 YType=VFNodeAttachingPosType.Top,
                 YOffset=0,
             ),
-            "INPUT"
+            "INPUT",
         )
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
         thisnode.add_handle_data(

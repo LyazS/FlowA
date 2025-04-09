@@ -114,11 +114,25 @@ class FABaseNode(ABC):
         pass
 
     @abstractmethod
-    def getCacheKey(self, request_nid: str):
+    def getCacheKey(self, request_nid: str) -> str | None:
         """
         针对请求节点，返回相应的缓存键
         """
         return None
+
+    @abstractmethod
+    def generateCache(self) -> str | None:
+        """
+        生成缓存字符串，例如将当前节点的数据序列化为JSON字符串
+        """
+        return None
+
+    @abstractmethod
+    def loadCache(self, cache_json_str: str):
+        """
+        从缓存字符串恢复当前节点的数据
+        """
+        pass
 
     @abstractmethod
     async def invoke(self):

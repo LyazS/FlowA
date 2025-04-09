@@ -129,9 +129,10 @@ class FATaskNode(FABaseNode):
             logger.debug(f"can run {self.data.Label} {self.id}")
             # ===============================================================
             # 这里读取缓存 ===============================================================
+            # 嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
             if not self.data.is_nested_node():
                 cacheKey = self.getCacheKey(self.id)
-                if cacheKey not in GLOBAL_CACHE:
+                if cacheKey and cacheKey not in GLOBAL_CACHE:
                     GLOBAL_CACHE[cacheKey] = True
                 else:
                     logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
