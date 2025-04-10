@@ -88,6 +88,12 @@ class Jinja2Template(FABaseNode):
     def getCacheKey(self, request_nid):
         return None
 
+    def generateCache(self) -> Dict | None:
+        return None
+
+    def loadCache(self, cache: Dict) -> None:
+        pass
+
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath
     ) -> VFNodeContentData:

@@ -123,14 +123,14 @@ class FABaseNode(ABC):
     @abstractmethod
     def generateCache(self) -> Dict | None:
         """
-        生成缓存字符串，例如将当前节点的数据序列化为JSON字符串
+        生成缓存，例如将当前节点的数据序列化为JSON字符串，返回的结果会被缓存到数据库
         """
         return None
 
     @abstractmethod
     def loadCache(self, cache: Dict) -> None:
         """
-        从缓存字符串恢复当前节点的数据
+        从缓存恢复当前节点的数据
         """
         pass
 

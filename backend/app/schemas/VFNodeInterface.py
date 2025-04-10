@@ -66,7 +66,6 @@ class VFNodeContentDataConfig(BaseModel):
 class VFNodeContentData(BaseModel):
     Label: str
     Type: str
-    # Key: str
     Data: RefType
     Config: Optional[VFNodeContentDataConfig] = None
     Hid: Optional[str] = None

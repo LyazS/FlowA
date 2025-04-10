@@ -7,7 +7,7 @@ import traceback
 import json
 import copy
 from loguru import logger
-from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData
+from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData, VFNodeContents
 from app.schemas.fanode import FARunStatus, FANodeWaitType
 from app.schemas.vfnode import VFNodeInfo
 from app.schemas.farequest import (
@@ -241,6 +241,7 @@ class FATaskNode(FABaseNode):
         pass
 
     # 需要子类实现的函数 ===============================================================
+
     def getCacheKey(self, request_nid: str):
         if self.cacheKey:
             return self.cacheKey
@@ -254,13 +255,17 @@ class FATaskNode(FABaseNode):
                 else:
                     # 如果前置节点没有缓存键，则后续也要跳过缓存
                     return None
+        ResultsCache = {
+            k: self.data.Results.ById[k].model_dump(exclude="Data")
+            for k in self.data.Results.Order
+        }
         data = {
             "wid": self.wid,
             "id": self.id,
             "data": {
                 "Connections": self.data.Connections.model_dump(),
                 "Payloads": self.data.Payloads.model_dump(),
-                "Results": None,
+                "Results": ResultsCache,
                 "Config": self.data.Config.model_dump(),
                 "Attaching": (
                     self.data.Attaching.model_dump() if self.data.Attaching else None
@@ -274,6 +279,21 @@ class FATaskNode(FABaseNode):
         }
         self.cacheKey = generateCacheKey(data)
         return self.cacheKey
+
+    def generateCache(self) -> Dict | None:
+        """
+        生成缓存
+        """
+        cache = self.data.Results.model_dump()
+        return cache
+
+    def loadCache(self, cache: Dict) -> None:
+        """
+        从缓存恢复当前节点的数据
+        """
+        res_cache = VFNodeContents.model_validate(cache)
+        self.data.Results = res_cache
+        pass
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath

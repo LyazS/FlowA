@@ -119,7 +119,6 @@ worker.onmessage = function (event: MessageEvent<WorkerMessage>) {
 
   if (Jinja2RenderData.value[nid]) {
     Jinja2RenderData.value[nid].rendered = rendered || null
-    Jinja2RenderData.value[nid].isdirty = false
   }
 }
 
@@ -128,6 +127,7 @@ const Jinja2RenderUseWorker = throttle(() => {
   const tasks = Object.entries(Jinja2RenderData.value)
     .map(([nid, { template, content, isdirty }]) => {
       if (isdirty) {
+        isdirty = false
         return {
           nid,
           template,
