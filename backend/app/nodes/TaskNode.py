@@ -286,8 +286,21 @@ class FATaskNode(FABaseNode):
         """
         从缓存恢复当前节点的数据
         """
-        self.data.Results = VFNodeContents.model_validate(cache["Results"])
-        self.outputStatus = cache["outputStatus"]
+        isSkipCache = False
+        for rid in self.data.Results.Order:
+            cache_results = VFNodeContentData.model_validate(
+                cache["Results"]["ById"][rid]
+            )
+            self.data.Results.ById[rid].Label = cache_results.Label
+            self.data.Results.ById[rid].Type = cache_results.Type
+            self.data.Results.ById[rid].Data.value = cache_results.Data.value
+            self.data.Results.ById[rid].Config = cache_results.Config
+            self.data.Results.ById[rid].Hid = cache_results.Hid
+            self.data.Results.ById[rid].Did = cache_results.Did
+            self.data.Results.ById[rid].UiType = cache_results.UiType
+
+        for status_name in self.outputStatus:
+            self.outputStatus[status_name] = cache["outputStatus"][status_name]
         pass
 
     async def getContentByPath(

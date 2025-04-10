@@ -343,11 +343,8 @@ class IterRun(FATaskNode):
     def getCacheKey(self, request_nid: str):
         """
         对于自身，返回None以跳过缓存
-        对于附属节点
-            input 返回D_ITER_ARRAY
-            output 返回Results
-            next 返回None，next没有后继节点
-        对于其他节点，返回output的缓存
+        对于内部节点 返回带payload，不用result
+        对于后继节点，返回带payload和result，以及output的缓存
         """
         if request_nid == self.id:
             return None
@@ -389,7 +386,7 @@ class IterRun(FATaskNode):
                         other={
                             "outnode": buildCache4GenerateKey(
                                 outanode,
-                                cache_parentNode=True,
+                                cache_parentNode=False,
                                 cache_preNodes=True,
                                 cache_Connections=True,
                                 cache_Payloads=True,

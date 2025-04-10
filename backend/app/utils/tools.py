@@ -124,6 +124,8 @@ def generateCacheKey(data: Dict) -> str:
     :return: 缓存键字符串
     """
     # 将输入参数序列化为字符串
+    if data is None:
+        raise ValueError("Data cannot be None")
     request_str = json.dumps(data, sort_keys=True)
     # 计算哈希值以确保唯一性
     cache_key = hashlib.sha256(request_str.encode()).hexdigest()

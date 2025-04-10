@@ -25,12 +25,6 @@ class ExamNode(FATaskNode):
         super().__init__(wid, nodeinfo, runner)
         pass
 
-    def getCacheKey(self, request_nid: str):
-        if pNode := self.runner().getNode(self.parentNode):
-            return pNode.getCacheKey(self.id)
-        return None
-        pass
-
     @staticmethod
     async def getNodeConfig():
         return {}
