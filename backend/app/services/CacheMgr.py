@@ -9,7 +9,7 @@ class CacheMgr:
     def __init__(self):
         pass
 
-    async def set(self, wid: str, cache_key: str, data: dict):
+    async def set(self, wid: str, nid: str, cache_key: str, data: dict):
         """
         将缓存保存到数据库
         如果已有则覆盖
@@ -20,6 +20,7 @@ class CacheMgr:
                 select(FANodeCacheModel).where(
                     FANodeCacheModel.key == cache_key,
                     FANodeCacheModel.wid == wid,
+                    FANodeCacheModel.nid == nid,
                 )
             )
             cache_entry = result.scalar_one_or_none()
@@ -29,18 +30,24 @@ class CacheMgr:
                 cache_entry.data = data
             else:
                 # Create a new entry
-                cache_entry = FANodeCacheModel(key=cache_key, data=data, wid=wid)
+                cache_entry = FANodeCacheModel(
+                    key=cache_key,
+                    data=data,
+                    wid=wid,
+                    nid=nid,
+                )
                 session.add(cache_entry)
 
             await session.commit()
 
-    async def get(self, wid: str, cache_key: str):
+    async def get(self, wid: str, nid: str, cache_key: str):
         """从数据库加载缓存"""
         async with get_db_ctxmgr() as session:
             result = await session.execute(
                 select(FANodeCacheModel.data).where(
                     FANodeCacheModel.key == cache_key,
                     FANodeCacheModel.wid == wid,
+                    FANodeCacheModel.nid == nid,
                 )
             )
             cache_entry = result.scalar_one_or_none()

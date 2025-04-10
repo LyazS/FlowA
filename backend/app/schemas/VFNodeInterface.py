@@ -146,8 +146,8 @@ class VFNodePadding(BaseModel):
 
 
 class VFNodeSize(BaseModel):
-    Width: int
-    Height: int
+    Width: float
+    Height: float
 
 
 class VFNodeNesting(BaseModel):

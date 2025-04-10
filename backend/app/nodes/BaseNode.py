@@ -58,23 +58,6 @@ class FABaseNode(ABC):
         # 该节点的前导节点
         self.preNodes: List[FAPreNodeModel] = []
 
-        """
-        节点的缓存键，可能需要包括的内容
-        wid
-        id
-        data里的
-            Connections
-            Payloads
-            Results
-                这里要去掉Data
-            Config
-            Attaching
-            Nesting
-        parentNode的缓存键
-        前导节点的缓存键
-        """
-        self.cacheKey = None
-
         pass
 
     def setNodeID(self, nodeid: str):

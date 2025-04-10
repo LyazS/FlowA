@@ -49,6 +49,8 @@ from app.utils.tools import (
     regexMatchOriginalNodeId,
     regexMatchNodeId,
     concatNestedNodeId,
+    buildCache4GenerateKey,
+    generateCacheKey,
 )
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 
@@ -67,6 +69,12 @@ async def init_node_class():
 class IterRun(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
+
+        self.cacheKey4Child = None
+        self.cacheKey4Input = None
+        self.cacheKey4Ouput = None
+        self.cacheKey4Next = None
+        self.cacheKey4PostNode = None
         pass
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
@@ -248,6 +256,7 @@ class IterRun(FATaskNode):
                                 await child_node.getContentByPath(self.id, contentpath)
                             ).Data
                         )
+                pass
             # 构建节点连接关系
             for edgeinfo in child_edge_infos.values():
                 src_node_info = child_node_infos[edgeinfo.source]
@@ -273,13 +282,7 @@ class IterRun(FATaskNode):
 
                 source_handle = edgeinfo.sourceHandle
                 target_handle = edgeinfo.targetHandle
-                tgt_node.waitEvents.append(src_node.doneEvent)
-                tgt_node.waitStatus.append(
-                    FANodeWaitStatus(
-                        nid=src_node.id,
-                        output=source_handle,
-                    )
-                )
+                tgt_node.addPreNode(src_node, source_handle)
             pass
             # 启动子节点
             for nid in child_nodes.keys():
@@ -287,6 +290,21 @@ class IterRun(FATaskNode):
             # 启动next附属节点
             task_next = asyncio.create_task(next_anode.invoke())
             await task_next
+            # 等待最后完成之后，再将结果加入结果数组
+            # for _, child_node in child_nodes.items():
+            #     # 真正将结果加入数组
+            #     for rid in node_results_dict.keys():
+            #         nid_pattern = node_results_dict[rid]["item_nid_pattern"]
+            #         if nid_pattern in child_node.id:
+            #             contentpath: FromInnerPath = node_results_dict[rid][
+            #                 "contentpath"
+            #             ]
+            #             node_results.ById[rid].Data.value.append(
+            #                 (
+            #                     await child_node.getContentByPath(self.id, contentpath)
+            #                 ).Data
+            #             )
+            #     pass
             pass
         task_output = asyncio.create_task(output_anode.invoke())
         await task_output
@@ -323,9 +341,68 @@ class IterRun(FATaskNode):
         return self.data.getContent(path.ContentName).ById[path.ContentId]
 
     def getCacheKey(self, request_nid: str):
+        """
+        对于自身，返回None以跳过缓存
+        对于附属节点
+            input 返回D_ITER_ARRAY
+            output 返回Results
+            next 返回None，next没有后继节点
+        对于其他节点，返回output的缓存
+        """
         if request_nid == self.id:
             return None
-        return super().getCacheKey(request_nid)
+        nest_layout = getNestedLayout(self.id)
+        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["input"].Nid)
+        input_anode_id = concatNestedNodeId(re_nid, nest_layout)
+        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["output"].Nid)
+        output_anode_id = concatNestedNodeId(re_nid, nest_layout)
+
+        req_node = self.runner().getNode(request_nid)
+        if req_node.parentNode == self.id:
+            if self.cacheKey4Child is None:
+                if data := buildCache4GenerateKey(
+                    self,
+                    cache_parentNode=True,
+                    cache_preNodes=True,
+                    cache_Connections=True,
+                    cache_Payloads=True,
+                    cache_Results=False,
+                    cache_Config=True,
+                    cache_Attaching=True,
+                    cache_Nesting=True,
+                ):
+                    self.cacheKey4Child = generateCacheKey(data)
+            return self.cacheKey4Child
+        else:
+            if self.cacheKey4PostNode is None:
+                if outanode := self.runner().getNode(output_anode_id):
+                    if data := buildCache4GenerateKey(
+                        self,
+                        cache_parentNode=True,
+                        cache_preNodes=True,
+                        cache_Connections=True,
+                        cache_Payloads=True,
+                        cache_Results=True,
+                        cache_Config=True,
+                        cache_Attaching=True,
+                        cache_Nesting=True,
+                        other={
+                            "outnode": buildCache4GenerateKey(
+                                outanode,
+                                cache_parentNode=True,
+                                cache_preNodes=True,
+                                cache_Connections=True,
+                                cache_Payloads=True,
+                                cache_Results=True,
+                                cache_Config=True,
+                                cache_Attaching=True,
+                                cache_Nesting=True,
+                            )
+                        },
+                    ):
+                        self.cacheKey4PostNode = generateCacheKey(data)
+                    pass
+            return self.cacheKey4PostNode
         pass
 
     @staticmethod

@@ -82,13 +82,22 @@ class FANodeCacheModel(Base):
     key: Mapped[str] = mapped_column(String(255), primary_key=True, index=True)
     # 缓存数据
     data: Mapped[dict] = mapped_column(BigJSONType, nullable=False)
+    # 节点 ID
+    nid: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # 修改: 添加 ondelete="CASCADE"
     wid: Mapped[str] = mapped_column(
         String(255), ForeignKey("fa_workflow.wid", ondelete="CASCADE"), nullable=False
     )
     # 定义复合索引
-    __table_args__ = (Index("idx_fa_node_cache_wid_key", "wid", "key"),)
+    __table_args__ = (
+        Index(
+            "idx_fa_node_cache_wid_key_nid",
+            "wid",
+            "key",
+            "nid",
+        ),
+    )
     pass
 
 

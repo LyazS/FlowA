@@ -24,7 +24,7 @@ from app.schemas.farequest import (
     FAWorkflowOperationResponse,
     FAProgressRequestType,
 )
-from app.utils.tools import reduceGet, generateCacheKey
+from app.utils.tools import reduceGet, generateCacheKey, buildCache4GenerateKey
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.taskMgr import ALL_TASKS_MGR
 from app.nodes.BaseNode import FABaseNode
@@ -61,6 +61,22 @@ class FATaskNode(FABaseNode):
         self.outputStatus: Dict[str, FARunStatus] = {
             oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.keys()
         }
+        """
+        节点的缓存键，可能需要包括的内容
+        wid
+        id
+        data里的
+            Connections
+            Payloads
+            Results
+                这里要去掉Data
+            Config
+            Attaching
+            Nesting
+        parentNode的缓存键
+        前导节点的缓存键
+        """
+        self.cacheKey = None
         pass
 
     def addPreNode(self, prenode: "FATaskNode", outhandle: str):
@@ -146,7 +162,7 @@ class FATaskNode(FABaseNode):
             isUseCache = False
             cacheKey = self.getCacheKey(self.id)
             if cacheKey:
-                if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, cacheKey):
+                if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, self.id, cacheKey):
                     self.loadCache(nodecache)
                     isUseCache = True
                 logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
@@ -156,7 +172,12 @@ class FATaskNode(FABaseNode):
                 # 前置节点全部成功，本节点开始运行
                 updateDatas = await self.run()
                 if cacheKey:
-                    await GOLBAL_CACHE_MGR.set(self.wid, cacheKey, self.generateCache())
+                    await GOLBAL_CACHE_MGR.set(
+                        self.wid,
+                        self.id,
+                        cacheKey,
+                        self.generateCache(),
+                    )
             # ===============================================================
 
             # 运行成功
@@ -245,54 +266,28 @@ class FATaskNode(FABaseNode):
     def getCacheKey(self, request_nid: str):
         if self.cacheKey:
             return self.cacheKey
-        parentNode = self.runner().getNode(self.parentNode)
-        parentCacheKey = parentNode.getCacheKey(self.id) if parentNode else None
-        preNodeCacheKeys = {}
-        for prenode in self.preNodes:
-            if preNode := self.runner().getNode(prenode.nid):
-                if preNodeCacheKey := preNode.getCacheKey(self.id):
-                    preNodeCacheKeys[prenode.nid] = preNodeCacheKey
-                else:
-                    # 如果前置节点没有缓存键，则后续也要跳过缓存
-                    return None
-        ResultsCache = {
-            k: self.data.Results.ById[k].model_dump(exclude="Data")
-            for k in self.data.Results.Order
-        }
-        data = {
-            "wid": self.wid,
-            "id": self.id,
-            "data": {
-                "Connections": self.data.Connections.model_dump(),
-                "Payloads": self.data.Payloads.model_dump(),
-                "Results": ResultsCache,
-                "Config": self.data.Config.model_dump(),
-                "Attaching": (
-                    self.data.Attaching.model_dump() if self.data.Attaching else None
-                ),
-                "Nesting": (
-                    self.data.Nesting.model_dump() if self.data.Nesting else None
-                ),
-            },
-            "parentCacheKey": parentCacheKey,
-            "preNodeCacheKeys": preNodeCacheKeys,
-        }
-        self.cacheKey = generateCacheKey(data)
-        return self.cacheKey
+
+        if data := buildCache4GenerateKey(self):
+            self.cacheKey = generateCacheKey(data)
+            return self.cacheKey
+        return None
 
     def generateCache(self) -> Dict | None:
         """
         生成缓存
         """
-        cache = self.data.Results.model_dump()
+        cache = {
+            "outputStatus": self.outputStatus,
+            "Results": self.data.Results.model_dump(),
+        }
         return cache
 
     def loadCache(self, cache: Dict) -> None:
         """
         从缓存恢复当前节点的数据
         """
-        res_cache = VFNodeContents.model_validate(cache)
-        self.data.Results = res_cache
+        self.data.Results = VFNodeContents.model_validate(cache["Results"])
+        self.outputStatus = cache["outputStatus"]
         pass
 
     async def getContentByPath(
