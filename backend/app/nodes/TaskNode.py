@@ -163,8 +163,7 @@ class FATaskNode(FABaseNode):
             cacheKey = self.getCacheKey(self.id)
             if cacheKey:
                 if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, self.id, cacheKey):
-                    self.loadCache(nodecache)
-                    isUseCache = True
+                    isUseCache = self.loadCache(nodecache)
                 logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
 
             # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
@@ -286,7 +285,6 @@ class FATaskNode(FABaseNode):
         """
         从缓存恢复当前节点的数据
         """
-        isSkipCache = False
         for rid in self.data.Results.Order:
             cache_results = VFNodeContentData.model_validate(
                 cache["Results"]["ById"][rid]
@@ -302,6 +300,7 @@ class FATaskNode(FABaseNode):
         for status_name in self.outputStatus:
             self.outputStatus[status_name] = cache["outputStatus"][status_name]
         pass
+        return True
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath

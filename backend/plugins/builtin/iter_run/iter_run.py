@@ -349,8 +349,11 @@ class IterRun(FATaskNode):
         if request_nid == self.id:
             return None
         nest_layout = getNestedLayout(self.id)
-        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["input"].Nid)
-        input_anode_id = concatNestedNodeId(re_nid, nest_layout)
+        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["next"].Nid)
+        next_anode_ids = [
+            concatNestedNodeId(re_nid, nest_layout + [iter_idx])
+            for iter_idx in range(self.iter_array_len)
+        ]
         re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["output"].Nid)
         output_anode_id = concatNestedNodeId(re_nid, nest_layout)
 
@@ -372,7 +375,13 @@ class IterRun(FATaskNode):
             return self.cacheKey4Child
         else:
             if self.cacheKey4PostNode is None:
-                if outanode := self.runner().getNode(output_anode_id):
+                outanode = self.runner().getNode(output_anode_id)
+
+                nextanodes = [
+                    self.runner().getNode(next_anode_id)
+                    for next_anode_id in next_anode_ids
+                ]
+                if outanode and all(nextanodes):
                     if data := buildCache4GenerateKey(
                         self,
                         cache_parentNode=True,
@@ -394,7 +403,21 @@ class IterRun(FATaskNode):
                                 cache_Config=True,
                                 cache_Attaching=True,
                                 cache_Nesting=True,
-                            )
+                            ),
+                            "nextnode": [
+                                buildCache4GenerateKey(
+                                    nextnode,
+                                    cache_parentNode=False,
+                                    cache_preNodes=True,
+                                    cache_Connections=True,
+                                    cache_Payloads=True,
+                                    cache_Results=True,
+                                    cache_Config=True,
+                                    cache_Attaching=True,
+                                    cache_Nesting=True,
+                                )
+                                for nextnode in nextanodes
+                            ],
                         },
                     ):
                         self.cacheKey4PostNode = generateCacheKey(data)
