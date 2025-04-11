@@ -285,28 +285,29 @@ class FATaskNode(FABaseNode):
         """
         从缓存恢复当前节点的数据
         """
-        if "Results" not in cache or "ById" not in cache["Results"]:
-            logger.warning("Cache 结构不正确，缺少 Results 或 ById")
+        if "Results" not in cache:
+            logger.warning("Cache键 [Results] 不存在")
             return False
-        cache_rids = cache["Results"]["ById"].keys()
-        # 检查cache_rids是否全部对应得上self.data.Results.Order
-        if set(cache_rids) != set(self.data.Results.Order):
-            logger.warning("Cache Results不完全匹配当前节点Results")
+        cache_results = VFNodeContents.model_validate(cache["Results"])
+        if set(self.data.Results.ById.keys()) != set(cache_results.ById.keys()):
+            logger.warning("Cache结果集不完全匹配当前节点结果集")
             return False
-        for rid in self.data.Results.Order:
-            cache_results = VFNodeContentData.model_validate(
-                cache["Results"]["ById"][rid]
-            )
-            self.data.Results.ById[rid].Label = cache_results.Label
-            self.data.Results.ById[rid].Type = cache_results.Type
-            self.data.Results.ById[rid].Data.value = cache_results.Data.value
-            self.data.Results.ById[rid].Config = cache_results.Config
-            self.data.Results.ById[rid].Hid = cache_results.Hid
-            self.data.Results.ById[rid].Did = cache_results.Did
-            self.data.Results.ById[rid].UiType = cache_results.UiType
+        for rid in self.data.Results.ById.keys():
+            cache_result = cache_results.ById[rid]
+            self.data.Results.ById[rid].Label = cache_result.Label
+            self.data.Results.ById[rid].Type = cache_result.Type
+            self.data.Results.ById[rid].Data.value = cache_result.Data.value
+            self.data.Results.ById[rid].Config = cache_result.Config
+            self.data.Results.ById[rid].Hid = cache_result.Hid
+            self.data.Results.ById[rid].Did = cache_result.Did
+            self.data.Results.ById[rid].UiType = cache_result.UiType
 
         # 检查cache["outputStatus"]是否完全对应上self.outputStatus
-        if set(cache["outputStatus"].keys()) != set(self.outputStatus.keys()):
+        if (
+            ("outputStatus" not in cache)
+            or (not isinstance(cache["outputStatus"], dict))
+            or (set(cache["outputStatus"].keys()) != set(self.outputStatus.keys()))
+        ):
             logger.warning("Cache outputStatus不完全匹配当前节点outputStatus")
             return False
         for status_name in self.outputStatus:
