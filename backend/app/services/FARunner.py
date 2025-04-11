@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.schemas.vfnode import VFlowData
 from app.schemas.fanode import FARunStatus
 from app.services.messageMgr import ALL_MESSAGES_MGR
+from app.services.CacheMgr import GOLBAL_CACHE_MGR
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -147,7 +148,7 @@ class FARunner:
             }
             self.status = FARunStatus.Running
             await asyncio.gather(*self.running_tasks)
-
+            await GOLBAL_CACHE_MGR.batchcommit(self.wid)
             self.endtime = datetime.now(ZoneInfo("Asia/Shanghai"))
             logger.info(f"workflow {self.wid} run success")
             self.status = FARunStatus.Success

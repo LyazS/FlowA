@@ -176,6 +176,7 @@ class FATaskNode(FABaseNode):
                         self.id,
                         cacheKey,
                         self.generateCache(),
+                        isCommit=False,
                     )
             # ===============================================================
 
