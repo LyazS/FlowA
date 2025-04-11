@@ -164,7 +164,7 @@ class FATaskNode(FABaseNode):
             if cacheKey:
                 if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, self.id, cacheKey):
                     isUseCache = self.loadCache(nodecache)
-                logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
+                    logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
 
             # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
             if not isUseCache:
@@ -285,6 +285,14 @@ class FATaskNode(FABaseNode):
         """
         从缓存恢复当前节点的数据
         """
+        if "Results" not in cache or "ById" not in cache["Results"]:
+            logger.warning("Cache 结构不正确，缺少 Results 或 ById")
+            return False
+        cache_rids = cache["Results"]["ById"].keys()
+        # 检查cache_rids是否全部对应得上self.data.Results.Order
+        if set(cache_rids) != set(self.data.Results.Order):
+            logger.warning("Cache Results不完全匹配当前节点Results")
+            return False
         for rid in self.data.Results.Order:
             cache_results = VFNodeContentData.model_validate(
                 cache["Results"]["ById"][rid]
@@ -297,6 +305,10 @@ class FATaskNode(FABaseNode):
             self.data.Results.ById[rid].Did = cache_results.Did
             self.data.Results.ById[rid].UiType = cache_results.UiType
 
+        # 检查cache["outputStatus"]是否完全对应上self.outputStatus
+        if set(cache["outputStatus"].keys()) != set(self.outputStatus.keys()):
+            logger.warning("Cache outputStatus不完全匹配当前节点outputStatus")
+            return False
         for status_name in self.outputStatus:
             self.outputStatus[status_name] = cache["outputStatus"][status_name]
         pass
