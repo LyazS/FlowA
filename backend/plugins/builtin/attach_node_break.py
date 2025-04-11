@@ -42,7 +42,7 @@ class AttachNode(FATaskNode):
                 YType=VFNodeAttachingPosType.Bottom,
                 YOffset=1,
             ),
-            "NEXT",
+            "BREAK",
         )
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")

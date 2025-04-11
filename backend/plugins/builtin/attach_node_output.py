@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
 
 
-class ExamNode(FATaskNode):
+class AttachNode(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         pass
@@ -58,4 +58,4 @@ class ExamNode(FATaskNode):
 
 
 # 必须存在
-EXPORT_NODE = ExamNode
+EXPORT_NODE = AttachNode

@@ -33,6 +33,14 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/attach_node_break",
+      "Label": "附属节点（跳出）",
+      "Description": "attach node (break)",
+      "Execute": "attach_node_break.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/code_interpreter",
       "Label": "代码解释器",
       "Description": "code interpreter",
@@ -61,6 +69,14 @@
       "Label": "迭代运行",
       "Description": "迭代运行，可以嵌套",
       "Execute": "iter_run/iter_run.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/IterRetry",
+      "Label": "迭代重试",
+      "Description": "迭代重试，可以嵌套",
+      "Execute": "iter_retry/iter_retry.py",
       "Setting": null
     }
   ],
@@ -98,7 +114,7 @@
     {
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
-      "Component": "iter_run/UI_Iter_Run_Inner_Var.py"
+      "Component": "UI_Components/UI_Iter_Run_Inner_Var.py"
     },
     {
       "Type": "FANode",
@@ -109,6 +125,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RUN_OUTPUT",
       "Component": "iter_run/UI_Iter_Run_Output.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_SETTING",
+      "Component": "iter_retry/UI_ITER_RETRY_SETTING.py"
     }
   ]
 }
