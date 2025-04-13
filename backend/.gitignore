@@ -3,3 +3,4 @@ historys
 workflows
 *.db
 .venv
+.VSCodeCounter

@@ -1,4 +1,5 @@
 *.db
+.VSCodeCounter
 # Logs
 logs
 *.log
