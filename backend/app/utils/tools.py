@@ -3,12 +3,6 @@ import re
 from typing import Dict, Any, List, TYPE_CHECKING
 from uuid_extensions import uuid7str
 from functools import reduce
-import hashlib
-import json
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
-    from app.nodes.BaseNode import FABaseNode
 
 
 def read_yaml(file_path):
@@ -115,80 +109,3 @@ def concatNestedNodeId(id_str: str, nested: list) -> str:
 
     # Step 4: 组装完整结构
     return f"NID{{{base_content}{nested_part}}}"
-
-
-def generateCacheKey(data: Dict) -> str:
-    """
-    生成节点的缓存键
-    :param data: 任意字典
-    :return: 缓存键字符串
-    """
-    # 将输入参数序列化为字符串
-    if data is None:
-        raise ValueError("Data cannot be None")
-    request_str = json.dumps(data, sort_keys=True)
-    # 计算哈希值以确保唯一性
-    cache_key = hashlib.sha256(request_str.encode()).hexdigest()
-    return cache_key
-
-
-def buildCache4GenerateKey(
-    node: "FABaseNode",
-    cache_parentNode: bool = True,
-    cache_preNodes: bool = True,
-    cache_Connections: bool = True,
-    cache_Payloads: bool = True,
-    cache_Results: bool = True,
-    cache_Config: bool = True,
-    cache_Attaching: bool = True,
-    cache_Nesting: bool = True,
-    other: Dict = None,
-) -> Dict:
-    parentCacheKey = None
-    if cache_parentNode:
-        parentNode = node.runner().getNode(node.parentNode)
-        parentCacheKey = parentNode.getCacheKey(node.id) if parentNode else None
-        pass
-    preNodeCacheKeys = {}
-    if cache_preNodes:
-        for prenode in node.preNodes:
-            if preNode := node.runner().getNode(prenode.nid):
-                if preNodeCacheKey := preNode.getCacheKey(node.id):
-                    preNodeCacheKeys[prenode.nid] = preNodeCacheKey
-                else:
-                    # 如果前置节点没有缓存键，则后续也要跳过缓存
-                    return None
-        pass
-    ResultsCache = {}
-    if cache_Results:
-        ResultsCache = {
-            k: node.data.Results.ById[k].model_dump(exclude="Data")
-            for k in node.data.Results.Order
-        }
-    data = {
-        "wid": node.wid,
-        "id": node.id,
-        "data": {
-            "Connections": (
-                node.data.Connections.model_dump() if cache_Connections else None
-            ),
-            "Payloads": node.data.Payloads.model_dump() if cache_Payloads else None,
-            "Results": ResultsCache,
-            "Config": node.data.Config.model_dump() if cache_Config else None,
-            "Attaching": (
-                node.data.Attaching.model_dump()
-                if node.data.Attaching and cache_Attaching
-                else None
-            ),
-            "Nesting": (
-                node.data.Nesting.model_dump()
-                if node.data.Nesting and cache_Nesting
-                else None
-            ),
-        },
-        "parentCacheKey": parentCacheKey,
-        "preNodeCacheKeys": preNodeCacheKeys,
-        "other": other,
-    }
-    pass
-    return data

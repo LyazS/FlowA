@@ -3,8 +3,6 @@ import json
 from datetime import datetime
 from pydantic import BaseModel
 from enum import StrEnum
-from .vfnode import VFlowData, VFNodeData
-from .fanode import FARunStatus
 from app.schemas.VFNodeInterface import FromInnerPath
 
 class VarItem(BaseModel):
@@ -80,25 +78,25 @@ class SSEResponse(BaseModel):
     pass
 
 
-class FAWorkflowNodeResult(BaseModel):
-    tid: str
-    id: str
-    oriid: str
-    data: VFNodeData
-    ntype: str
-    parentNode: Optional[str]
-    runStatus: FARunStatus
-    pass
+# class FAWorkflowNodeResult(BaseModel):
+#     tid: str
+#     id: str
+#     oriid: str
+#     data: VFNodeData
+#     ntype: str
+#     parentNode: Optional[str]
+#     runStatus: FARunStatus
+#     pass
 
 
-class FAWorkflowResult(BaseModel):
-    tid: str
-    usedvflow: Optional[dict]
-    noderesult: Optional[List[FAWorkflowNodeResult]]
-    status: FARunStatus
-    starttime: datetime
-    endtime: datetime
-    pass
+# class FAWorkflowResult(BaseModel):
+#     tid: str
+#     usedvflow: Optional[dict]
+#     noderesult: Optional[List[FAWorkflowNodeResult]]
+#     status: FARunStatus
+#     starttime: datetime
+#     endtime: datetime
+#     pass
 
 
 class FAWorkflow(BaseModel):

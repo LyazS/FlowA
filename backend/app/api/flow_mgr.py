@@ -14,7 +14,6 @@ from zoneinfo import ZoneInfo
 from fastapi.background import BackgroundTasks
 from sse_starlette.sse import EventSourceResponse
 from app.core.config import settings
-from app.schemas.vfnode import VFlowData
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from app.services.messageMgr import ALL_MESSAGES_MGR
@@ -26,8 +25,6 @@ from app.schemas.farequest import (
     SSEResponse,
     SSEResponseData,
     SSEResponseType,
-    FAWorkflowNodeResult,
-    FAWorkflowResult,
     FAWorkflow,
     FAWorkflowLocation,
     FAWorkflowUpdateRequset,

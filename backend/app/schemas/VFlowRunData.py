@@ -1,7 +1,6 @@
 from typing import List, Optional, Any
 from pydantic import BaseModel
 from enum import StrEnum
-from app.schemas.VFNodeInterface import VFNodeConnectionType
 
 
 class FARunStatus(StrEnum):
@@ -21,11 +20,20 @@ class FANodeWaitType(StrEnum):
     pass
 
 
-class ConnectOption_Var(BaseModel):
-    ConnectionType: VFNodeConnectionType
-    HandleID: str
+class VFNodeCacheKeyBefore(StrEnum):
+    Skip = "Skip"
+    Load = "Load"
     pass
 
 
-class ConnectOption_Node(BaseModel):
+class VFNodeCacheKeyAfter(StrEnum):
+    Skip = "Skip"
+    Save = "Save"
+    pass
+
+
+class VFNodeCacheKey(BaseModel):
+    Before: VFNodeCacheKeyBefore = VFNodeCacheKeyBefore.Load
+    Key: Optional[str] = None
+    After: VFNodeCacheKeyAfter = VFNodeCacheKeyAfter.Save
     pass

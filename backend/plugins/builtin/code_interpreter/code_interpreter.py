@@ -12,14 +12,13 @@ from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import VFNodeInfo
-from app.schemas.fanode import FARunStatus
+from app.schemas.VFlowData import VFNodeInfo
+from app.schemas.VFlowRunData import FARunStatus
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
     FANodeUpdateData,
 )
-from app.schemas.vfnode_contentdata import VarType
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -41,7 +40,7 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
 
-from ..UI_Components.UI_InputVars import InputVarModel
+from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
 class EvalType(StrEnum):

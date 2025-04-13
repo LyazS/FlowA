@@ -3,8 +3,8 @@ from loguru import logger
 import asyncio
 import traceback
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import VFNodeInfo
-from app.schemas.fanode import FARunStatus
+from app.schemas.VFlowData import VFNodeInfo
+from app.schemas.VFlowRunData import FARunStatus
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -30,15 +30,15 @@ from app.schemas.farequest import (
     FAProgressRequestType,
     FAWorkflowOperationType,
 )
-from app.schemas.vfnode_contentdata import VarType
 from app.utils.vueRef import serialize_ref, RefOptions, RefTriggerData
 from app.services.messageMgr import ALL_MESSAGES_MGR
+from app.services.CacheMgr import VFNodeCacheKey
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
 
-from ..UI_Components.UI_InputVars import InputVarModel
+from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
 class Jinja2Template(FABaseNode):
@@ -86,7 +86,7 @@ class Jinja2Template(FABaseNode):
         pass
 
     def getCacheKey(self, request_nid):
-        return None
+        return VFNodeCacheKey()
 
     def generateCache(self) -> Dict | None:
         return None
@@ -231,7 +231,7 @@ class Jinja2Template(FABaseNode):
                 Label="Jinja2模板",
                 Type="String",
                 Data="<p>{{ arg1 }}</p>\n<hr>\n<p>{{ arg2 }}</p>",
-                UiType="@/FlowABuiltin/UI_CODE_EDITOR",
+                UiType="@/FlowABuiltin/UI_CODE_EDITOR_DISABLED",
                 Config=VFNodeContentDataConfig(Language="django"),
             ),
             payload_id="D_JINJA2_TEMPLATE",

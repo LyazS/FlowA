@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Any
 from loguru import logger
 from pydantic import BaseModel
 from app.schemas.farequest import VarItem, ValidationError
-from app.schemas.vfnode import VFlowData
+from app.schemas.VFlowData import VFlowData
 from app.schemas.VFNodeInterface import (
     VFNodeConnectionType,
     VFNodeFlag,

@@ -144,10 +144,11 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
         const curPNode_newid = nodeMapOld2New.get(curPNodeId)
         if (curPNode.data.isNestedNode() && curPNode_newid) {
           const { id: pid, nested: pNested } = regexMatchNodeId(curPNode_newid)
-          const newid = concatNestedNodeId(generateNodeId(), [
-            ...pNested,
-            curPNode.data.Nesting.Tag,
-          ])
+          const new_nested = [...pNested]
+          if (curPNode.data.Nesting.Tag) {
+            new_nested.push(curPNode.data.Nesting.Tag)
+          }
+          const newid = concatNestedNodeId(generateNodeId(), new_nested)
           nodeMapOld2New.set(node.id, newid)
         } else {
           throw new Error(`${curPNodeId}应该是嵌套节点或者${curPNode_newid}应该不为空`)

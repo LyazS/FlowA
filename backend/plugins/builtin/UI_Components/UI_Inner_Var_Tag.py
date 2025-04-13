@@ -7,6 +7,12 @@ from .RefVarSelect import UI_RefVarSelect
 from .NText import NText
 from .NFlex import NFlex
 
+
+class TagPath(BaseModel):
+    label_path: List[str | int]
+    type_path: List[str | int]
+
+
 class innerTag(NFlex):
     def __init__(self, label_path: List[str | int], type_path: List[str | int]):
         super().__init__(
@@ -57,7 +63,7 @@ class innerTag(NFlex):
 
 
 class innerCard(NormalComponent):
-    def __init__(self):
+    def __init__(self, tagpaths: List[TagPath]):
         super().__init__(
             Type="NCard",
             Props={
@@ -66,7 +72,6 @@ class innerCard(NormalComponent):
                 "size": "small",
                 "style": {
                     "width": "100%",
-                    # "margin-bottom": "10px",
                 },
             },
             Slots={
@@ -75,37 +80,10 @@ class innerCard(NormalComponent):
                     slots={
                         "default": [
                             innerTag(
-                                label_path=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    "D_ITER_INDEX",
-                                    "Label",
-                                ],
-                                type_path=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    "D_ITER_INDEX",
-                                    "Type",
-                                ],
-                            ),
-                            innerTag(
-                                label_path=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    "D_ITER_ITEM",
-                                    "Label",
-                                ],
-                                type_path=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    "D_ITER_ITEM",
-                                    "Type",
-                                ],
-                            ),
+                                label_path=tagpath.label_path,
+                                type_path=tagpath.type_path,
+                            )
+                            for tagpath in tagpaths
                         ]
                     },
                 )
@@ -113,17 +91,14 @@ class innerCard(NormalComponent):
         )
 
 
-class UI_Iter_Run_Inner_Var(NFlex):
-    def __init__(self):
+class UI_Inner_Var_Tag(NFlex):
+    def __init__(self, tagpaths: List[TagPath]):
         super().__init__(
             vertical=True,
             slots={
                 "default": [
                     Header(type="success", text="内置变量"),
-                    innerCard(),
+                    innerCard(tagpaths),
                 ],
             },
         )
-
-
-EXPORT_UI = UI_Iter_Run_Inner_Var

@@ -93,7 +93,7 @@ class VFNode implements BaseVFNodeData {
   }
 
   // 类型初始化方法 ================================================
-  initAsNestedNode(tag: string): this & NestedVFNodeData {
+  initAsNestedNode(tag: string | null): this & NestedVFNodeData {
     this.Flag |= VFNodeFlag.IsNested
     this.MinSize = { Width: 200, Height: 200 }
     this.Nesting = {

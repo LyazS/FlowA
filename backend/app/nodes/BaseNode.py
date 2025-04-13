@@ -4,15 +4,14 @@ from pydantic import BaseModel
 from weakref import ref
 import copy
 from loguru import logger
-from app.schemas.fanode import (
+from app.schemas.VFlowRunData import (
     FARunStatus,
-    FANodeWaitType,
-    ConnectOption_Var,
-    ConnectOption_Node,
 )
 from app.schemas.VFNodeClass import VFNode, create_vf_node_from_data
 from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData
 from app.schemas.VFlowData import VFNodeInfo
+from app.schemas.VFlowRunData import VFNodeCacheKey, VFNodeCacheKeyBefore
+
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -20,8 +19,6 @@ from app.schemas.farequest import (
     SSEResponse,
     SSEResponseData,
     SSEResponseType,
-    FAWorkflowNodeResult,
-    FAWorkflowResult,
     FAWorkflow,
     FAWorkflowOperationResponse,
 )
@@ -71,42 +68,21 @@ class FABaseNode(ABC):
         self.parentNode = parentid
         pass
 
-    def store(self):
-        return FAWorkflowNodeResult(
-            tid=self.tid,
-            id=self.id,
-            oriid=self.oriid,
-            data=self.data,
-            ntype=self.ntype,
-            parentNode=self.parentNode,
-            runStatus=self.runStatus,
-        )
-
-    def restore(self, data: FAWorkflowNodeResult):
-        self.tid = data.tid
-        self.id = data.id
-        self.oriid = data.oriid
-        self.data = data.data
-        self.ntype = data.ntype
-        self.parentNode = data.parentNode
-        self.runStatus = data.runStatus
-        pass
-
     def addPreNode(self, prenode: "FABaseNode", outhandle: str):
         self.preNodes.append(FAPreNodeModel(nid=prenode.id, handle=outhandle))
         pass
 
     @abstractmethod
-    def getCacheKey(self, request_nid: str) -> str | None:
+    def getCacheKey(self, request_nid: str) -> VFNodeCacheKey:
         """
         针对请求节点，返回相应的缓存键
         """
-        return None
+        return VFNodeCacheKey()
 
     @abstractmethod
     def generateCache(self) -> Dict | None:
         """
-        生成缓存，例如将当前节点的数据序列化为JSON字符串，返回的结果会被缓存到数据库
+        生成缓存，例如将当前节点的数据序列化为JSON，然后写入到数据库
         """
         return None
 

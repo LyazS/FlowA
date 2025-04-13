@@ -106,7 +106,7 @@ class retry_num(NFlex):
                     NormalComponent(
                         Type="NInputNumber",
                         Props={
-                            "size": "medium",
+                            "size": "small",
                             "min": min,
                             "max": max,
                             "step": step,
@@ -138,7 +138,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
             slots={
                 "default": [
                     Header(
-                        type="success",
+                        type="warning",
                         text=VBindProp(
                             Data=[
                                 THIS_NODE_DATA,

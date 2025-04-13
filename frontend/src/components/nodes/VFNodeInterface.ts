@@ -123,7 +123,7 @@ interface VFNodeSize {
 }
 
 interface VFNodeNesting {
-  Tag: string
+  Tag: string | null
   Pad: VFNodePadding
   APad: VFNodePadding
   ANodes: Record<string, VFNodeAttachedNode>

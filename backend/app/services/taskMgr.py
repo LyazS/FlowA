@@ -1,12 +1,14 @@
 import asyncio
-from typing import Callable, Awaitable, Any, Dict, Optional
+from typing import Callable, Awaitable, Any, Dict, Optional, TYPE_CHECKING
 from pydantic import BaseModel
 from loguru import logger
+
+# if TYPE_CHECKING:
 from .FARunner import FARunner
 
 
 class TaskModel(BaseModel):
-    runner: FARunner
+    runner: "FARunner"
     task: Optional[asyncio.Task] = None
 
     class Config:
@@ -62,7 +64,7 @@ class TaskMgr:
                 del self.tasks[wid]
             pass
 
-    async def get(self, wid: str) -> Optional[FARunner]:
+    async def get(self, wid: str) -> Optional["FARunner"]:
         """获取任务"""
         async with self.lock:
             if wid in self.tasks:

@@ -1,31 +1,27 @@
 from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union, Literal
 import asyncio
-import os
-import re
-import ast
-import copy
-import sys
-import json
 import traceback
-import base64
 from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
 from app.utils.vueRef import RefType
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import (
+from app.schemas.VFlowData import (
     VFNodeInfo,
     VFEdgeInfo,
-    VFNodeData,
     VFlowData,
 )
-from app.schemas.fanode import FARunStatus
+from app.schemas.VFlowRunData import (
+    FARunStatus,
+    VFNodeCacheKey,
+    VFNodeCacheKeyBefore,
+    VFNodeCacheKeyAfter,
+)
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
     FANodeUpdateData,
 )
-from app.schemas.vfnode_contentdata import VarType
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -49,17 +45,14 @@ from app.utils.tools import (
     regexMatchOriginalNodeId,
     regexMatchNodeId,
     concatNestedNodeId,
-    buildCache4GenerateKey,
-    generateCacheKey,
 )
 from app.utils.db4node import loadNodeConfig, setNodeConfig
+from app.services.CacheMgr import buildCache4GenerateKey
 
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
-
-from ..UI_Components.UI_InputVars import InputVarModel
 
 
 class RetryType(StrEnum):
@@ -84,11 +77,6 @@ async def init_node_class():
 class IterRetry(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
-
-        self.cacheKey4Child = None
-        self.cacheKey4Input = None
-        self.cacheKey4Ouput = None
-        self.cacheKey4Next = None
         self.cacheKey4PostNode = None
         pass
 
@@ -104,11 +92,9 @@ class IterRetry(FATaskNode):
                 ],
             )
             node_payloads = self.data.Payloads
-            D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
-            if D_ITER_ARRAY.Data.value not in selfVars:
-                error_msgs.append(
-                    f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}"
-                )
+            D_IN_NODE: VFNodeContentData = node_payloads.ById["D_IN_NODE"]
+            if D_IN_NODE.Data.value not in selfVars:
+                error_msgs.append(f"【初始变量】没有该变量选项{D_IN_NODE.Data.value}")
 
             aoutputVars = await validator.getConnectionByPath(
                 self.id,
@@ -118,19 +104,10 @@ class IterRetry(FATaskNode):
                     "attach_output",
                 ],
             )
-            node_results = self.data.Results
-            for rid in node_results.Order:
-                ref_data = node_results.ById[rid].Config.Ref
-                if (
-                    ref_data is None
-                    or not isinstance(ref_data, str)
-                    or len(ref_data) <= 0
-                ):
-                    error_msgs.append(f"结果{rid}没有配置输出选项")
-                else:
-                    if ref_data not in aoutputVars:
-                        error_msgs.append(f"没有该输出选项{ref_data}")
-                pass
+            D_OUT_NODE: VFNodeContentData = node_payloads.ById["D_OUT_NODE"]
+            if D_OUT_NODE.Data.value not in aoutputVars:
+                error_msgs.append(f"【迭代变量】没有该变量选项{D_OUT_NODE.Data.value}")
+            pass
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -141,52 +118,210 @@ class IterRetry(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
+        from app.nodes import FANODE_REGISTRY
+
+        nest_layout = getNestedLayout(self.id)
+        node_payloads = self.data.Payloads
+        node_results = self.data.Results
+
+        # 获取迭代项目 ===============================================
+        D_FINAL_OUTPUT: VFNodeContentData = node_results.ById["D_FINAL_OUTPUT"]
+        D_IN_NODE: VFNodeContentData = node_payloads.ById["D_IN_NODE"]
+        D_OUT_NODE: VFNodeContentData = node_payloads.ById["D_OUT_NODE"]
+        D_ITER_RETRY_SETTING: VFNodeContentData = node_payloads.ById[
+            "D_ITER_RETRY_SETTING"
+        ]
+        retry_config = RetrySettingModel.model_validate(D_ITER_RETRY_SETTING.Data.value)
+
+        self.retry_item = await self.runner().getRefData(self.id, D_IN_NODE.Data.value)
+        self.retry_index = 0
+
+        # 构建子图 ================================================
+        flowdata: VFlowData = self.runner().flowdata
+        child_node_infos: Dict[str, VFNodeInfo] = {}
+        child_edge_infos: Dict[str, VFEdgeInfo] = {}
+        # 收集所有子节点
+        for nodeinfo in flowdata.nodes:
+            if nodeinfo.parentNode == self.oriid and (
+                VFNodeFlag.IsTask & nodeinfo.data.Flag
+                or VFNodeFlag.IsAttached & nodeinfo.data.Flag
+            ):
+                child_node_infos[nodeinfo.id] = nodeinfo
+            pass
         pass
+        for edgeinfo in flowdata.edges:
+            if (
+                edgeinfo.source in child_node_infos
+                and edgeinfo.target in child_node_infos
+            ):
+                child_edge_infos[edgeinfo.id] = edgeinfo
+            pass
+        pass
+
+        # 收集附属节点
+        input_anode_info = None
+        output_anode_info = None
+        break_anode_info = None
+        for nodeinfo in flowdata.nodes:
+            if nodeinfo.id == self.data.Nesting.ANodes["input"].Nid:
+                input_anode_info = nodeinfo
+            elif nodeinfo.id == self.data.Nesting.ANodes["output"].Nid:
+                output_anode_info = nodeinfo
+            elif nodeinfo.id == self.data.Nesting.ANodes["break"].Nid:
+                break_anode_info = nodeinfo
+            pass
+        assert (
+            input_anode_info is not None
+            and output_anode_info is not None
+            and break_anode_info is not None
+        )
+        pass
+        input_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+            self.wid,
+            input_anode_info,
+            self.runner(),
+        )
+        re_nid, _ = regexMatchNodeId(input_anode.id)
+        new_nid = concatNestedNodeId(re_nid, nest_layout)
+        input_anode.setNodeID(new_nid)
+        self.runner().addNode(input_anode.id, input_anode)
+        asyncio.create_task(self.runner().getNode(input_anode.id).invoke())
+        logger.info(f"启动附属节点{input_anode.data.Label} {input_anode.id}")
+        pass
+        # 开始迭代
+        AddInNodes: List[str] = []
+        for retry_idx in range(retry_config.Num):
+            self.retry_index = retry_idx
+            # 构建break附属节点
+            break_anode: FATaskNode = (FANODE_REGISTRY[break_anode_info.data.NType])(
+                self.wid,
+                break_anode_info,
+                self.runner(),
+            )
+            output_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+                self.wid,
+                output_anode_info,
+                self.runner(),
+            )
+            for node in [break_anode, output_anode]:
+                re_nid, _ = regexMatchNodeId(node.id)
+                new_nid = concatNestedNodeId(re_nid, nest_layout)
+                node.setNodeID(new_nid)
+                AddInNodes.append(new_nid)
+                self.runner().addNode(node.id, node)
+            pass
+
+            # 构建其余子节点
+            anode_ids = set([input_anode.oriid, output_anode.oriid, break_anode.oriid])
+            child_nodes: Dict[str, FATaskNode] = {}
+            for child_id, child_info in child_node_infos.items():
+                if child_info.id in anode_ids:
+                    continue
+                child_node: FATaskNode = (FANODE_REGISTRY[child_info.data.NType])(
+                    self.wid,
+                    child_info,
+                    self.runner(),
+                )
+                re_nid, _ = regexMatchNodeId(child_node.id)
+                new_nid = concatNestedNodeId(re_nid, nest_layout)
+                child_node.setNodeID(new_nid)
+                AddInNodes.append(new_nid)
+                self.runner().addNode(new_nid, child_node)
+                child_nodes[child_node.id] = child_node
+                pass
+
+            # 构建节点连接关系
+            for edgeinfo in child_edge_infos.values():
+                src_node_info = child_node_infos[edgeinfo.source]
+                tgt_node_info = child_node_infos[edgeinfo.target]
+                if src_node_info.id == input_anode.oriid:
+                    src_node = input_anode
+                    pass
+                else:
+                    re_nid, _ = regexMatchNodeId(edgeinfo.source)
+                    src_nid = concatNestedNodeId(re_nid, nest_layout)
+                    src_node = self.runner().getNode(src_nid)
+                if tgt_node_info.id == output_anode.oriid:
+                    tgt_node = output_anode
+                    pass
+                elif tgt_node_info.id == break_anode.oriid:
+                    tgt_node = break_anode
+                    pass
+                else:
+                    re_nid, _ = regexMatchNodeId(edgeinfo.target)
+                    tgt_nid = concatNestedNodeId(re_nid, nest_layout)
+                    tgt_node = self.runner().getNode(tgt_nid)
+                    pass
+
+                source_handle = edgeinfo.sourceHandle
+                target_handle = edgeinfo.targetHandle
+                tgt_node.addPreNode(src_node, source_handle)
+            pass
+            # 启动子节点
+            for nid in child_nodes.keys():
+                asyncio.create_task(child_nodes[nid].invoke())
+            # 启动output/next附属节点
+            task_output = asyncio.create_task(output_anode.invoke())
+            task_break = asyncio.create_task(break_anode.invoke())
+            await asyncio.wait([task_output, task_break])
+            pass
+            if break_anode.runStatus == FARunStatus.Success:
+                self.setAllOutputStatus(FARunStatus.Success)
+                D_FINAL_OUTPUT.Data.value = self.retry_item
+                return []
+            if output_anode.runStatus == FARunStatus.Success:
+                self.retry_item = await self.runner().getRefData(
+                    self.id, D_OUT_NODE.Data.value
+                )
+
+            logger.error(f"不满足条件，继续重试{retry_idx+1}/{retry_config.Num}")
+            for nid in AddInNodes:
+                self.runner().rmNode(nid)
+            AddInNodes.clear()
+            continue
+        pass
+        raise Exception(f"子节点全部运行失败，共迭代重试{retry_config.Num}次")
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath
     ) -> VFNodeContentData:
-        req_layout = getNestedLayout(request_nid)
-        self_layout = getNestedLayout(self.id)
-        assert len(req_layout) >= len(self_layout), "子节点应该比父节点更深"
         node_payloads = self.data.Payloads
-        if path.ContentId == "D_ITER_INDEX":
+        if path.ContentName == "Payloads" and path.ContentId == "D_ITER_INDEX":
             D_ITER_INDEX: VFNodeContentData = node_payloads.ById["D_ITER_INDEX"]
             return VFNodeContentData(
                 Label=D_ITER_INDEX.Label,
                 Type=D_ITER_INDEX.Type,
-                Data=RefType(req_layout[len(self_layout)]),
+                Data=RefType(self.retry_index),
             )
-        elif path.ContentId == "D_ITER_ITEM":
-            D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
+        elif path.ContentName == "Payloads" and path.ContentId == "D_ITER_ITEM":
+            D_ITER_ITEM: VFNodeContentData = node_payloads.ById["D_ITER_ITEM"]
             return VFNodeContentData(
-                Label=D_ITER_ARRAY.Label,
-                Type=D_ITER_ARRAY.Type,
-                Data=RefType(self.iter_array[req_layout[len(self_layout)]]),
+                Label=D_ITER_ITEM.Label,
+                Type=D_ITER_ITEM.Type,
+                Data=RefType(self.retry_item),
             )
         return self.data.getContent(path.ContentName).ById[path.ContentId]
 
-    def getCacheKey(self, request_nid: str):
+    def getCacheKey(self, request_nid: str) -> VFNodeCacheKey:
         """
-        对于自身，返回None以跳过缓存
-        对于内部节点 返回带payload，不用result
-        对于后继节点，返回带payload和result，以及output的缓存
+        重试节点相当于一个节点组，因此不应该重新执行流程，直接获取缓存输出就行了
+        对于自身和后继节点，返回带payload和result，以及output的缓存
+        对于内部节点 返回None
         """
-        if request_nid == self.id:
-            return None
-        nest_layout = getNestedLayout(self.id)
-        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["next"].Nid)
-        next_anode_ids = [
-            concatNestedNodeId(re_nid, nest_layout + [iter_idx])
-            for iter_idx in range(self.iter_array_len)
-        ]
-        re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["output"].Nid)
-        output_anode_id = concatNestedNodeId(re_nid, nest_layout)
 
         req_node = self.runner().getNode(request_nid)
         if req_node.parentNode == self.id:
-            if self.cacheKey4Child is None:
-                if data := buildCache4GenerateKey(
+            # 如果重试节点需要执行，则内部节点也需要重新执行并且不能保存缓存
+            # 并且内部节点不能保存缓存，因为每次输入数据都不一样
+            return VFNodeCacheKey(
+                Before=VFNodeCacheKeyBefore.Skip,
+                After=VFNodeCacheKeyAfter.Skip,
+            )
+        else:
+            # 对于外部节点，包括他自己，则作为一个节点就可以了
+            if self.cacheKey4PostNode is None:
+                subgraph = self.runner().getSubGraph(self.id)
+                self.cacheKey4PostNode = buildCache4GenerateKey(
                     self,
                     cache_parentNode=True,
                     cache_preNodes=True,
@@ -196,58 +331,9 @@ class IterRetry(FATaskNode):
                     cache_Config=True,
                     cache_Attaching=True,
                     cache_Nesting=True,
-                ):
-                    self.cacheKey4Child = generateCacheKey(data)
-            return self.cacheKey4Child
-        else:
-            if self.cacheKey4PostNode is None:
-                outanode = self.runner().getNode(output_anode_id)
-
-                nextanodes = [
-                    self.runner().getNode(next_anode_id)
-                    for next_anode_id in next_anode_ids
-                ]
-                if outanode and all(nextanodes):
-                    if data := buildCache4GenerateKey(
-                        self,
-                        cache_parentNode=True,
-                        cache_preNodes=True,
-                        cache_Connections=True,
-                        cache_Payloads=True,
-                        cache_Results=True,
-                        cache_Config=True,
-                        cache_Attaching=True,
-                        cache_Nesting=True,
-                        other={
-                            "outnode": buildCache4GenerateKey(
-                                outanode,
-                                cache_parentNode=False,
-                                cache_preNodes=True,
-                                cache_Connections=True,
-                                cache_Payloads=True,
-                                cache_Results=True,
-                                cache_Config=True,
-                                cache_Attaching=True,
-                                cache_Nesting=True,
-                            ),
-                            "nextnode": [
-                                buildCache4GenerateKey(
-                                    nextnode,
-                                    cache_parentNode=False,
-                                    cache_preNodes=True,
-                                    cache_Connections=True,
-                                    cache_Payloads=True,
-                                    cache_Results=True,
-                                    cache_Config=True,
-                                    cache_Attaching=True,
-                                    cache_Nesting=True,
-                                )
-                                for nextnode in nextanodes
-                            ],
-                        },
-                    ):
-                        self.cacheKey4PostNode = generateCacheKey(data)
-                    pass
+                    other={"subgraph": subgraph.model_dump()},
+                )
+                pass
             return self.cacheKey4PostNode
         pass
 
@@ -255,11 +341,11 @@ class IterRetry(FATaskNode):
     def getNodeCreateInfo():
         thisnode = VFNode("basenode")
         thisnode.set_flag(VFNodeFlag.IsTask | VFNodeFlag.IsNested)
-        thisnode.init_as_nested_node("ITERRETRY")
+        thisnode.init_as_nested_node(None)
         thisnode.set_size(200, 200)
 
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input", "Input")
-        thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "Output")
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output", "OUTPUT")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")
         thisnode.add_handle(VFNodeConnectionType.Self, "attach_output")
         thisnode.add_handle(VFNodeConnectionType.Attach, "Attach")
@@ -296,7 +382,7 @@ class IterRetry(FATaskNode):
                 Label="",
                 Type="List",
                 Data=None,
-                UiType="@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
+                UiType="@/FlowABuiltin/UI_ITER_RETRY_INNER_VAR",
             ),
         )
 

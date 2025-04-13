@@ -10,8 +10,8 @@ from sse_starlette.sse import EventSourceResponse
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from app.core.config import settings
-from app.schemas.fanode import FARunStatus
-from app.schemas.vfnode import VFlowData
+from app.schemas.VFlowRunData import FARunStatus
+from app.schemas.VFlowData import VFlowData
 from app.schemas.VFNodeInterface import VFNodeFlag
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator

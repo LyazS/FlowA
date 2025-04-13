@@ -206,7 +206,11 @@ export const useVFlowManager = (): NodeManagementInstance => {
       const pdata = parentNode.data as VFNode
       if (pdata.isNestedNode()) {
         const { id: pid, nested: pnested } = regexMatchNodeId(parentNode.id)
-        new_node_id = concatNestedNodeId(new_node_id, [...pnested, pdata.Nesting.Tag])
+        const new_nested = [...pnested]
+        if (pdata.Nesting.Tag) {
+          new_nested.push(pdata.Nesting.Tag)
+        }
+        new_node_id = concatNestedNodeId(new_node_id, new_nested)
       }
     }
 

@@ -1,6 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
+from app.schemas.VFNodeInterface import VFNodeData
+from enum import StrEnum
+
 
 class VFNodePosition(BaseModel):
     x: float
@@ -12,7 +15,7 @@ class VFNodeInfo(BaseModel):
     id: str
     type: str
     position: VFNodePosition
-    data: VFNode
+    data: VFNodeData
     parentNode: Optional[str] = None
     pass
 

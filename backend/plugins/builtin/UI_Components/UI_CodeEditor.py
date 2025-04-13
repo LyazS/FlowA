@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from app.schemas.VFNodeInterface import VFNodeContentData
 from app.uisdk import *
@@ -7,7 +8,14 @@ from .NButton import NButton
 
 
 class UI_CodeEditor(NFlex):
-    def __init__(self):
+    def __init__(self, useDisabled: Optional[bool] = None):
+        otherProps = (
+            {
+                "disabled": useDisabled,
+            }
+            if useDisabled is not None
+            else {}
+        )
         super().__init__(
             vertical=True,
             slots={
@@ -46,9 +54,7 @@ class UI_CodeEditor(NFlex):
                                             Language="python",
                                         )
                                     ),
-                                    otherProps={
-                                        "disabled": False,
-                                    },
+                                    otherProps=otherProps,
                                     slots={
                                         "default": SpanComponent(
                                             Type=ComponentType.VALUE, Data="编辑"
@@ -87,6 +93,3 @@ class UI_CodeEditor(NFlex):
                 ]
             },
         )
-
-
-EXPORT_UI = UI_CodeEditor

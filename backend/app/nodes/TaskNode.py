@@ -8,8 +8,14 @@ import json
 import copy
 from loguru import logger
 from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData, VFNodeContents
-from app.schemas.fanode import FARunStatus, FANodeWaitType
-from app.schemas.vfnode import VFNodeInfo
+from app.schemas.VFlowRunData import (
+    FARunStatus,
+    FANodeWaitType,
+    VFNodeCacheKey,
+    VFNodeCacheKeyBefore,
+    VFNodeCacheKeyAfter,
+)
+from app.schemas.VFlowData import VFNodeInfo
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -17,18 +23,19 @@ from app.schemas.farequest import (
     SSEResponse,
     SSEResponseData,
     SSEResponseType,
-    FAWorkflowNodeResult,
-    FAWorkflowResult,
     FAWorkflow,
     FAWorkflowNodeRequest,
     FAWorkflowOperationResponse,
     FAProgressRequestType,
 )
-from app.utils.tools import reduceGet, generateCacheKey, buildCache4GenerateKey
-from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.taskMgr import ALL_TASKS_MGR
+from app.utils.tools import reduceGet
 from app.nodes.BaseNode import FABaseNode
-from app.services.CacheMgr import GOLBAL_CACHE_MGR
+
+from app.services.messageMgr import ALL_MESSAGES_MGR
+from app.services.CacheMgr import (
+    GOLBAL_CACHE_MGR,
+    buildCache4GenerateKey,
+)
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner
@@ -61,21 +68,7 @@ class FATaskNode(FABaseNode):
         self.outputStatus: Dict[str, FARunStatus] = {
             oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.keys()
         }
-        """
-        节点的缓存键，可能需要包括的内容
-        wid
-        id
-        data里的
-            Connections
-            Payloads
-            Results
-                这里要去掉Data
-            Config
-            Attaching
-            Nesting
-        parentNode的缓存键
-        前导节点的缓存键
-        """
+        # 缓存键
         self.cacheKey = None
         pass
 
@@ -161,22 +154,25 @@ class FATaskNode(FABaseNode):
             # 一般来说嵌套节点不需要缓存，因为嵌套节点并不实际执行内容，只是控制流程
             isUseCache = False
             cacheKey = self.getCacheKey(self.id)
-            if cacheKey:
-                if nodecache := await GOLBAL_CACHE_MGR.get(self.wid, self.id, cacheKey):
+            if cacheKey.Before == VFNodeCacheKeyBefore.Load:
+                if nodecache := await GOLBAL_CACHE_MGR.get(
+                    self.wid, self.id, cacheKey.Key
+                ):
                     isUseCache = self.loadCache(nodecache)
-                    logger.debug(f"cache hit {self.data.Label} {self.id} {cacheKey}")
+                    logger.debug(
+                        f"cache hit {self.data.Label} {self.id} {cacheKey.Key}"
+                    )
 
-            # logger.debug(f"get cache {self.data.Label} {self.id} {cacheKey}")
             if not isUseCache:
                 # 前置节点全部成功，本节点开始运行
                 updateDatas = await self.run()
-                if cacheKey:
+                if cacheKey.Key and cacheKey.After == VFNodeCacheKeyAfter.Save:
                     await GOLBAL_CACHE_MGR.set(
                         self.wid,
                         self.id,
-                        cacheKey,
+                        cacheKey.Key,
                         self.generateCache(),
-                        isCommit=False,
+                        isCommit=True,
                     )
             # ===============================================================
 
@@ -263,14 +259,10 @@ class FATaskNode(FABaseNode):
 
     # 需要子类实现的函数 ===============================================================
 
-    def getCacheKey(self, request_nid: str):
-        if self.cacheKey:
-            return self.cacheKey
-
-        if data := buildCache4GenerateKey(self):
-            self.cacheKey = generateCacheKey(data)
-            return self.cacheKey
-        return None
+    def getCacheKey(self, request_nid: str) -> VFNodeCacheKey:
+        if not self.cacheKey:
+            self.cacheKey = buildCache4GenerateKey(self)
+        return self.cacheKey
 
     def generateCache(self) -> Dict | None:
         """

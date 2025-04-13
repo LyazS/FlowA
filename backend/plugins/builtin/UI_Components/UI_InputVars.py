@@ -1,8 +1,8 @@
 from typing import Callable, Any
 from loguru import logger
 from pydantic import BaseModel
+from enum import StrEnum
 from app.uisdk import *
-from app.schemas.vfnode_contentdata import VarType
 from app.schemas.VFNodeInterface import VFNodeConnectionType
 from .Header import Header
 from .RefVarSelect import UI_RefVarSelect
@@ -10,6 +10,17 @@ from .NInput import NInput
 from .NSwitch import NSwitch
 from .NButton import NButton
 from .NFlex import NFlex
+
+
+class VarType(StrEnum):
+    Ref = "Ref"
+    String = "String"
+    Integer = "Integer"
+    Number = "Number"
+    Boolean = "Boolean"
+    File = "File"
+    pass
+
 
 class InputVarModel(BaseModel):
     key: str = ""

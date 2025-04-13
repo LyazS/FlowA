@@ -13,19 +13,22 @@ from enum import StrEnum
 from pydantic import BaseModel
 from app.utils.vueRef import RefType
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import (
+from app.schemas.VFlowData import (
     VFNodeInfo,
     VFEdgeInfo,
-    VFNodeData,
     VFlowData,
 )
-from app.schemas.fanode import FARunStatus
+from app.schemas.VFlowRunData import (
+    FARunStatus,
+    VFNodeCacheKey,
+    VFNodeCacheKeyBefore,
+    VFNodeCacheKeyAfter,
+)
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
     FANodeUpdateData,
 )
-from app.schemas.vfnode_contentdata import VarType
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -49,17 +52,12 @@ from app.utils.tools import (
     regexMatchOriginalNodeId,
     regexMatchNodeId,
     concatNestedNodeId,
-    buildCache4GenerateKey,
-    generateCacheKey,
 )
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
-    from app.services.FAValidator import FAValidator
-
-from ..UI_Components.UI_InputVars import InputVarModel
+from app.services.CacheMgr import buildCache4GenerateKey
+from app.services.FARunner import FARunner
+from app.services.FAValidator import FAValidator
 
 
 async def init_node_class():
@@ -71,9 +69,6 @@ class IterRun(FATaskNode):
         super().__init__(wid, nodeinfo, runner)
 
         self.cacheKey4Child = None
-        self.cacheKey4Input = None
-        self.cacheKey4Ouput = None
-        self.cacheKey4Next = None
         self.cacheKey4PostNode = None
         pass
 
@@ -126,7 +121,6 @@ class IterRun(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
-        from app.nodes.TaskNode import FANodeWaitStatus
         from app.nodes import FANODE_REGISTRY
 
         nest_layout = getNestedLayout(self.id)
@@ -290,21 +284,6 @@ class IterRun(FATaskNode):
             # 启动next附属节点
             task_next = asyncio.create_task(next_anode.invoke())
             await task_next
-            # 等待最后完成之后，再将结果加入结果数组
-            # for _, child_node in child_nodes.items():
-            #     # 真正将结果加入数组
-            #     for rid in node_results_dict.keys():
-            #         nid_pattern = node_results_dict[rid]["item_nid_pattern"]
-            #         if nid_pattern in child_node.id:
-            #             contentpath: FromInnerPath = node_results_dict[rid][
-            #                 "contentpath"
-            #             ]
-            #             node_results.ById[rid].Data.value.append(
-            #                 (
-            #                     await child_node.getContentByPath(self.id, contentpath)
-            #                 ).Data
-            #             )
-            #     pass
             pass
         task_output = asyncio.create_task(output_anode.invoke())
         await task_output
@@ -324,14 +303,14 @@ class IterRun(FATaskNode):
         self_layout = getNestedLayout(self.id)
         assert len(req_layout) >= len(self_layout), "子节点应该比父节点更深"
         node_payloads = self.data.Payloads
-        if path.ContentId == "D_ITER_INDEX":
+        if path.ContentName == "Payloads" and path.ContentId == "D_ITER_INDEX":
             D_ITER_INDEX: VFNodeContentData = node_payloads.ById["D_ITER_INDEX"]
             return VFNodeContentData(
                 Label=D_ITER_INDEX.Label,
                 Type=D_ITER_INDEX.Type,
                 Data=RefType(req_layout[len(self_layout)]),
             )
-        elif path.ContentId == "D_ITER_ITEM":
+        elif path.ContentName == "Payloads" and path.ContentId == "D_ITER_ITEM":
             D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
             return VFNodeContentData(
                 Label=D_ITER_ARRAY.Label,
@@ -342,12 +321,15 @@ class IterRun(FATaskNode):
 
     def getCacheKey(self, request_nid: str):
         """
-        对于自身，返回None以跳过缓存
+        对于自身，跳过缓存
         对于内部节点 返回带payload，不用result
         对于后继节点，返回带payload和result，以及output的缓存
         """
         if request_nid == self.id:
-            return None
+            return VFNodeCacheKey(
+                Before=VFNodeCacheKeyBefore.Skip,
+                After=VFNodeCacheKeyAfter.Skip,
+            )
         nest_layout = getNestedLayout(self.id)
         re_nid, _ = regexMatchNodeId(self.data.Nesting.ANodes["next"].Nid)
         next_anode_ids = [
@@ -360,7 +342,7 @@ class IterRun(FATaskNode):
         req_node = self.runner().getNode(request_nid)
         if req_node.parentNode == self.id:
             if self.cacheKey4Child is None:
-                if data := buildCache4GenerateKey(
+                self.cacheKey4Child = buildCache4GenerateKey(
                     self,
                     cache_parentNode=True,
                     cache_preNodes=True,
@@ -370,8 +352,7 @@ class IterRun(FATaskNode):
                     cache_Config=True,
                     cache_Attaching=True,
                     cache_Nesting=True,
-                ):
-                    self.cacheKey4Child = generateCacheKey(data)
+                )
             return self.cacheKey4Child
         else:
             if self.cacheKey4PostNode is None:
@@ -382,7 +363,7 @@ class IterRun(FATaskNode):
                     for next_anode_id in next_anode_ids
                 ]
                 if outanode and all(nextanodes):
-                    if data := buildCache4GenerateKey(
+                    self.cacheKey4PostNode = buildCache4GenerateKey(
                         self,
                         cache_parentNode=True,
                         cache_preNodes=True,
@@ -403,7 +384,7 @@ class IterRun(FATaskNode):
                                 cache_Config=True,
                                 cache_Attaching=True,
                                 cache_Nesting=True,
-                            ),
+                            ).model_dump(),
                             "nextnode": [
                                 buildCache4GenerateKey(
                                     nextnode,
@@ -415,12 +396,11 @@ class IterRun(FATaskNode):
                                     cache_Config=True,
                                     cache_Attaching=True,
                                     cache_Nesting=True,
-                                )
+                                ).model_dump()
                                 for nextnode in nextanodes
                             ],
                         },
-                    ):
-                        self.cacheKey4PostNode = generateCacheKey(data)
+                    )
                     pass
             return self.cacheKey4PostNode
         pass

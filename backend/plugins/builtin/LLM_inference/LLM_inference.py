@@ -11,7 +11,8 @@ import openai
 from openai import AsyncOpenAI, NotGiven
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from app.schemas.VFNodeClass import VFNode
-from app.schemas.vfnode import VFNodeInfo
+from app.schemas.VFlowData import VFNodeInfo
+from app.schemas.VFlowRunData import FARunStatus
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
@@ -28,9 +29,7 @@ from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
     FANodeUpdateData,
-    FARunStatus,
 )
-from app.schemas.vfnode_contentdata import VarType
 from app.utils.tools import read_yaml, reduceGet, replace_vars
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
     from app.services.FARunner import FARunner
     from app.services.FAValidator import FAValidator
 
-from ..UI_Components.UI_InputVars import InputVarModel
+from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
 class LLMSettingType(StrEnum):

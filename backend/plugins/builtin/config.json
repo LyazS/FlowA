@@ -89,7 +89,12 @@
     {
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_CODE_EDITOR",
-      "Component": "UI_Components/UI_CodeEditor.py"
+      "Component": "code_interpreter/UI_Code_Editor.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_CODE_EDITOR_DISABLED",
+      "Component": "jinja2_template/UI_Code_Editor_Disabled.py"
     },
     {
       "Type": "FANode",
@@ -114,7 +119,7 @@
     {
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
-      "Component": "UI_Components/UI_Iter_Run_Inner_Var.py"
+      "Component": "iter_run/UI_Iter_Run_Inner_Var.py"
     },
     {
       "Type": "FANode",
@@ -128,8 +133,18 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_INNER_VAR",
+      "Component": "iter_retry/UI_Iter_Retry_Inner_Var.py"
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RETRY_SETTING",
       "Component": "iter_retry/UI_ITER_RETRY_SETTING.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_INOUT",
+      "Component": "iter_retry/UI_ITER_RETRY_INOUT.py"
     }
   ]
 }
