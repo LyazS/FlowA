@@ -163,14 +163,14 @@ const handle_text_edge_pad = 6
 const label_gap = 15
 
 const inputHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.Connections.Inputs)
+  return Object.entries(thisnodedata.Connections.Inputs.ById)
     .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 
 const outputHandles = computed<HandleData[]>(() => {
   const pattern = /^\d+\/[^/]*$/
-  const sortedEntries = Object.entries(thisnodedata.Connections.Outputs).sort(
+  const sortedEntries = Object.entries(thisnodedata.Connections.Outputs.ById).sort(
     ([aKey, aValue], [bKey, bValue]) => {
       if (pattern.test(aValue.Label) && pattern.test(bValue.Label)) {
         const a_num = parseInt(aValue.Label.split('/')[0])
@@ -189,13 +189,13 @@ const outputHandles = computed<HandleData[]>(() => {
 })
 
 const cbfuncHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.Connections.CallbackFuncs)
+  return Object.entries(thisnodedata.Connections.CallbackFuncs.ById)
     .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 
 const cbuserHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.Connections.CallbackUsers)
+  return Object.entries(thisnodedata.Connections.CallbackUsers.ById)
     .map(([key, value]) => ({ key, label: value.Label }))
     .sort((a, b) => a.key.localeCompare(b.key))
 })

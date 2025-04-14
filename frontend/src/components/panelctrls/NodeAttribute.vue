@@ -138,16 +138,16 @@ const getOrCreateVarSelectionWHandle = (path: string[]) => {
     let Connections: Record<string, VFNodeHandle>
     if (path[0] == VFNodeConnectionType.Self) {
       ctype = VFNodeConnectionType.Self
-      Connections = curSelectedNode.value.data.Connections.Self
+      Connections = curSelectedNode.value.data.Connections.Self.ById
     } else if (path[0] == VFNodeConnectionType.Attach) {
       ctype = VFNodeConnectionType.Attach
-      Connections = curSelectedNode.value.data.Connections.Attach
+      Connections = curSelectedNode.value.data.Connections.Attach.ById
     } else if (path[0] == VFNodeConnectionType.Inputs) {
       ctype = VFNodeConnectionType.Inputs
-      Connections = curSelectedNode.value.data.Connections.Inputs
+      Connections = curSelectedNode.value.data.Connections.Inputs.ById
     } else if (path[0] == VFNodeConnectionType.Outputs) {
       ctype = VFNodeConnectionType.Outputs
-      Connections = curSelectedNode.value.data.Connections.Outputs
+      Connections = curSelectedNode.value.data.Connections.Outputs.ById
     } else return []
 
     if (path[1] && Connections.hasOwnProperty(path[1])) {

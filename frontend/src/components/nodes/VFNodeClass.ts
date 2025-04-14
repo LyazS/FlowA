@@ -66,12 +66,12 @@ class VFNode implements BaseVFNodeData {
   // 初始化方法 ====================================================
   private createDefaultConnections(): VFNodeConnections {
     return {
-      Self: { Self: { Label: 'Self', Data: {} } },
-      Attach: { Attach: { Label: 'Attach', Data: {} } },
-      Inputs: {},
-      Outputs: {},
-      CallbackUsers: {},
-      CallbackFuncs: {},
+      Self: { ById: {}, Order: [] },
+      Attach: { ById: {}, Order: [] },
+      Inputs: { ById: {}, Order: [] },
+      Outputs: { ById: {}, Order: [] },
+      CallbackUsers: { ById: {}, Order: [] },
+      CallbackFuncs: { ById: {}, Order: [] },
     }
   }
 
@@ -147,16 +147,21 @@ class VFNode implements BaseVFNodeData {
 
   // 连接点操作 ====================================================
   addHandle(connectType: VFNodeConnectionType, handleId: string, label?: string): this {
-    this.Connections[connectType][handleId] = {
+    this.Connections[connectType].ById[handleId] = {
       Label: label || handleId,
       Data: {},
     }
+    this.Connections[connectType].Order.push(handleId)
     return this
   }
 
   rmHandle(connectType: VFNodeConnectionType, handleId: string): this {
-    if (this.Connections[connectType][handleId]) {
-      delete this.Connections[connectType][handleId]
+    if (this.Connections[connectType].ById[handleId]) {
+      delete this.Connections[connectType].ById[handleId]
+      this.Connections[connectType].Order.splice(
+        this.Connections[connectType].Order.indexOf(handleId),
+        1,
+      )
     }
     return this
   }
@@ -167,7 +172,7 @@ class VFNode implements BaseVFNodeData {
     data: VFNodeHandleData,
     did?: string | null,
   ): string {
-    const handle = this.Connections[connectType][handleId]
+    const handle = this.Connections[connectType].ById[handleId]
     if (!handle) throw new Error(`Handle ${handleId} not found in ${connectType}`)
 
     const dataId = did || getUuid()
@@ -176,7 +181,7 @@ class VFNode implements BaseVFNodeData {
   }
 
   rmHandleData(connectType: VFNodeConnectionType, handleId: string, did: string): this {
-    const handle = this.Connections[connectType][handleId]
+    const handle = this.Connections[connectType].ById[handleId]
     if (handle?.Data[did]) {
       delete handle.Data[did]
     }
@@ -220,7 +225,7 @@ class VFNode implements BaseVFNodeData {
     rid: string | null = null,
     did: string | null = null,
   ): string {
-    if (!this.Connections.Outputs[handleId]) {
+    if (!this.Connections.Outputs.ById[handleId]) {
       this.addHandle(VFNodeConnectionType.Outputs, handleId)
     }
 

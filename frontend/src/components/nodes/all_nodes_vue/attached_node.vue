@@ -62,13 +62,13 @@ const handle_type = computed<HandleType>(() => {
 const handle_id = computed<string>(() => {
   switch (thisattaching.value.Type) {
     case VFNodeAttachingType.Output:
-      return Object.keys(thisnodedata.Connections.Inputs)[0]
+      return thisnodedata.Connections.Inputs.Order[0]
     case VFNodeAttachingType.Input:
-      return Object.keys(thisnodedata.Connections.Outputs)[0]
+      return thisnodedata.Connections.Outputs.Order[0]
     case VFNodeAttachingType.CallbackFunc:
-      return Object.keys(thisnodedata.Connections.CallbackUsers)[0]
+      return thisnodedata.Connections.CallbackUsers.Order[0]
     case VFNodeAttachingType.CallbackUser:
-      return Object.keys(thisnodedata.Connections.CallbackFuncs)[0]
+      return thisnodedata.Connections.CallbackFuncs.Order[0]
     default:
       return 'output'
   }

@@ -51,11 +51,11 @@ export const useNodeUtils = () => {
     const result: VarItem[] = []
     const thenode = findNode(nid) as NodeWithVFData
 
-    if (!thenode || !thenode.data.Connections[findconnect]?.[hid]) {
+    if (!thenode || !thenode.data.Connections[findconnect]?.ById[hid]) {
       return result
     }
     const thenodedata = thenode.data as VFNodeData
-    const connection = thenodedata.Connections[findconnect][hid].Data
+    const connection = thenodedata.Connections[findconnect].ById[hid].Data
 
     for (const c_data of Object.values(connection) as Array<VFNodeHandleData>) {
       if (c_data.Type === VFNodeConnectionDataType.FromInner && c_data.Path) {
@@ -116,13 +116,13 @@ export const useNodeUtils = () => {
 
     if (!handles) {
       if (handleType === VFNodeConnectionType.Self) {
-        handles = Object.keys(thenodedata.Connections.Inputs)
+        handles = thenodedata.Connections.Inputs.Order
       } else if (handleType === VFNodeConnectionType.Attach) {
-        handles = Object.keys(thenodedata.Connections.Attach)
+        handles = thenodedata.Connections.Attach.Order
       } else if (handleType === VFNodeConnectionType.Inputs) {
-        handles = Object.keys(thenodedata.Connections.Inputs)
+        handles = thenodedata.Connections.Inputs.Order
       } else if (handleType === VFNodeConnectionType.Outputs) {
-        handles = Object.keys(thenodedata.Connections.Outputs)
+        handles = thenodedata.Connections.Outputs.Order
       } else {
         handles = []
       }

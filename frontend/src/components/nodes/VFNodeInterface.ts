@@ -78,15 +78,18 @@ interface VFNodeHandle {
   Data: Record<string, VFNodeHandleData>
 }
 
+interface VFNodeConnection {
+  ById: Record<string, VFNodeHandle>
+  Order: string[]
+}
 type VFNodeConnections = {
   // 连接类型：handleID：{handle标签，handle数据}
-  // [key in VFNodeConnectionType]: Record<string, VFNodeHandle>
-  Self: Record<string, VFNodeHandle>
-  Attach: Record<string, VFNodeHandle>
-  Inputs: Record<string, VFNodeHandle>
-  Outputs: Record<string, VFNodeHandle>
-  CallbackUsers: Record<string, VFNodeHandle>
-  CallbackFuncs: Record<string, VFNodeHandle>
+  Self: VFNodeConnection
+  Attach: VFNodeConnection
+  Inputs: VFNodeConnection
+  Outputs: VFNodeConnection
+  CallbackUsers: VFNodeConnection
+  CallbackFuncs: VFNodeConnection
 }
 
 interface VFNodeAttachingPos {
@@ -104,9 +107,6 @@ interface VFNodeAttaching {
 interface VFNodeAttachedNode {
   Nid: string | null
   NType: string
-  // Type: VFNodeAttachingType
-  // Pos: VFNodeAttachingPos
-  // Label: string
 }
 
 interface VFNodePadding {
@@ -187,6 +187,7 @@ export type {
   VFNodeContents,
   VFNodeHandleData,
   VFNodeHandle,
+  VFNodeConnection,
   VFNodeConnections,
   VFNodeAttaching,
   VFNodeAttachedNode,
