@@ -47,12 +47,9 @@ from app.utils.tools import (
     concatNestedNodeId,
 )
 from app.utils.db4node import loadNodeConfig, setNodeConfig
-from app.services.CacheMgr import buildCache4GenerateKey
-
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
-    from app.services.FAValidator import FAValidator
+from app.utils.cacheKey import buildCache4GenerateKey
+from app.services.FARunner import FARunner
+from app.services.FAValidator import FAValidator
 
 
 class RetryType(StrEnum):

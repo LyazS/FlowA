@@ -32,11 +32,8 @@ from app.schemas.farequest import (
 )
 from app.utils.tools import read_yaml, reduceGet, replace_vars
 from app.utils.db4node import loadNodeConfig, setNodeConfig
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
-    from app.services.FAValidator import FAValidator
-
+from app.services.FARunner import FARunner
+from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 

@@ -15,9 +15,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeAttachingPos,
     VFNodeAttachingPosType,
 )
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
+from app.services.FARunner import FARunner
 
 
 class AttachNode(FATaskNode):

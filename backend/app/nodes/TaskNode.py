@@ -32,10 +32,8 @@ from app.utils.tools import reduceGet
 from app.nodes.BaseNode import FABaseNode
 
 from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.CacheMgr import (
-    GOLBAL_CACHE_MGR,
-    buildCache4GenerateKey,
-)
+from app.services.CacheMgr import GOLBAL_CACHE_MGR
+from app.utils.cacheKey import buildCache4GenerateKey
 
 if TYPE_CHECKING:
     from app.services.FARunner import FARunner

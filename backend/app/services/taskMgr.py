@@ -2,9 +2,7 @@ import asyncio
 from typing import Callable, Awaitable, Any, Dict, Optional, TYPE_CHECKING
 from pydantic import BaseModel
 from loguru import logger
-
-# if TYPE_CHECKING:
-from .FARunner import FARunner
+from app.services.FARunner import FARunner
 
 
 class TaskModel(BaseModel):

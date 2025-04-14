@@ -32,12 +32,9 @@ from app.schemas.farequest import (
 )
 from app.utils.vueRef import serialize_ref, RefOptions, RefTriggerData
 from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.CacheMgr import VFNodeCacheKey
-
-if TYPE_CHECKING:
-    from app.services.FARunner import FARunner
-    from app.services.FAValidator import FAValidator
-
+from app.schemas.VFlowRunData import VFNodeCacheKey
+from app.services.FARunner import FARunner
+from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
