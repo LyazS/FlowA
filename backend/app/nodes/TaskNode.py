@@ -32,7 +32,6 @@ from app.utils.tools import reduceGet
 from app.nodes.BaseNode import FABaseNode
 
 from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.CacheMgr import GOLBAL_CACHE_MGR
 from app.utils.cacheKey import buildCache4GenerateKey
 
 if TYPE_CHECKING:
@@ -153,9 +152,7 @@ class FATaskNode(FABaseNode):
             isUseCache = False
             cacheKey = self.getCacheKey(self.id)
             if cacheKey.Before == VFNodeCacheKeyBefore.Load:
-                if nodecache := await GOLBAL_CACHE_MGR.get(
-                    self.wid, self.id, cacheKey.Key
-                ):
+                if nodecache := await self.runner().getCache(self.id, cacheKey.Key):
                     isUseCache = self.loadCache(nodecache)
                     logger.debug(
                         f"cache hit {self.data.Label} {self.id} {cacheKey.Key}"
@@ -165,12 +162,11 @@ class FATaskNode(FABaseNode):
                 # 前置节点全部成功，本节点开始运行
                 updateDatas = await self.run()
                 if cacheKey.Key and cacheKey.After == VFNodeCacheKeyAfter.Save:
-                    await GOLBAL_CACHE_MGR.set(
-                        self.wid,
+                    await self.runner().setCache(
                         self.id,
                         cacheKey.Key,
                         self.generateCache(),
-                        isCommit=True,
+                        isCommit=False,
                     )
             # ===============================================================
 

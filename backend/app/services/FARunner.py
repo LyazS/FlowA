@@ -6,7 +6,7 @@ from loguru import logger
 from app.schemas.VFlowData import VFlowData, VFNodeInfo, VFEdgeInfo
 from app.schemas.VFlowRunData import FARunStatus
 from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.CacheMgr import GOLBAL_CACHE_MGR
+from app.services.CacheMgr import CacheMgr
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -47,6 +47,7 @@ class FARunner:
 
         self.cancel_event = asyncio.Event()
         self.running_tasks: Set[asyncio.Task] = set()  # 跟踪所有节点任务
+        self.cachemgr = CacheMgr(self.wid)
 
         # 方便的全局父子节点结构
         self.nestedGraph: Dict[str, List[str]] = {}
@@ -137,6 +138,18 @@ class FARunner:
     def getNode(self, request_nid: str) -> Union["FABaseNode", None]:
         return self.nodes.get(request_nid, None)
 
+    async def getCache(self, request_nid: str, cache_key: str):
+        return await self.cachemgr.get(request_nid, cache_key)
+
+    async def setCache(
+        self,
+        request_nid: str,
+        cache_key: str,
+        value,
+        isCommit: bool = False,
+    ):
+        await self.cachemgr.set(request_nid, cache_key, value, isCommit)
+
     async def getRefData(self, request_nid: str, refvalue: str):
         """
         根据curnid获取相对应层级的refdata数据
@@ -206,7 +219,7 @@ class FARunner:
             }
             self.status = FARunStatus.Running
             await asyncio.gather(*self.running_tasks)
-            await GOLBAL_CACHE_MGR.batchcommit(self.wid)
+            await self.cachemgr.batchcommit()
             self.endtime = datetime.now(ZoneInfo("Asia/Shanghai"))
             logger.info(f"workflow {self.wid} run success")
             self.status = FARunStatus.Success
