@@ -163,9 +163,17 @@ const handle_text_edge_pad = 6
 const label_gap = 15
 
 const inputHandles = computed<HandleData[]>(() => {
-  return Object.entries(thisnodedata.Connections.Inputs.ById)
-    .map(([key, value]) => ({ key, label: value.Label }))
-    .sort((a, b) => a.key.localeCompare(b.key))
+  const handles: HandleData[] = []
+  const order = thisnodedata.Connections.Inputs.Order
+  // 从后往前遍历
+  for (let i = order.length - 1; i >= 0; i--) {
+    const key = order[i]
+    handles.push({
+      key: key,
+      label: thisnodedata.Connections.Inputs.ById[key].Label,
+    })
+  }
+  return handles
 })
 
 const outputHandles = computed<HandleData[]>(() => {
