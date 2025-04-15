@@ -169,23 +169,17 @@ const inputHandles = computed<HandleData[]>(() => {
 })
 
 const outputHandles = computed<HandleData[]>(() => {
-  const pattern = /^\d+\/[^/]*$/
-  const sortedEntries = Object.entries(thisnodedata.Connections.Outputs.ById).sort(
-    ([aKey, aValue], [bKey, bValue]) => {
-      if (pattern.test(aValue.Label) && pattern.test(bValue.Label)) {
-        const a_num = parseInt(aValue.Label.split('/')[0])
-        const b_num = parseInt(bValue.Label.split('/')[0])
-        return b_num - a_num
-      } else {
-        return aKey.localeCompare(bKey)
-      }
-    },
-  )
-
-  return sortedEntries.map(([key, value]) => ({
-    key,
-    label: pattern.test(value.Label) ? value.Label.split('/')[1] : value.Label,
-  }))
+  const handles: HandleData[] = []
+  const order = thisnodedata.Connections.Outputs.Order
+  // 从后往前遍历
+  for (let i = order.length - 1; i >= 0; i--) {
+    const key = order[i]
+    handles.push({
+      key: key,
+      label: thisnodedata.Connections.Outputs.ById[key].Label,
+    })
+  }
+  return handles
 })
 
 const cbfuncHandles = computed<HandleData[]>(() => {
