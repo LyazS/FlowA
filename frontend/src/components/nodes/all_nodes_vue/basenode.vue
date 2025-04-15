@@ -165,8 +165,8 @@ const label_gap = 15
 const inputHandles = computed<HandleData[]>(() => {
   const handles: HandleData[] = []
   const order = thisnodedata.Connections.Inputs.Order
-  // 从后往前遍历
-  for (let i = order.length - 1; i >= 0; i--) {
+  // 从前往后遍历
+  for (let i = 0; i < order.length; i++) {
     const key = order[i]
     handles.push({
       key: key,
