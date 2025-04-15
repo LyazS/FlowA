@@ -76,6 +76,7 @@ import {
   NCol,
   NSpace,
 } from 'naive-ui'
+import { VueDraggable } from 'vue-draggable-plus'
 
 export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   NButton: NButton,
@@ -150,6 +151,9 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   // NRow: NRow,
   // NCol: NCol,
   NSpace: NSpace,
+  // 其他组件
+  // 拖拽排序
+  VueDraggable: VueDraggable,
 }
 
 import RefVarSelect from '@/components/panelctrls/editables/RefVarSelect.vue'
@@ -157,9 +161,10 @@ export const DYNAMIC_FA_COMPONENTS_MAP: Record<string, Component> = {
   RefVarSelect: RefVarSelect,
 }
 
-import { Add, Close, CreateOutline } from '@vicons/ionicons5'
+import { Add, Close, CreateOutline, EllipsisVertical } from '@vicons/ionicons5'
 export const DYNAMIC_ICONS_MAP: Record<string, Component> = {
   Add: Add,
   Close: Close,
   CreateOutline: CreateOutline,
+  EllipsisVertical: EllipsisVertical,
 }

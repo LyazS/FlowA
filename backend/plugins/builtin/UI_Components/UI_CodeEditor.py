@@ -42,17 +42,21 @@ class UI_CodeEditor(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=OPENEDITOR_FuncProp(
-                                        Arg=FuncArg_OPENEDITOR(
-                                            DstPath=[
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                PAYLOADS_ID,
-                                                "Data",
-                                            ],
-                                            Language="python",
-                                        )
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            OPENEDITOR_FuncProp(
+                                                Arg=FuncArg_OPENEDITOR(
+                                                    DstPath=[
+                                                        THIS_NODE_DATA,
+                                                        "Payloads",
+                                                        "ById",
+                                                        PAYLOADS_ID,
+                                                        "Data",
+                                                    ],
+                                                    Language="python",
+                                                )
+                                            )
+                                        ]
                                     ),
                                     otherProps=otherProps,
                                     slots={

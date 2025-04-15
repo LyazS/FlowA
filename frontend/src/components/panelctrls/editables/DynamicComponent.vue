@@ -262,50 +262,57 @@ const processedProps = computed(() => {
         }
         break
       case PropVarType.Function:
-        const prop_Function = prop as FunctionProp
-        if (prop_Function.Func == FunctionPropType.ADDITEM) {
-          const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
-          if (!!ItemKey && !!ItemValue && !!DstPath) {
-            propsObj[propName] = () =>
-              addItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey), cloneDeep(ItemValue))
-          } else {
-            console.error('Invalid add item function')
-          }
-        } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
-          const { ItemKey, DstPath } = prop_Function.Arg
-          if (!!ItemKey && !!DstPath) {
-            propsObj[propName] = () =>
-              removeItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey))
-          } else {
-            console.error('Invalid remove item function')
-          }
-        } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
-          const { DstPath, ItemValue } = prop_Function.Arg
-          if (!!ItemValue && !!DstPath) {
-            propsObj[propName] = () => appendItemByPath(DstPath, cloneDeep(ItemValue))
-          } else {
-            console.error('Invalid append item function')
-          }
-        } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
-          const { HandleId, Result } = prop_Function.Arg
-          if (!!HandleId && !!Result) {
-            propsObj[propName] = () => addItem2Results(HandleId, cloneDeep(Result))
-          } else {
-            console.error('Invalid add result function')
-          }
-        } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
-          const { ResultId } = prop_Function.Arg
-          if (!!ResultId) {
-            propsObj[propName] = () => removeItem4Results(getPropValueFromReadOnlyPropVar(ResultId))
-          } else {
-            console.error('Invalid remove result function')
-          }
-        } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
-          const { DstPath, Language } = prop_Function.Arg
-          if (!!DstPath && !!Language) {
-            propsObj[propName] = () => openCodeEditor(DstPath, Language)
-          } else {
-            console.error('Invalid open code editor function')
+        const prop_Functions = prop as FunctionProp
+        for (const prop_Function of prop_Functions.Funcs) {
+          if (prop_Function.Func == FunctionPropType.ADDITEM) {
+            const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
+            if (!!ItemKey && !!ItemValue && !!DstPath) {
+              propsObj[propName] = () =>
+                addItemByPath(
+                  DstPath,
+                  getPropValueFromReadOnlyPropVar(ItemKey),
+                  cloneDeep(ItemValue),
+                )
+            } else {
+              console.error('Invalid add item function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
+            const { ItemKey, DstPath } = prop_Function.Arg
+            if (!!ItemKey && !!DstPath) {
+              propsObj[propName] = () =>
+                removeItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey))
+            } else {
+              console.error('Invalid remove item function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
+            const { DstPath, ItemValue } = prop_Function.Arg
+            if (!!ItemValue && !!DstPath) {
+              propsObj[propName] = () => appendItemByPath(DstPath, cloneDeep(ItemValue))
+            } else {
+              console.error('Invalid append item function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
+            const { HandleId, Result } = prop_Function.Arg
+            if (!!HandleId && !!Result) {
+              propsObj[propName] = () => addItem2Results(HandleId, cloneDeep(Result))
+            } else {
+              console.error('Invalid add result function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
+            const { ResultId } = prop_Function.Arg
+            if (!!ResultId) {
+              propsObj[propName] = () =>
+                removeItem4Results(getPropValueFromReadOnlyPropVar(ResultId))
+            } else {
+              console.error('Invalid remove result function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
+            const { DstPath, Language } = prop_Function.Arg
+            if (!!DstPath && !!Language) {
+              propsObj[propName] = () => openCodeEditor(DstPath, Language)
+            } else {
+              console.error('Invalid open code editor function')
+            }
           }
         }
         break

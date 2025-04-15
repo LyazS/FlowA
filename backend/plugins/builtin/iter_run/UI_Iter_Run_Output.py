@@ -12,6 +12,7 @@ from ..UI_Components.NInput import NInput
 from ..UI_Components.NButton import NButton
 from ..UI_Components.NFlex import NFlex
 
+
 class VarNameInput(NInput):
     def __init__(self):
         super().__init__(
@@ -46,16 +47,22 @@ class UI_Iter_Run_Output(NFlex):
                                 NButton(
                                     type="info",
                                     text=True,
-                                    onClick=ADDRESULT2OUT_FuncProp(
-                                        Arg=FuncArg_ADDRESULT2OUT(
-                                            HandleId="output",
-                                            Result=VFNodeContentData(
-                                                Label="",
-                                                Type="List",
-                                                Data=[],
-                                                Config=VFNodeContentDataConfig(Ref=""),
-                                            ),
-                                        )
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            ADDRESULT2OUT_FuncProp(
+                                                Arg=FuncArg_ADDRESULT2OUT(
+                                                    HandleId="output",
+                                                    Result=VFNodeContentData(
+                                                        Label="",
+                                                        Type="List",
+                                                        Data=[],
+                                                        Config=VFNodeContentDataConfig(
+                                                            Ref=""
+                                                        ),
+                                                    ),
+                                                )
+                                            )
+                                        ]
                                     ),
                                     slots={
                                         "default": SpanComponent(
@@ -126,12 +133,16 @@ class UI_Iter_Run_Output(NFlex):
                                         size="small",
                                         circle=True,
                                         level="tertiary",
-                                        onClick=REMOVERESULT4OUT_FuncProp(
-                                            Arg=FuncArg_REMOVERESULT4OUT(
-                                                ResultId=VBindProp(
-                                                    Data=[VFOR_DATA, "@RID"]
-                                                ),
-                                            )
+                                        onClick=FunctionProp(
+                                            Funcs=[
+                                                REMOVERESULT4OUT_FuncProp(
+                                                    Arg=FuncArg_REMOVERESULT4OUT(
+                                                        ResultId=VBindProp(
+                                                            Data=[VFOR_DATA, "@RID"]
+                                                        ),
+                                                    )
+                                                )
+                                            ]
                                         ),
                                         slots={
                                             "icon": NormalComponent(Type="Close"),

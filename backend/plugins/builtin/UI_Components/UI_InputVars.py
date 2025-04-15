@@ -325,17 +325,21 @@ class UI_InputVars(NFlex):
                                 NButton(
                                     type="success",
                                     text=True,
-                                    onClick=APPENDITEM_FuncProp(
-                                        Arg=FuncArg_APPENDITEM(
-                                            DstPath=[
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                PAYLOADS_ID,
-                                                "Data",
-                                            ],
-                                            ItemValue=InputVarModel(),
-                                        )
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            APPENDITEM_FuncProp(
+                                                Arg=FuncArg_APPENDITEM(
+                                                    DstPath=[
+                                                        THIS_NODE_DATA,
+                                                        "Payloads",
+                                                        "ById",
+                                                        PAYLOADS_ID,
+                                                        "Data",
+                                                    ],
+                                                    ItemValue=InputVarModel(),
+                                                )
+                                            )
+                                        ]
                                     ),
                                     slots={
                                         "default": SpanComponent(
@@ -373,22 +377,26 @@ class UI_InputVars(NFlex):
                                         size="small",
                                         circle=True,
                                         level="tertiary",
-                                        onClick=REMOVEITEM_FuncProp(
-                                            Arg=FuncArg_REMOVEITEM(
-                                                DstPath=[
-                                                    THIS_NODE_DATA,
-                                                    "Payloads",
-                                                    "ById",
-                                                    PAYLOADS_ID,
-                                                    "Data",
-                                                ],
-                                                ItemKey=VBindProp(
-                                                    Data=[
-                                                        VFOR_DATA,
-                                                        "@Index",
-                                                    ]
-                                                ),
-                                            ),
+                                        onClick=FunctionProp(
+                                            Funcs=[
+                                                REMOVEITEM_FuncProp(
+                                                    Arg=FuncArg_REMOVEITEM(
+                                                        DstPath=[
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            PAYLOADS_ID,
+                                                            "Data",
+                                                        ],
+                                                        ItemKey=VBindProp(
+                                                            Data=[
+                                                                VFOR_DATA,
+                                                                "@Index",
+                                                            ]
+                                                        ),
+                                                    ),
+                                                )
+                                            ]
                                         ),
                                         slots={
                                             "icon": NormalComponent(Type="Close"),

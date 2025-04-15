@@ -70,16 +70,20 @@ class UI_CodeOutput(NFlex):
                                 NButton(
                                     type="info",
                                     text=True,
-                                    onClick=ADDRESULT2OUT_FuncProp(
-                                        Arg=FuncArg_ADDRESULT2OUT(
-                                            HandleId="output",
-                                            Result=VFNodeContentData(
-                                                Label="",
-                                                Type="String",
-                                                # Key="",
-                                                Data=None,
-                                            ),
-                                        )
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            ADDRESULT2OUT_FuncProp(
+                                                Arg=FuncArg_ADDRESULT2OUT(
+                                                    HandleId="output",
+                                                    Result=VFNodeContentData(
+                                                        Label="",
+                                                        Type="String",
+                                                        # Key="",
+                                                        Data=None,
+                                                    ),
+                                                )
+                                            )
+                                        ]
                                     ),
                                     slots={
                                         "default": SpanComponent(
@@ -130,12 +134,16 @@ class UI_CodeOutput(NFlex):
                                         size="small",
                                         circle=True,
                                         level="tertiary",
-                                        onClick=REMOVERESULT4OUT_FuncProp(
-                                            Arg=FuncArg_REMOVERESULT4OUT(
-                                                ResultId=VBindProp(
-                                                    Data=[VFOR_DATA, "@RID"]
-                                                ),
-                                            )
+                                        onClick=FunctionProp(
+                                            Funcs=[
+                                                REMOVERESULT4OUT_FuncProp(
+                                                    Arg=FuncArg_REMOVERESULT4OUT(
+                                                        ResultId=VBindProp(
+                                                            Data=[VFOR_DATA, "@RID"]
+                                                        ),
+                                                    )
+                                                )
+                                            ]
                                         ),
                                         slots={
                                             "icon": NormalComponent(Type="Close"),

@@ -92,6 +92,10 @@ class FunctionPropType(StrEnum):
     APPENDITEM = "@APPENDITEM@"
     ADDRESULT2OUT = "@ADDRESULT2OUT@"
     REMOVERESULT4OUT = "@REMOVERESULT4OUT@"
+    ADDHANDLE = "@ADDHANDLE@"
+    REMOVEHANDLE = "@REMOVEHANDLE@"
+    ADDHANDLEDATA = "@ADDHANDLEDATA@"
+    REMOVEHANDLEDATA = "@REMOVEHANDLEDATA@"
     OPENEDITOR = "@OPENEDITOR@"
     pass
 
@@ -140,52 +144,95 @@ class FuncArg_OPENEDITOR(BaseModel):
     pass
 
 
+class FuncArg_ADDHANDLE(BaseModel):
+    pass
+
+
+class FuncArg_REMOVEHANDLE(BaseModel):
+    pass
+
+
+class FuncArg_ADDHANDLEDATA(BaseModel):
+    pass
+
+
+class FuncArg_REMOVEHANDLEDATA(BaseModel):
+    pass
+
+
 # ================= 强化函数属性 =================
-class _FunctionPropBase(PropVarBase):
-    Type: Literal[PropVarType.Function] = PropVarType.Function
-    Func: FunctionPropType
 
 
-class ADDITEM_FuncProp(_FunctionPropBase):
+class ADDITEM_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.ADDITEM] = FunctionPropType.ADDITEM
     Arg: FuncArg_ADDITEM
 
 
-class REMOVEITEM_FuncProp(_FunctionPropBase):
+class REMOVEITEM_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.REMOVEITEM] = FunctionPropType.REMOVEITEM
     Arg: FuncArg_REMOVEITEM
 
 
-class APPENDITEM_FuncProp(_FunctionPropBase):
+class APPENDITEM_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.APPENDITEM] = FunctionPropType.APPENDITEM
     Arg: FuncArg_APPENDITEM
 
 
-class ADDRESULT2OUT_FuncProp(_FunctionPropBase):
+class ADDRESULT2OUT_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.ADDRESULT2OUT] = FunctionPropType.ADDRESULT2OUT
     Arg: FuncArg_ADDRESULT2OUT
 
 
-class REMOVERESULT4OUT_FuncProp(_FunctionPropBase):
+class REMOVERESULT4OUT_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.REMOVERESULT4OUT] = FunctionPropType.REMOVERESULT4OUT
     Arg: FuncArg_REMOVERESULT4OUT
 
 
-class OPENEDITOR_FuncProp(_FunctionPropBase):
+class ADDHANDLE_FuncProp(BaseModel):
+    Func: Literal[FunctionPropType.ADDHANDLE] = FunctionPropType.ADDHANDLE
+    Arg: FuncArg_ADDHANDLE
+
+
+class REMOVEHANDLE_FuncProp(BaseModel):
+    Func: Literal[FunctionPropType.REMOVEHANDLE] = FunctionPropType.REMOVEHANDLE
+    Arg: FuncArg_REMOVEHANDLE
+
+
+class ADDHANDLEDATA_FuncProp(BaseModel):
+    Func: Literal[FunctionPropType.ADDHANDLEDATA] = FunctionPropType.ADDHANDLEDATA
+    Arg: FuncArg_ADDHANDLEDATA
+
+
+class REMOVEHANDLEDATA_FuncProp(BaseModel):
+    Func: Literal[FunctionPropType.REMOVEHANDLEDATA] = FunctionPropType.REMOVEHANDLEDATA
+    Arg: FuncArg_REMOVEHANDLEDATA
+
+
+class OPENEDITOR_FuncProp(BaseModel):
     Func: Literal[FunctionPropType.OPENEDITOR] = FunctionPropType.OPENEDITOR
     Arg: FuncArg_OPENEDITOR
 
 
-# ================= 最终联合类型 =================
-FunctionProp = Union[
+SingleFunctionProp = Union[
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
     APPENDITEM_FuncProp,
     ADDRESULT2OUT_FuncProp,
     REMOVERESULT4OUT_FuncProp,
+    ADDHANDLE_FuncProp,
+    REMOVEHANDLE_FuncProp,
+    ADDHANDLEDATA_FuncProp,
+    REMOVEHANDLEDATA_FuncProp,
     OPENEDITOR_FuncProp,
 ]
 
+
+class FunctionProp(PropVarBase):
+    Type: Literal[PropVarType.Function] = PropVarType.Function
+    Funcs: List[SingleFunctionProp]
+
+
+# ================= 最终联合类型 =================
 PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
 ReadOnlyPropVar = Union[ValueProp, VBindProp]
 
@@ -302,6 +349,7 @@ class ForLoopComponent(BaseComponent):
 UnionComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]
 for cls in [ForLoopComponent, SpanComponent, NormalComponent]:
     cls.model_rebuild()
+
 
 class SelectOptions(BaseModel):
     label: str

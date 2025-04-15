@@ -55,19 +55,23 @@ class UI_PromptOperate(NFlex):
                         style={"margin-bottom": 0},
                         type="warning",
                         text=True,
-                        onClick=OPENEDITOR_FuncProp(
-                            Arg=FuncArg_OPENEDITOR(
-                                DstPath=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    PAYLOADS_ID,
-                                    "Data",
-                                    "@PromptIndex",
-                                    "content",
-                                ],
-                                Language="text",
-                            )
+                        onClick=FunctionProp(
+                            Funcs=[
+                                OPENEDITOR_FuncProp(
+                                    Arg=FuncArg_OPENEDITOR(
+                                        DstPath=[
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            PAYLOADS_ID,
+                                            "Data",
+                                            "@PromptIndex",
+                                            "content",
+                                        ],
+                                        Language="text",
+                                    )
+                                )
+                            ]
                         ),
                         slots={
                             "default": SpanComponent(
@@ -112,22 +116,26 @@ class UI_PromptContent(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=REMOVEITEM_FuncProp(
-                            Arg=FuncArg_REMOVEITEM(
-                                DstPath=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    PAYLOADS_ID,
-                                    "Data",
-                                ],
-                                ItemKey=VBindProp(
-                                    Data=[
-                                        VFOR_DATA,
-                                        "@PromptIndex",
-                                    ]
-                                ),
-                            ),
+                        onClick=FunctionProp(
+                            Funcs=[
+                                REMOVEITEM_FuncProp(
+                                    Arg=FuncArg_REMOVEITEM(
+                                        DstPath=[
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            PAYLOADS_ID,
+                                            "Data",
+                                        ],
+                                        ItemKey=VBindProp(
+                                            Data=[
+                                                VFOR_DATA,
+                                                "@PromptIndex",
+                                            ]
+                                        ),
+                                    ),
+                                )
+                            ]
                         ),
                         slots={
                             "icon": NormalComponent(Type="Close"),
@@ -193,22 +201,26 @@ class UI_SinglePromptWrmbtn(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=REMOVEITEM_FuncProp(
-                            Arg=FuncArg_REMOVEITEM(
-                                DstPath=[
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    PAYLOADS_ID,
-                                    "Data",
-                                ],
-                                ItemKey=VBindProp(
-                                    Data=[
-                                        VFOR_DATA,
-                                        "@PromptIndex",
-                                    ]
-                                ),
-                            ),
+                        onClick=FunctionProp(
+                            Funcs=[
+                                REMOVEITEM_FuncProp(
+                                    Arg=FuncArg_REMOVEITEM(
+                                        DstPath=[
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            PAYLOADS_ID,
+                                            "Data",
+                                        ],
+                                        ItemKey=VBindProp(
+                                            Data=[
+                                                VFOR_DATA,
+                                                "@PromptIndex",
+                                            ]
+                                        ),
+                                    ),
+                                )
+                            ]
                         ),
                         slots={
                             "icon": NormalComponent(Type="Close"),
@@ -236,17 +248,21 @@ class UI_LLM_PROMPTS(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=APPENDITEM_FuncProp(
-                                        Arg=FuncArg_APPENDITEM(
-                                            DstPath=[
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                PAYLOADS_ID,
-                                                "Data",
-                                            ],
-                                            ItemValue=DefaultPrompt,
-                                        )
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            APPENDITEM_FuncProp(
+                                                Arg=FuncArg_APPENDITEM(
+                                                    DstPath=[
+                                                        THIS_NODE_DATA,
+                                                        "Payloads",
+                                                        "ById",
+                                                        PAYLOADS_ID,
+                                                        "Data",
+                                                    ],
+                                                    ItemValue=DefaultPrompt,
+                                                )
+                                            )
+                                        ]
                                     ),
                                     slots={
                                         "default": SpanComponent(

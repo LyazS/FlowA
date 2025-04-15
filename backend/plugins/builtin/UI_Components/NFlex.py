@@ -22,6 +22,7 @@ class NFlex(NormalComponent):
         ] = "medium",
         wrap: bool | PropVar = True,
         style: Optional[Dict] = None,
+        otherProps: Dict = {},
         slots: Optional[Dict] = None,
         IfCondition: Optional[Condition] = None,
     ):
@@ -34,6 +35,7 @@ class NFlex(NormalComponent):
                 "size": size,
                 "wrap": wrap,
                 "style": style,
+                **otherProps,
             },
             Slots=slots,
             IfCondition=IfCondition,

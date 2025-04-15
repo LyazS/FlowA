@@ -78,6 +78,14 @@
       "Description": "迭代重试，可以嵌套",
       "Execute": "iter_retry/iter_retry.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/CondBranch",
+      "Label": "条件分支",
+      "Description": "条件分支",
+      "Execute": "cond_branch/cond_branch.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
@@ -145,6 +153,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RETRY_INOUT",
       "Component": "iter_retry/UI_ITER_RETRY_INOUT.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_COND_BRANCH",
+      "Component": "cond_branch/UI_Cond_Branch.py"
     }
   ]
 }

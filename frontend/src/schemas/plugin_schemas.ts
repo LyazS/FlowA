@@ -28,6 +28,10 @@ export enum FunctionPropType {
   APPENDITEM = '@APPENDITEM@',
   ADDRESULT2OUT = '@ADDRESULT2OUT@',
   REMOVERESULT4OUT = '@REMOVERESULT4OUT@',
+  ADDHANDLE = '@ADDHANDLE@',
+  REMOVEHANDLE = '@REMOVEHANDLE@',
+  ADDHANDLEDATA = '@ADDHANDLEDATA@',
+  REMOVEHANDLEDATA = '@REMOVEHANDLEDATA@',
   OPENEDITOR = '@OPENEDITOR@',
 }
 export enum PropVarType {
@@ -59,16 +63,18 @@ export interface VModelProp extends PropVarBase {
 
 export interface FunctionProp extends PropVarBase {
   Type: PropVarType.Function
-  Func: FunctionPropType
-  Arg: {
-    DstPath?: (string | number)[]
-    ItemKey?: ReadOnlyPropVar
-    ItemValue?: any
-    HandleId?: string
-    Result?: any
-    ResultId?: ReadOnlyPropVar
-    Language?: CodeEditorLanguage
-  }
+  Funcs: {
+    Func: FunctionPropType
+    Arg: {
+      DstPath?: (string | number)[]
+      ItemKey?: ReadOnlyPropVar
+      ItemValue?: any
+      HandleId?: string
+      Result?: any
+      ResultId?: ReadOnlyPropVar
+      Language?: CodeEditorLanguage
+    }
+  }[]
 }
 
 export type PropVar = ValueProp | VBindProp | VModelProp | FunctionProp
