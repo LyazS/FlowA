@@ -33,12 +33,12 @@ class VFNode(VFNodeData):
 
     def _create_default_connections(self) -> VFNodeConnections:
         return VFNodeConnections(
-            Self={},
-            Attach={},
-            Inputs={},
-            Outputs={},
-            CallbackUsers={},
-            CallbackFuncs={},
+            Self=VFNodeConnection(ById={}, Order=[]),
+            Attach=VFNodeConnection(ById={}, Order=[]),
+            Inputs=VFNodeConnection(ById={}, Order=[]),
+            Outputs=VFNodeConnection(ById={}, Order=[]),
+            CallbackUsers=VFNodeConnection(ById={}, Order=[]),
+            CallbackFuncs=VFNodeConnection(ById={}, Order=[]),
         )
 
     def _create_default_contents(self) -> VFNodeContents:
@@ -140,9 +140,9 @@ class VFNode(VFNodeData):
         handle_id: str,
         label: Optional[str] = None,
     ) -> "VFNode":
-        getattr(self.Connections, connect_type.value)[handle_id] = VFNodeHandle(
-            Label=label or handle_id, Data={}
-        )
+        connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
+        connection.ById[handle_id] = VFNodeHandle(Label=label or handle_id, Data={})
+        connection.Order.append(handle_id)
         return self
 
     def add_handle_data(
@@ -152,9 +152,8 @@ class VFNode(VFNodeData):
         data: VFNodeHandleData,
         data_id: Optional[str] = None,
     ) -> str:
-        handle: VFNodeHandle = getattr(self.Connections, connect_type.value).get(
-            handle_id
-        )
+        connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
+        handle: VFNodeHandle = connection.ById.get(handle_id)
         if not handle:
             raise ValueError(f"Handle {handle_id} not found in {connect_type}")
 
@@ -165,17 +164,17 @@ class VFNode(VFNodeData):
     def remove_handle(
         self, connect_type: VFNodeConnectionType, handle_id: str
     ) -> "VFNode":
-        connection = getattr(self.Connections, connect_type.value)
+        connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
         if handle_id in connection:
             del connection[handle_id]
+            connection.Order.remove(handle_id)
         return self
 
     def remove_handle_data(
         self, connect_type: VFNodeConnectionType, handle_id: str, data_id: str
     ) -> "VFNode":
-        handle: VFNodeHandle = getattr(self.Connections, connect_type.value).get(
-            handle_id
-        )
+        connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
+        handle: VFNodeHandle = connection.ById.get(handle_id)
         if handle and data_id in handle.Data:
             del handle.Data[data_id]
         return self
@@ -188,7 +187,7 @@ class VFNode(VFNodeData):
         result_id: Optional[str] = None,
         data_id: Optional[str] = None,
     ) -> str:
-        if handle_id not in self.Connections.Outputs:
+        if handle_id not in self.Connections.Outputs.ById:
             self.add_handle(VFNodeConnectionType.Outputs, handle_id)
 
         rid = result_id or getUuid()
@@ -276,9 +275,6 @@ class VFNode(VFNodeData):
         self,
         a_name: str,
         a_ntype: str,
-        # a_type: VFNodeAttachingType,
-        # a_pos: VFNodeAttachingPos,
-        # a_label: str,
     ) -> "VFNode":
         if not self.is_nested_node:
             raise ValueError("Cannot add attached node to non-nested node")
@@ -286,9 +282,6 @@ class VFNode(VFNodeData):
         self.Nesting.ANodes[a_name] = VFNodeAttachedNode(
             NId=None,
             NType=a_ntype,
-            # Type=a_type,
-            # Pos=a_pos,
-            # Label=a_label,
         )
         return self
 

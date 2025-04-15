@@ -78,7 +78,7 @@ class FAValidator:
         }
 
         # 获取连接数据
-        connections = connection_map[findconnect]()
+        connections = (connection_map[findconnect]()).ById
         if not connections or hid not in connections:
             return result
 
@@ -145,10 +145,10 @@ class FAValidator:
         # 如果没有提供handles，根据handleType获取所有handles
         if handles is None:
             connection_map = {
-                VFNodeConnectionType.Self: lambda: thenode.data.Connections.Self.keys(),
-                VFNodeConnectionType.Attach: lambda: thenode.data.Connections.Attach.keys(),
-                VFNodeConnectionType.Inputs: lambda: thenode.data.Connections.Inputs.keys(),
-                VFNodeConnectionType.Outputs: lambda: thenode.data.Connections.Outputs.keys(),
+                VFNodeConnectionType.Self: lambda: thenode.data.Connections.Self.Order,
+                VFNodeConnectionType.Attach: lambda: thenode.data.Connections.Attach.Order,
+                VFNodeConnectionType.Inputs: lambda: thenode.data.Connections.Inputs.Order,
+                VFNodeConnectionType.Outputs: lambda: thenode.data.Connections.Outputs.Order,
             }
 
             if getter := connection_map.get(handle_type):

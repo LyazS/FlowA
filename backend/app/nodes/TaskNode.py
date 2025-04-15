@@ -63,7 +63,7 @@ class FATaskNode(FABaseNode):
         self.waitType = FANodeWaitType.AND
         # 该节点的输出handle的状态
         self.outputStatus: Dict[str, FARunStatus] = {
-            oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.keys()
+            oname: FARunStatus.Pending for oname in self.data.Connections.Outputs.Order
         }
         # 缓存键
         self.cacheKey = None

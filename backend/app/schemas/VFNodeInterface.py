@@ -109,13 +109,19 @@ class VFNodeHandle(BaseModel):
     Data: Dict[str, VFNodeHandleData]
 
 
+class VFNodeConnection(BaseModel):
+    ById: Dict[str, VFNodeHandle]
+    Order: List[str]
+    pass
+
+
 class VFNodeConnections(BaseModel):
-    Self: Dict[str, VFNodeHandle] = {}
-    Attach: Dict[str, VFNodeHandle] = {}
-    Inputs: Dict[str, VFNodeHandle] = {}
-    Outputs: Dict[str, VFNodeHandle] = {}
-    CallbackUsers: Dict[str, VFNodeHandle] = {}
-    CallbackFuncs: Dict[str, VFNodeHandle] = {}
+    Self: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
+    Attach: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
+    Inputs: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
+    Outputs: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
+    CallbackUsers: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
+    CallbackFuncs: VFNodeConnection = VFNodeConnection(ById={}, Order=[])
 
 
 class VFNodeAttachingPos(BaseModel):
