@@ -6,6 +6,151 @@ from ..UI_Components.NText import NText
 from ..UI_Components.NButton import NButton
 
 
+class branch_header(NFlex):
+    def __init__(self):
+        super().__init__(
+            vertical=False,
+            wrap=False,
+            justify="flex-start",
+            style={"align-content": "center", "align-items": "center"},
+            slots={
+                "default": [
+                    NormalComponent(
+                        Type="NIcon",
+                        Props={},
+                        Slots={"default": NormalComponent(Type="EllipsisVertical")},
+                    ),
+                    NormalComponent(
+                        Type="NSwitch",
+                        Props={
+                            "size": "small",
+                            "style": {"width": "5em"},
+                        },
+                        Slots={
+                            "checked": SpanComponent(
+                                Type=ComponentType.VALUE,
+                                Data="AND",
+                            ),
+                            "unchecked": SpanComponent(
+                                Type=ComponentType.VALUE,
+                                Data="OR",
+                            ),
+                        },
+                    ),
+                    NormalComponent(
+                        Type="NInputGroup",
+                        Props={},
+                        Slots={
+                            "default": [
+                                NormalComponent(
+                                    Type="NTag",
+                                    Props={
+                                        "bordered": False,
+                                        "type": "info",
+                                        "size": "small",
+                                        "round": True,
+                                    },
+                                    Slots={
+                                        "default": SpanComponent(
+                                            Type=ComponentType.VALUE,
+                                            Data="分支名",
+                                        )
+                                    },
+                                ),
+                                NormalComponent(
+                                    Type="NInput",
+                                    Props={
+                                        "size": "tiny",
+                                        "autosize": True,
+                                        "style": {
+                                            "min-width": "20%",
+                                        },
+                                        "placeholder": "分支名",
+                                        "value": VModelProp(
+                                            Data=[
+                                                THIS_NODE_DATA,
+                                                "Connections",
+                                                "Outputs",
+                                                "ById",
+                                                "@OutHandleName",
+                                                "Label",
+                                            ]
+                                        ),
+                                    },
+                                ),
+                            ]
+                        },
+                    ),
+                ]
+            },
+        )
+
+
+class UI_Cond_Card(NFlex):
+    def __init__(self):
+        super().__init__(
+            vertical=False,
+            wrap=False,
+            justify="flex-start",
+            style={"align-content": "center", "align-items": "center"},
+            slots={
+                "default": [
+                    NormalComponent(
+                        Type="NCard",
+                        Props={
+                            "style": {"width": "95%"},
+                            "bordered": True,
+                            "hoverable": True,
+                            "size": "small",
+                        },
+                        Slots={
+                            
+                        },
+                    ),
+                    NButton(
+                        style={"width": "5%"},
+                        type="error",
+                        size="small",
+                        circle=True,
+                        level="tertiary",
+                        onClick=FunctionProp(Funcs=[]),
+                        slots={
+                            "icon": NormalComponent(Type="Close"),
+                        },
+                    ),
+                ]
+            },
+        )
+
+
+class UI_Branch_Card(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NCard",
+            Props={
+                "bordered": True,
+                "hoverable": True,
+                "size": "small",
+                "style": {"margin-bottom": "5px"},
+            },
+            Slots={
+                "header": branch_header(),
+                "header-extra": NButton(
+                    type="error",
+                    text=True,
+                    onClick=FunctionProp(Funcs=[]),
+                    slots={
+                        "default": SpanComponent(
+                            Type=ComponentType.VALUE, Data="删除分支"
+                        ),
+                        "icon": NormalComponent(Type="Close"),
+                    },
+                ),
+                "default": UI_Cond_Card(),
+            },
+        )
+
+
 class UI_Drag_Branch(NormalComponent):
     def __init__(self):
         super().__init__(
@@ -21,6 +166,11 @@ class UI_Drag_Branch(NormalComponent):
                         "Order",
                     ]
                 ),
+                "onUpdate": FunctionProp(
+                    Funcs=[
+                        UPDATENODEINTERNAL_FuncProp(),
+                    ]
+                ),
             },
             Slots={
                 "default": ForLoopComponent(
@@ -34,29 +184,7 @@ class UI_Drag_Branch(NormalComponent):
                     ),
                     ItemLabel="@OutHandleName",
                     IndexLabel="@OutHandleIndex",
-                    Template=NFlex(
-                        justify="center",
-                        align="center",
-                        style={
-                            "width": "100%",
-                            "height": "100%",
-                        },
-                        slots={
-                            "default": [
-                                SpanComponent(
-                                    Type=ComponentType.VBIND,
-                                    Data=[
-                                        THIS_NODE_DATA,
-                                        "Connections",
-                                        "Outputs",
-                                        "ById",
-                                        "@OutHandleName",
-                                        "Label",
-                                    ],
-                                ),
-                            ]
-                        },
-                    ),
+                    Template=UI_Branch_Card(),
                 )
             },
         )

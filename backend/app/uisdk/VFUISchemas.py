@@ -96,6 +96,7 @@ class FunctionPropType(StrEnum):
     REMOVEHANDLE = "@REMOVEHANDLE@"
     ADDHANDLEDATA = "@ADDHANDLEDATA@"
     REMOVEHANDLEDATA = "@REMOVEHANDLEDATA@"
+    UPDATENODEINTERNAL = "@UPDATENODEINTERNAL@"
     OPENEDITOR = "@OPENEDITOR@"
     pass
 
@@ -163,52 +164,64 @@ class FuncArg_REMOVEHANDLEDATA(BaseModel):
 # ================= 强化函数属性 =================
 
 
-class ADDITEM_FuncProp(BaseModel):
+class _FuncPropBase(BaseModel):
+    Func: FunctionPropType
+    Arg: Any
+
+
+class ADDITEM_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDITEM] = FunctionPropType.ADDITEM
     Arg: FuncArg_ADDITEM
 
 
-class REMOVEITEM_FuncProp(BaseModel):
+class REMOVEITEM_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.REMOVEITEM] = FunctionPropType.REMOVEITEM
     Arg: FuncArg_REMOVEITEM
 
 
-class APPENDITEM_FuncProp(BaseModel):
+class APPENDITEM_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.APPENDITEM] = FunctionPropType.APPENDITEM
     Arg: FuncArg_APPENDITEM
 
 
-class ADDRESULT2OUT_FuncProp(BaseModel):
+class ADDRESULT2OUT_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDRESULT2OUT] = FunctionPropType.ADDRESULT2OUT
     Arg: FuncArg_ADDRESULT2OUT
 
 
-class REMOVERESULT4OUT_FuncProp(BaseModel):
+class REMOVERESULT4OUT_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.REMOVERESULT4OUT] = FunctionPropType.REMOVERESULT4OUT
     Arg: FuncArg_REMOVERESULT4OUT
 
 
-class ADDHANDLE_FuncProp(BaseModel):
+class ADDHANDLE_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDHANDLE] = FunctionPropType.ADDHANDLE
     Arg: FuncArg_ADDHANDLE
 
 
-class REMOVEHANDLE_FuncProp(BaseModel):
+class REMOVEHANDLE_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.REMOVEHANDLE] = FunctionPropType.REMOVEHANDLE
     Arg: FuncArg_REMOVEHANDLE
 
 
-class ADDHANDLEDATA_FuncProp(BaseModel):
+class ADDHANDLEDATA_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDHANDLEDATA] = FunctionPropType.ADDHANDLEDATA
     Arg: FuncArg_ADDHANDLEDATA
 
 
-class REMOVEHANDLEDATA_FuncProp(BaseModel):
+class REMOVEHANDLEDATA_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.REMOVEHANDLEDATA] = FunctionPropType.REMOVEHANDLEDATA
     Arg: FuncArg_REMOVEHANDLEDATA
 
 
-class OPENEDITOR_FuncProp(BaseModel):
+class UPDATENODEINTERNAL_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.UPDATENODEINTERNAL] = (
+        FunctionPropType.UPDATENODEINTERNAL
+    )
+    Arg: Any = None
+
+
+class OPENEDITOR_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.OPENEDITOR] = FunctionPropType.OPENEDITOR
     Arg: FuncArg_OPENEDITOR
 
@@ -223,6 +236,7 @@ SingleFunctionProp = Union[
     REMOVEHANDLE_FuncProp,
     ADDHANDLEDATA_FuncProp,
     REMOVEHANDLEDATA_FuncProp,
+    UPDATENODEINTERNAL_FuncProp,
     OPENEDITOR_FuncProp,
 ]
 

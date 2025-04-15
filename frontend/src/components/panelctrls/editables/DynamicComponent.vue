@@ -9,6 +9,7 @@ import {
   type PropType,
   type ComputedRef,
 } from 'vue'
+import { useVueFlow } from '@vue-flow/core'
 import type {
   BaseComponent,
   NormalComponent,
@@ -63,6 +64,7 @@ import { cloneDeep } from 'lodash'
 defineOptions({
   name: 'DynamicComponent',
 })
+const { updateNodeInternals } = useVueFlow()
 const { mapVarItemToSelect } = useNodeUtils()
 const props = defineProps({
   componentData: {
@@ -312,6 +314,10 @@ const processedProps = computed(() => {
               propsObj[propName] = () => openCodeEditor(DstPath, Language)
             } else {
               console.error('Invalid open code editor function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.UPDATENODEINTERNAL) {
+            propsObj[propName] = () => {
+              if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
             }
           }
         }
