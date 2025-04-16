@@ -158,7 +158,6 @@ class CondBranch(FATaskNode):
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input-cond", "CONDITION")
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input-var", "VARIABLE")
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else", "ELSE")
-        thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else2", "ELSE2")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")
         thisnode.add_handle_data(
             VFNodeConnectionType.Self,

@@ -4,7 +4,7 @@ import {
   VFNodeConnectionType,
   type VFNodeContentData,
 } from '@/components/nodes/VFNodeInterface'
-
+import { InsertPos } from '@/components/nodes/VFNodeClass'
 // 特殊定义 =====================================================================
 
 // 路径定义
@@ -35,6 +35,8 @@ export enum FunctionPropType {
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
   APPENDITEM = '@APPENDITEM@',
+  ADDRESULT = '@ADDRESULT@',
+  REMOVERESULT = '@REMOVERESULT@',
   ADDRESULT2OUT = '@ADDRESULT2OUT@',
   REMOVERESULT4OUT = '@REMOVERESULT4OUT@',
   ADDHANDLE = '@ADDHANDLE@',
@@ -50,6 +52,7 @@ export enum PropVarType {
   VModel = '@VMODEL@',
   Function = '@FUNCTION@',
 }
+
 // =============================================================================
 // 接口定义
 export interface PropVarBase {
@@ -94,9 +97,20 @@ export interface FuncArg_APPENDITEM {
   ItemValue: any
 }
 
+export interface FuncArg_ADDRESULT {
+  Result: VFNodeContentData
+  ResultId?: ReadOnlyPropVar
+  Position: InsertPos
+}
+
+export interface FuncArg_REMOVERESULT {
+  ResultId: ReadOnlyPropVar
+}
+
 export interface FuncArg_ADDRESULT2OUT {
   Result: VFNodeContentData
   HandleId: ReadOnlyPropVar
+  Position: InsertPos
   ResultId?: ReadOnlyPropVar
   DataId?: ReadOnlyPropVar
 }
@@ -108,6 +122,7 @@ export interface FuncArg_REMOVERESULT4OUT {
 export interface FuncArg_ADDHANDLE {
   HandleType: VFNodeConnectionType
   HandleId: ReadOnlyPropVar
+  Position: InsertPos
   HandleLabel?: ReadOnlyPropVar
 }
 
@@ -162,6 +177,15 @@ export interface APPENDITEM_FuncProp extends _FuncPropBase {
   Arg: FuncArg_APPENDITEM
 }
 
+export interface ADDRESULT_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDRESULT
+  Arg: FuncArg_ADDRESULT
+}
+export interface REMOVERESULT_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVERESULT
+  Arg: FuncArg_REMOVERESULT
+}
+
 export interface ADDRESULT2OUT_FuncProp extends _FuncPropBase {
   Func: FunctionPropType.ADDRESULT2OUT
   Arg: FuncArg_ADDRESULT2OUT
@@ -208,6 +232,8 @@ export type SingleFunctionProp =
   | ADDITEM_FuncProp
   | REMOVEITEM_FuncProp
   | APPENDITEM_FuncProp
+  | ADDRESULT_FuncProp
+  | REMOVERESULT_FuncProp
   | ADDRESULT2OUT_FuncProp
   | REMOVERESULT4OUT_FuncProp
   | ADDHANDLE_FuncProp

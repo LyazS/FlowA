@@ -3,6 +3,11 @@ from app.schemas.VFNodeInterface import *
 from app.utils.tools import getUuid
 
 
+class InsertPos(StrEnum):
+    Start = "Start"
+    End = "End"
+
+
 class VFNode(VFNodeData):
     # 初始化方法 ====================================================
     def __init__(self, v_type: str):
@@ -139,6 +144,7 @@ class VFNode(VFNodeData):
         connect_type: VFNodeConnectionType,
         handle_id: str,
         label: Optional[str] = None,
+        pos: InsertPos = InsertPos.End,
     ) -> "VFNode":
         if connect_type == VFNodeConnectionType.Inputs and not handle_id.startswith(
             "input"
@@ -151,7 +157,11 @@ class VFNode(VFNodeData):
 
         connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
         connection.ById[handle_id] = VFNodeHandle(Label=label or handle_id, Data={})
-        connection.Order.append(handle_id)
+        if pos == InsertPos.Start:
+            connection.Order.insert(0, handle_id)
+            return self
+        else:
+            connection.Order.append(handle_id)
         return self
 
     def add_handle_data(
@@ -195,6 +205,7 @@ class VFNode(VFNodeData):
         handle_id: str,
         result_id: Optional[str] = None,
         data_id: Optional[str] = None,
+        pos: InsertPos = InsertPos.End,
     ) -> str:
         if handle_id not in self.Connections.Outputs.ById:
             self.add_handle(VFNodeConnectionType.Outputs, handle_id)
@@ -215,7 +226,11 @@ class VFNode(VFNodeData):
             update={"Hid": handle_id, "Did": did},
             deep=True,
         )
-        self.Results.Order.append(rid)
+        if pos == InsertPos.Start:
+            self.Results.Order.insert(0, rid)
+            return rid
+        else:
+            self.Results.Order.append(rid)
         return rid
 
     def remove_result_into_outputs(self, result_id: str) -> "VFNode":
@@ -236,14 +251,21 @@ class VFNode(VFNodeData):
 
     # 数据内容操作补充 ==============================================
     def add_payload(
-        self, content: VFNodeContentData, payload_id: Optional[str] = None
+        self,
+        content: VFNodeContentData,
+        payload_id: Optional[str] = None,
+        pos: InsertPos = InsertPos.End,
     ) -> str:
         pid = payload_id or getUuid()
         self.Payloads.ById[pid] = content.model_copy(
             update={"Hid": "", "Did": ""},
             deep=True,
         )
-        self.Payloads.Order.append(pid)
+        if pos == InsertPos.Start:
+            self.Payloads.Order.insert(0, pid)
+            return pid
+        else:
+            self.Payloads.Order.append(pid)
         return pid
 
     def remove_payload(self, payload_id: str) -> "VFNode":
@@ -253,14 +275,21 @@ class VFNode(VFNodeData):
         return self
 
     def add_result(
-        self, content: VFNodeContentData, result_id: Optional[str] = None
+        self,
+        content: VFNodeContentData,
+        result_id: Optional[str] = None,
+        pos: InsertPos = InsertPos.End,
     ) -> str:
         rid = result_id or getUuid()
         self.Results.ById[rid] = content.model_copy(
             update={"Hid": "", "Did": ""},
             deep=True,
         )
-        self.Results.Order.append(rid)
+        if pos == InsertPos.Start:
+            self.Results.Order.insert(0, rid)
+            return rid
+        else:
+            self.Results.Order.append(rid)
         return rid
 
     def remove_result(self, result_id: str) -> "VFNode":

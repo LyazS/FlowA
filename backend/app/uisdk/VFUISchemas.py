@@ -6,6 +6,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeContentData,
 )
+from app.schemas.VFNodeClass import InsertPos
 
 """
 vue数据结构定义
@@ -96,6 +97,8 @@ class FunctionPropType(StrEnum):
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
     APPENDITEM = "@APPENDITEM@"
+    ADDRESULT = "@ADDRESULT@"
+    REMOVERESULT = "@REMOVERESULT@"
     ADDRESULT2OUT = "@ADDRESULT2OUT@"
     REMOVERESULT4OUT = "@REMOVERESULT4OUT@"
     ADDHANDLE = "@ADDHANDLE@"
@@ -138,9 +141,22 @@ class FuncArg_APPENDITEM(BaseModel):
     pass
 
 
+class FuncArg_ADDRESULT(BaseModel):
+    Result: VFNodeContentData = Field(..., description="结果数据")
+    ResultId: Optional["ReadOnlyPropVar"] = Field(None, description="结果id")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
+    pass
+
+
+class FuncArg_REMOVERESULT(BaseModel):
+    ResultId: "ReadOnlyPropVar" = Field(..., description="结果id")
+    pass
+
+
 class FuncArg_ADDRESULT2OUT(BaseModel):
     HandleId: "ReadOnlyPropVar" = Field(..., description="输出句柄id")
     Result: VFNodeContentData = Field(..., description="结果数据")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
     ResultId: Optional["ReadOnlyPropVar"] = Field(None, description="结果id")
     DataId: Optional["ReadOnlyPropVar"] = Field(None, description="连接数据id")
     pass
@@ -162,6 +178,7 @@ class FuncArg_OPENEDITOR(BaseModel):
 class FuncArg_ADDHANDLE(BaseModel):
     HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
     HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
     HandleLabel: Optional["ReadOnlyPropVar"] = Field(None, description="句柄标签")
     pass
 
@@ -215,6 +232,16 @@ class APPENDITEM_FuncProp(_FuncPropBase):
     Arg: FuncArg_APPENDITEM
 
 
+class ADDRESULT_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.ADDRESULT] = FunctionPropType.ADDRESULT
+    Arg: FuncArg_ADDRESULT
+
+
+class REMOVERESULT_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.REMOVERESULT] = FunctionPropType.REMOVERESULT
+    Arg: FuncArg_REMOVERESULT
+
+
 class ADDRESULT2OUT_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDRESULT2OUT] = FunctionPropType.ADDRESULT2OUT
     Arg: FuncArg_ADDRESULT2OUT
@@ -262,6 +289,8 @@ SingleFunctionProp = Union[
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
     APPENDITEM_FuncProp,
+    ADDRESULT_FuncProp,
+    REMOVERESULT_FuncProp,
     ADDRESULT2OUT_FuncProp,
     REMOVERESULT4OUT_FuncProp,
     ADDHANDLE_FuncProp,

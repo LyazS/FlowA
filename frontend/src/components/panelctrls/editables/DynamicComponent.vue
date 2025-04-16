@@ -52,7 +52,7 @@ import {
   DYNAMIC_FA_COMPONENTS_MAP,
   DYNAMIC_ICONS_MAP,
 } from '@/schemas/dynamic_components_map'
-import { VFNode } from '@/components/nodes/VFNodeClass'
+import { VFNode, InsertPos } from '@/components/nodes/VFNodeClass'
 import {
   selectedNodeId,
   isEditorMode,
@@ -209,22 +209,47 @@ const appendItemByPath = (path: (string | number)[], value: any) => {
   console.error('Unsupported append path')
 }
 
-// Results添加项
-const addItem2Results = (
-  handleid: string,
-  result: any,
-  rid: string | null = null,
-  did: string | null = null,
+// 添加Result
+const addItem2Result = (
+  content: Omit<VFNodeContentData, 'Hid' | 'Did'>,
+  rid?: string,
+  pos?: InsertPos,
 ) => {
   const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
   if (nodedata) {
-    nodedata.addResultWithConnection(result, handleid, rid, did)
+    nodedata.addResult(content, rid, pos)
     return
   }
   console.error('Unsupported append path')
 }
-// Results删除项
-const removeItem4Results = (rid: string) => {
+
+// 删除Result
+const removeItem4Result = (rid: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.rmResult(rid)
+    return
+  }
+  console.error('Unsupported remove path')
+}
+
+// Results添加项进Connect
+const addResults2Connect = (
+  handleid: string,
+  result: any,
+  rid: string | null = null,
+  did: string | null = null,
+  pos?: InsertPos,
+) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.addResultWithConnection(result, handleid, rid, did, pos)
+    return
+  }
+  console.error('Unsupported append path')
+}
+// 从Connect删除Results
+const removeResults4Connect = (rid: string) => {
   const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
   if (nodedata) {
     nodedata.rmResultWithConnection(rid)
@@ -234,10 +259,15 @@ const removeItem4Results = (rid: string) => {
 }
 
 // 添加Handle
-const addHandle = (handleType: VFNodeConnectionType, handleId: string, handleLabel?: string) => {
+const addHandle = (
+  handleType: VFNodeConnectionType,
+  handleId: string,
+  handleLabel?: string,
+  pos?: InsertPos,
+) => {
   const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
   if (nodedata) {
-    nodedata.addHandle(handleType, handleId, handleLabel)
+    nodedata.addHandle(handleType, handleId, handleLabel, pos)
     if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
     return
   }
@@ -296,11 +326,13 @@ const parseResult = (result: VFNodeContentData, getValueFunc: Function) => {
   const parseValue = (value: any): any => {
     if (typeof value === 'object' && value !== null) {
       // 使用 zod 进行类型验证
-      const ReadOnlyPropVarSchema = z.object({
-        Type: z.enum([PropVarType.Value, PropVarType.VBind]),
-        Data: z.any(),
-        Replace: z.string().optional(),
-      }).strict()
+      const ReadOnlyPropVarSchema = z
+        .object({
+          Type: z.enum([PropVarType.Value, PropVarType.VBind]),
+          Data: z.any(),
+          Replace: z.string().optional(),
+        })
+        .strict()
       if (ReadOnlyPropVarSchema.safeParse(value).success) {
         // This is a ReadOnlyPropVar
         return getValueFunc(value as ReadOnlyPropVar)
@@ -368,98 +400,97 @@ const processedProps = computed(() => {
         break
       case PropVarType.Function:
         const prop_Functions = prop as FunctionProp
-        const functions: (() => void)[] = []
-        const f_Context: Record<string, any> = {}
-        const getValueFrom_f_Context = (propvar: ReadOnlyPropVar | null | undefined) => {
-          if (!propvar) return null
-          if (propvar.Type === PropVarType.VBind && propvar.Data[0] === CONTEXT_ARG) {
-            const data = propvar.Data.slice(1).reduce((acc, key) => acc?.[key], f_Context)
-            if (propvar.Replace && typeof data === 'string') {
-              return propvar.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
-                return data
-              })
-            }
-            return data
-          }
-          return getPropValueFromReadOnlyPropVar(propvar)
-        }
+        const functions: ((
+          getFunc: (propvar: ReadOnlyPropVar | null | undefined) => any,
+          setFunc: (key: string, value: any) => void,
+        ) => void)[] = []
 
         for (const prop_Function of prop_Functions.Funcs) {
           if (prop_Function.Func == FunctionPropType.SETCONTEXT) {
-            const { Key, Value } = prop_Function.Arg
-            if (Key && Value) {
-              f_Context[getPropValueFromReadOnlyPropVar(Key)] =
-                getPropValueFromReadOnlyPropVar(Value)
-            } else {
-              console.error('Invalid set context function')
-            }
+            functions.push((getFunc, setFunc) => {
+              const { Key, Value } = prop_Function.Arg
+              setFunc(getPropValueFromReadOnlyPropVar(Key), getPropValueFromReadOnlyPropVar(Value))
+            })
           } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
-            functions.push(() =>
-              addItemByPath(DstPath, getValueFrom_f_Context(ItemKey), cloneDeep(ItemValue)),
+            functions.push((getFunc, setFunc) =>
+              addItemByPath(DstPath, getFunc(ItemKey), cloneDeep(ItemValue)),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
             const { ItemKey, DstPath } = prop_Function.Arg
-            functions.push(() => removeItemByPath(DstPath, getValueFrom_f_Context(ItemKey)))
+            functions.push((getFunc, setFunc) => removeItemByPath(DstPath, getFunc(ItemKey)))
           } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
             const { DstPath, ItemValue } = prop_Function.Arg
-            functions.push(() => appendItemByPath(DstPath, cloneDeep(ItemValue)))
+            functions.push((getFunc, setFunc) => appendItemByPath(DstPath, cloneDeep(ItemValue)))
+          } else if (prop_Function.Func == FunctionPropType.ADDRESULT) {
+            const { Result, ResultId, Position } = prop_Function.Arg
+            functions.push((getFunc, setFunc) =>
+              addItem2Result(cloneDeep(parseResult(Result, getFunc)), getFunc(ResultId), Position),
+            )
+          } else if (prop_Function.Func == FunctionPropType.REMOVERESULT) {
+            const { ResultId } = prop_Function.Arg
+            functions.push((getFunc, setFunc) => removeItem4Result(getFunc(ResultId)))
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
-            const { HandleId, Result, ResultId, DataId } = prop_Function.Arg
-            functions.push(() =>
-              addItem2Results(
-                getValueFrom_f_Context(HandleId),
-                cloneDeep(parseResult(Result, getValueFrom_f_Context)),
-                getValueFrom_f_Context(ResultId),
-                getValueFrom_f_Context(DataId),
+            const { HandleId, Result, ResultId, Position, DataId } = prop_Function.Arg
+            functions.push((getFunc, setFunc) =>
+              addResults2Connect(
+                getFunc(HandleId),
+                cloneDeep(parseResult(Result, getFunc)),
+                getFunc(ResultId),
+                getFunc(DataId),
+                Position,
               ),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
             const { ResultId } = prop_Function.Arg
-            functions.push(() => removeItem4Results(getValueFrom_f_Context(ResultId)))
+            functions.push((getFunc, setFunc) => removeResults4Connect(getFunc(ResultId)))
           } else if (prop_Function.Func == FunctionPropType.ADDHANDLE) {
-            const { HandleType, HandleId, HandleLabel } = prop_Function.Arg
-            functions.push(() =>
-              addHandle(
-                HandleType,
-                getValueFrom_f_Context(HandleId),
-                getValueFrom_f_Context(HandleLabel),
-              ),
+            const { HandleType, HandleId, Position, HandleLabel } = prop_Function.Arg
+            functions.push((getFunc, setFunc) =>
+              addHandle(HandleType, getFunc(HandleId), cloneDeep(getFunc(HandleLabel)), Position),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLE) {
             const { HandleType, HandleId } = prop_Function.Arg
-            functions.push(() => removeHandle(HandleType, getValueFrom_f_Context(HandleId)))
+            functions.push((getFunc, setFunc) => removeHandle(HandleType, getFunc(HandleId)))
           } else if (prop_Function.Func == FunctionPropType.ADDHANDLEDATA) {
             const { HandleType, HandleId, Data, DataId } = prop_Function.Arg
-            functions.push(() =>
-              addHandleData(
-                HandleType,
-                getValueFrom_f_Context(HandleId),
-                Data,
-                getValueFrom_f_Context(DataId),
-              ),
+            functions.push((getFunc, setFunc) =>
+              addHandleData(HandleType, getFunc(HandleId), Data, getFunc(DataId)),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLEDATA) {
             const { HandleType, HandleId, DataId } = prop_Function.Arg
-            functions.push(() =>
-              removeHandleData(
-                HandleType,
-                getValueFrom_f_Context(HandleId),
-                getValueFrom_f_Context(DataId),
-              ),
+            functions.push((getFunc, setFunc) =>
+              removeHandleData(HandleType, getFunc(HandleId), getFunc(DataId)),
             )
           } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
             const { DstPath, Language } = prop_Function.Arg
-            functions.push(() => openCodeEditor(DstPath, Language))
+            functions.push((getFunc, setFunc) => openCodeEditor(DstPath, Language))
           } else if (prop_Function.Func == FunctionPropType.UPDATENODEINTERNAL) {
-            functions.push(() => {
+            functions.push((getFunc, setFunc) => {
               if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
             })
           }
         }
         propsObj[propName] = () => {
+          const f_Context: Record<string, any> = {}
+          const getValueFrom_f_Context = (propvar: ReadOnlyPropVar | null | undefined) => {
+            if (!propvar) return null
+            if (propvar.Type === PropVarType.VBind && propvar.Data[0] === CONTEXT_ARG) {
+              const data = propvar.Data.slice(1).reduce((acc, key) => acc?.[key], f_Context)
+              if (propvar.Replace && typeof data === 'string') {
+                return propvar.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
+                  return data
+                })
+              }
+              return data
+            }
+            return getPropValueFromReadOnlyPropVar(propvar)
+          }
+          const set_f_Context = (key: string, value: any) => {
+            f_Context[key] = value
+          }
           for (const func of functions) {
-            func()
+            func(getValueFrom_f_Context, set_f_Context)
           }
         }
         break

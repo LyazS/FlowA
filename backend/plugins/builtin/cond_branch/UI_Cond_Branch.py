@@ -31,7 +31,7 @@ class branch_header(NFlex):
                         Type="NSwitch",
                         Props={
                             "size": "small",
-                            "style": {"width": "5em"},
+                            "style": {"width": "12em"},
                         },
                         Slots={
                             "checked": SpanComponent(
@@ -133,6 +133,7 @@ class UI_Branch_Card(NormalComponent):
         super().__init__(
             Type="NCard",
             Props={
+                "key": VBindProp(Data=[VFOR_DATA, "@OutHandleName"]),
                 "bordered": True,
                 "hoverable": True,
                 "size": "small",
@@ -153,6 +154,11 @@ class UI_Branch_Card(NormalComponent):
                 ),
                 "default": UI_Cond_Card(),
             },
+            IfCondition=CompareCondition(
+                Left=VBindProp(Data=[VFOR_DATA, "@OutHandleName"]),
+                Operator="!=",
+                Right=ValueProp(Data="output-else"),
+            ),
         )
 
 
@@ -238,6 +244,7 @@ class UI_Cond_Branch(NFlex):
                                                     HandleLabel=ValueProp(
                                                         Data="分支【请修改名字】"
                                                     ),
+                                                    Position=InsertPos.Start,
                                                 )
                                             ),
                                             ADDHANDLEDATA_FuncProp(
@@ -256,8 +263,8 @@ class UI_Cond_Branch(NFlex):
                                                     ),
                                                 )
                                             ),
-                                            ADDRESULT2OUT_FuncProp(
-                                                Arg=FuncArg_ADDRESULT2OUT(
+                                            ADDRESULT_FuncProp(
+                                                Arg=FuncArg_ADDRESULT(
                                                     HandleId=VBindProp(
                                                         Data=[
                                                             CONTEXT_ARG,

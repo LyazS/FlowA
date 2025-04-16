@@ -27,7 +27,10 @@ import {
 } from '@/components/nodes/VFNodeInterface'
 
 import { getUuid } from '@/utils/tools'
-
+export enum InsertPos {
+  Start = 'Start',
+  End = 'End',
+}
 class VFNode implements BaseVFNodeData {
   // 基础必选属性
   NType: string
@@ -146,19 +149,25 @@ class VFNode implements BaseVFNodeData {
   }
 
   // 连接点操作 ====================================================
-  addHandle(connectType: VFNodeConnectionType, handleId: string, label?: string): this {
-    if (connectType === VFNodeConnectionType.Inputs && !handleId.startsWith("input")) {
-      throw new Error(`Handle ID must start with 'input' for ${connectType}`);
+  addHandle(
+    connectType: VFNodeConnectionType,
+    handleId: string,
+    label?: string,
+    pos: InsertPos = InsertPos.End,
+  ): this {
+    if (connectType === VFNodeConnectionType.Inputs && !handleId.startsWith('input')) {
+      throw new Error(`Handle ID must start with 'input' for ${connectType}`)
     }
-    if (connectType === VFNodeConnectionType.Outputs && !handleId.startsWith("output")) {
-      throw new Error(`Handle ID must start with 'output' for ${connectType}`);
+    if (connectType === VFNodeConnectionType.Outputs && !handleId.startsWith('output')) {
+      throw new Error(`Handle ID must start with 'output' for ${connectType}`)
     }
 
     this.Connections[connectType].ById[handleId] = {
       Label: label || handleId,
       Data: {},
     }
-    this.Connections[connectType].Order.push(handleId)
+    if (pos === InsertPos.Start) this.Connections[connectType].Order.unshift(handleId)
+    else this.Connections[connectType].Order.push(handleId)
     return this
   }
 
@@ -196,10 +205,15 @@ class VFNode implements BaseVFNodeData {
   }
 
   // 数据内容操作 ==================================================
-  addPayload(content: Omit<VFNodeContentData, 'Hid' | 'Did'>, pid?: string): string {
+  addPayload(
+    content: Omit<VFNodeContentData, 'Hid' | 'Did'>,
+    pid?: string,
+    pos: InsertPos = InsertPos.End,
+  ): string {
     const id = pid || getUuid()
     this.Payloads.ById[id] = { ...content, Hid: '', Did: '' }
-    this.Payloads.Order.push(id)
+    if (pos === InsertPos.Start) this.Payloads.Order.unshift(id)
+    else this.Payloads.Order.push(id)
     return id
   }
 
@@ -211,10 +225,15 @@ class VFNode implements BaseVFNodeData {
     return this
   }
 
-  addResult(content: Omit<VFNodeContentData, 'Hid' | 'Did'>, rid?: string): string {
+  addResult(
+    content: Omit<VFNodeContentData, 'Hid' | 'Did'>,
+    rid?: string,
+    pos: InsertPos = InsertPos.End,
+  ): string {
     const id = rid || getUuid()
     this.Results.ById[id] = { ...content, Hid: '', Did: '' }
-    this.Results.Order.push(id)
+    if (pos === InsertPos.Start) this.Results.Order.unshift(id)
+    else this.Results.Order.push(id)
     return id
   }
 
@@ -231,6 +250,7 @@ class VFNode implements BaseVFNodeData {
     handleId: string,
     rid: string | null = null,
     did: string | null = null,
+    pos: InsertPos = InsertPos.End,
   ): string {
     if (!this.Connections.Outputs.ById[handleId]) {
       this.addHandle(VFNodeConnectionType.Outputs, handleId)
@@ -249,7 +269,8 @@ class VFNode implements BaseVFNodeData {
     )
 
     this.Results.ById[_rid] = { ...content, Hid: handleId, Did: _did }
-    this.Results.Order.push(_rid)
+    if (pos === InsertPos.Start) this.Results.Order.unshift(_rid)
+    else this.Results.Order.push(_rid)
     return _rid
   }
 
@@ -270,9 +291,6 @@ class VFNode implements BaseVFNodeData {
   addAttachedNode(
     aname: string,
     antype: string,
-    // type: VFNodeAttachingType,
-    // pos: VFNodeAttachingPos,
-    // label: string,
   ): this {
     if (!this.isNestedNode()) {
       throw new Error('Cannot add attached node to non-nested node')
