@@ -9,8 +9,18 @@ from ..UI_Components.NFlex import NFlex
 from ..UI_Components.Header import Header
 from ..UI_Components.NText import NText
 from ..UI_Components.NButton import NButton
-from .cond_branch import ConditionType, Single_Condition, Single_ConditionDict
 from ..UI_Components.UI_InputVars import VarType
+from ..UI_Components.RefVarSelect import UI_RefVarSelect
+from .cond_branch import (
+    Single_Condition,
+    Single_ConditionDict,
+    LengthTypeSelections,
+    StartEndTypeSelections,
+    NullTypeSelections,
+    EqualTypeSelections,
+    NotEqualTypeSelections,
+    ContainsTypeSelections,
+)
 
 
 class branch_header(NFlex):
@@ -32,6 +42,16 @@ class branch_header(NFlex):
                         Props={
                             "size": "small",
                             "style": {"width": "12em"},
+                            "value": VModelProp(
+                                Data=[
+                                    THIS_NODE_DATA,
+                                    "Results",
+                                    "ById",
+                                    "@OutHandleName",
+                                    "Data",
+                                    "condIsAnd",
+                                ]
+                            ),
                         },
                         Slots={
                             "checked": SpanComponent(
@@ -110,7 +130,74 @@ class UI_Cond_Card(NFlex):
                             "hoverable": True,
                             "size": "small",
                         },
-                        Slots={},
+                        Slots={
+                            "default": [
+                                NFlex(
+                                    vertical=False,
+                                    wrap=False,
+                                    justify="flex-start",
+                                    style={
+                                        "align-content": "center",
+                                        "align-items": "center",
+                                    },
+                                    slots={
+                                        "default": [
+                                            UI_RefVarSelect(
+                                                style={"width": "65%"},
+                                                size="small",
+                                                value=VModelProp(
+                                                    Data=[
+                                                        THIS_NODE_DATA,
+                                                        "Results",
+                                                        "ById",
+                                                        "@OutHandleName",
+                                                        "Data",
+                                                        "conditions",
+                                                        "@CondIndex",
+                                                        "refdata",
+                                                    ]
+                                                ),
+                                                options=VBindProp(
+                                                    Data=[
+                                                        CONNECT_DATA_TO_SELECT,
+                                                        VFNodeConnectionType.Self,
+                                                        "self",
+                                                    ]
+                                                ),
+                                            ),
+                                            NormalComponent(
+                                                Type="NSelect",
+                                                Props={
+                                                    "size": "small",
+                                                    "style": {"width": "35%"},
+                                                    "consistent-menu-width": False,
+                                                    "options": []
+                                                    + EqualTypeSelections
+                                                    + NotEqualTypeSelections
+                                                    + StartEndTypeSelections
+                                                    + LengthTypeSelections
+                                                    + ContainsTypeSelections
+                                                    + NullTypeSelections
+                                                    + [],
+                                                    "value": VModelProp(
+                                                        Data=[
+                                                            THIS_NODE_DATA,
+                                                            "Results",
+                                                            "ById",
+                                                            "@OutHandleName",
+                                                            "Data",
+                                                            "conditions",
+                                                            "@CondIndex",
+                                                            "operator",
+                                                        ]
+                                                    ),
+                                                },
+                                            ),
+                                        ]
+                                    },
+                                )
+                            ]
+                        },
                     ),
                     NButton(
                         style={"width": "5%"},
@@ -118,7 +205,25 @@ class UI_Cond_Card(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=FunctionProp(Funcs=[]),
+                        onClick=FunctionProp(
+                            Funcs=[
+                                REMOVEITEM_FuncProp(
+                                    Arg=FuncArg_REMOVEITEM(
+                                        DstPath=[
+                                            THIS_NODE_DATA,
+                                            "Results",
+                                            "ById",
+                                            "@OutHandleName",
+                                            "Data",
+                                            "conditions",
+                                        ],
+                                        ItemKey=VBindProp(
+                                            Data=[VFOR_DATA, "@CondIndex"]
+                                        ),
+                                    )
+                                )
+                            ]
+                        ),
                         slots={
                             "icon": NormalComponent(Type="Close"),
                         },
@@ -144,7 +249,25 @@ class UI_Branch_Card(NormalComponent):
                 "header-extra": NButton(
                     type="error",
                     text=True,
-                    onClick=FunctionProp(Funcs=[]),
+                    onClick=FunctionProp(
+                        Funcs=[
+                            REMOVERESULT_FuncProp(
+                                Arg=FuncArg_REMOVERESULT(
+                                    ResultId=VBindProp(
+                                        Data=[VFOR_DATA, "@OutHandleName"]
+                                    ),
+                                )
+                            ),
+                            REMOVEHANDLE_FuncProp(
+                                Arg=FuncArg_REMOVEHANDLE(
+                                    HandleType=VFNodeConnectionType.Outputs,
+                                    HandleId=VBindProp(
+                                        Data=[VFOR_DATA, "@OutHandleName"]
+                                    ),
+                                )
+                            ),
+                        ]
+                    ),
                     slots={
                         "default": SpanComponent(
                             Type=ComponentType.VALUE, Data="删除分支"
@@ -152,7 +275,64 @@ class UI_Branch_Card(NormalComponent):
                         "icon": NormalComponent(Type="Close"),
                     },
                 ),
-                "default": UI_Cond_Card(),
+                "default": NFlex(
+                    vertical=True,
+                    slots={
+                        "default": [
+                            ForLoopComponent(
+                                Items=VBindProp(
+                                    Data=[
+                                        THIS_NODE_DATA,
+                                        "Results",
+                                        "ById",
+                                        "@OutHandleName",
+                                        "Data",
+                                        "conditions",
+                                    ]
+                                ),
+                                ItemLabel="@CondItem",
+                                IndexLabel="@CondIndex",
+                                Template=UI_Cond_Card(),
+                            ),
+                            NButton(
+                                style={"width": "100%"},
+                                type="success",
+                                text=True,
+                                onClick=FunctionProp(
+                                    Funcs=[
+                                        APPENDITEM_FuncProp(
+                                            Arg=FuncArg_APPENDITEM(
+                                                DstPath=[
+                                                    THIS_NODE_DATA,
+                                                    "Results",
+                                                    "ById",
+                                                    "@OutHandleName",
+                                                    "Data",
+                                                    "conditions",
+                                                ],
+                                                ItemValue=Single_Condition(
+                                                    refdata="",
+                                                    operator="eq",
+                                                    comparetype=VarType.Ref,
+                                                    valueStr="",
+                                                    valueNum=0,
+                                                    valueBool=False,
+                                                ),
+                                            )
+                                        )
+                                    ]
+                                ),
+                                slots={
+                                    "default": SpanComponent(
+                                        Type=ComponentType.VALUE,
+                                        Data="添加条件",
+                                    ),
+                                    "icon": NormalComponent(Type="Add"),
+                                },
+                            ),
+                        ]
+                    },
+                ),
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(Data=[VFOR_DATA, "@OutHandleName"]),
@@ -265,7 +445,7 @@ class UI_Cond_Branch(NFlex):
                                             ),
                                             ADDRESULT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT(
-                                                    HandleId=VBindProp(
+                                                    ResultId=VBindProp(
                                                         Data=[
                                                             CONTEXT_ARG,
                                                             "bid",
@@ -283,11 +463,11 @@ class UI_Cond_Branch(NFlex):
                                                                 ],
                                                                 Replace="output-{{Data}}",
                                                             ),
-                                                            condType=ConditionType.AND,
+                                                            condIsAnd=True,
                                                             conditions=[
                                                                 Single_Condition(
                                                                     refdata="",
-                                                                    operator="==",
+                                                                    operator="eq",
                                                                     comparetype=VarType.Ref,
                                                                     valueStr="",
                                                                     valueNum=0,

@@ -38,11 +38,78 @@ from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
+# const _LengthTypeSelections = [
+#   { label: '长度等于', value: 'len_eq' },
+#   { label: '长度不等于', value: 'len_ne' },
+#   { label: '长度大于', value: 'len_gt' },
+#   { label: '长度大于等于', value: 'len_gte' },
+#   { label: '长度小于', value: 'len_lt' },
+#   { label: '长度小于等于', value: 'len_lte' },
+# ] as const satisfies readonly SelectOption[]
 
-class ConditionType(StrEnum):
-    AND = "AND"
-    OR = "OR"
-    pass
+# const _StartEndTypeSelections = [
+#   { label: '开头是', value: 'startwith' },
+#   { label: '结尾是', value: 'endwith' },
+# ] as const satisfies readonly SelectOption[]
+
+# const _NullTypeSelections = [
+#   { label: '为空', value: 'isnull' },
+#   { label: '不为空', value: 'notnull' },
+# ] as const satisfies readonly SelectOption[]
+
+# const _EqualTypeSelections = [
+#   { label: '等于', value: 'eq' },
+#   { label: '不等于', value: 'ne' },
+# ] as const satisfies readonly SelectOption[]
+
+# const _NotEuqalTypeSelections = [
+#   { label: '大于', value: 'gt' },
+#   { label: '大于等于', value: 'gte' },
+#   { label: '小于', value: 'lt' },
+#   { label: '小于等于', value: 'lte' },
+# ] as const satisfies readonly SelectOption[]
+
+# const _ContainsTypeSelections = [
+#   { label: '包含', value: 'contains' },
+#   { label: '不包含', value: 'notcontains' },
+# ] as const satisfies readonly SelectOption[]
+
+# const _BooleanTypeSelections = [
+#   { label: '为true', value: 'istrue' },
+#   { label: '为false', value: 'isfalse' },
+# ] as const satisfies readonly SelectOption[]
+
+LengthTypeSelections = [
+    SelectOptions(label="长度等于", value="len_eq"),
+    SelectOptions(label="长度不等于", value="len_ne"),
+    SelectOptions(label="长度大于", value="len_gt"),
+    SelectOptions(label="长度大于等于", value="len_gte"),
+    SelectOptions(label="长度小于", value="len_lt"),
+    SelectOptions(label="长度小于等于", value="len_lte"),
+]
+StartEndTypeSelections = [
+    SelectOptions(label="开头是", value="startwith"),
+    SelectOptions(label="结尾是", value="endwith"),
+]
+NullTypeSelections = [
+    SelectOptions(label="为空", value="isnull"),
+    SelectOptions(label="不为空", value="notnull"),
+]
+EqualTypeSelections = [
+    SelectOptions(label="等于", value="eq"),
+    SelectOptions(label="不等于", value="neq"),
+]
+NotEqualTypeSelections = [
+    SelectOptions(label="大于", value="gt"),
+    SelectOptions(label="大于等于", value="gte"),
+    SelectOptions(label="小于", value="lt"),
+    SelectOptions(label="小于等于", value="lte"),
+]
+ContainsTypeSelections = [
+    SelectOptions(label="包含", value="contains"),
+    SelectOptions(label="不包含", value="notcontains"),
+]
+
 
 
 class Single_Condition(BaseModel):
@@ -57,7 +124,7 @@ class Single_Condition(BaseModel):
 
 class Single_ConditionDict(BaseModel):
     outputKey: ReadOnlyPropVar
-    condType: ConditionType
+    condIsAnd: bool
     conditions: List[Single_Condition]
     pass
 
