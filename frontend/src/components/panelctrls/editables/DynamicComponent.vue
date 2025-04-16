@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { z } from 'zod'
 import {
   h,
   resolveComponent,
@@ -21,6 +22,7 @@ import type {
   ReadOnlyPropVar,
   FunctionProp,
   Condition,
+  VBindProp,
   ValueProp,
 } from '@/schemas/plugin_schemas'
 import {
@@ -29,6 +31,8 @@ import {
   THIS_NODE_DATA,
   NODE_CONFIG_DATA,
   CONTEXT_FUNCTION,
+  CONTEXT_ARG,
+  GENERATE_UUID,
   VFOR_DATA,
   CONNECT_DATA,
   CONNECT_DATA_HANDLE,
@@ -58,8 +62,14 @@ import {
 } from '@/hooks/useVFlowAttribute'
 import { type SelectOption } from 'naive-ui'
 import { useNodeUtils, type VarItem } from '@/hooks/useNodeUtils'
-import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
+import {
+  type CodeEditorLanguage,
+  type VFNodeHandleData,
+  VFNodeConnectionType,
+  type VFNodeContentData,
+} from '@/components/nodes/VFNodeInterface'
 import { cloneDeep } from 'lodash'
+import { getUuid } from '@/utils/tools'
 
 defineOptions({
   name: 'DynamicComponent',
@@ -125,6 +135,8 @@ const getValueByPath = (path: (string | number)[]): any => {
   } else if (resolvePath[0] === NODE_CONFIG_DATA) {
     const nodeConfig = getNodeConfig(selectedNodeId.value as string)
     return resolvePath.slice(1).reduce((acc, key) => acc?.[key], nodeConfig)
+  } else if (resolvePath[0] === GENERATE_UUID) {
+    return getUuid()
   }
   console.error('Invalid connect option path')
   return null
@@ -198,10 +210,15 @@ const appendItemByPath = (path: (string | number)[], value: any) => {
 }
 
 // Results添加项
-const addItem2Results = (handleid: string, result: any) => {
+const addItem2Results = (
+  handleid: string,
+  result: any,
+  rid: string | null = null,
+  did: string | null = null,
+) => {
   const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
   if (nodedata) {
-    nodedata.addResultWithConnection(result, handleid)
+    nodedata.addResultWithConnection(result, handleid, rid, did)
     return
   }
   console.error('Unsupported append path')
@@ -216,6 +233,51 @@ const removeItem4Results = (rid: string) => {
   console.error('Unsupported remove path')
 }
 
+// 添加Handle
+const addHandle = (handleType: VFNodeConnectionType, handleId: string, handleLabel?: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.addHandle(handleType, handleId, handleLabel)
+    if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
+    return
+  }
+  console.error('Unsupported add handle')
+}
+// 删除Handle
+const removeHandle = (handleType: VFNodeConnectionType, handleId: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.rmHandle(handleType, handleId)
+    if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
+    return
+  }
+  console.error('Unsupported remove handle')
+}
+// 添加Handle数据
+const addHandleData = (
+  handleType: VFNodeConnectionType,
+  handleId: string,
+  data: VFNodeHandleData,
+  dataId?: string,
+) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.addHandleData(handleType, handleId, data, dataId)
+    return
+  }
+  console.error('Unsupported add handle data')
+}
+
+// 删除Handle数据
+const removeHandleData = (handleType: VFNodeConnectionType, handleId: string, dataId: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.rmHandleData(handleType, handleId, dataId)
+    return
+  }
+  console.error('Unsupported remove handle data')
+}
+
 // 打开编辑器
 const openCodeEditor = (path: (string | number)[], lang: CodeEditorLanguage) => {
   // 解析路径
@@ -228,12 +290,53 @@ const openCodeEditor = (path: (string | number)[], lang: CodeEditorLanguage) => 
     isShowCodeEditor.value = true
   }
 }
+
+// 这里需要递归解析result，解包ReadOnlyPropVar
+const parseResult = (result: VFNodeContentData, getValueFunc: Function) => {
+  const parseValue = (value: any): any => {
+    if (typeof value === 'object' && value !== null) {
+      // 使用 zod 进行类型验证
+      const ReadOnlyPropVarSchema = z.object({
+        Type: z.enum([PropVarType.Value, PropVarType.VBind]),
+        Data: z.any(),
+        Replace: z.string().optional(),
+      }).strict()
+      if (ReadOnlyPropVarSchema.safeParse(value).success) {
+        // This is a ReadOnlyPropVar
+        return getValueFunc(value as ReadOnlyPropVar)
+      } else if (Array.isArray(value)) {
+        return value.map(parseValue)
+      } else {
+        const parsed: Record<string, any> = {}
+        for (const [key, val] of Object.entries(value)) {
+          parsed[key] = parseValue(val)
+        }
+        return parsed
+      }
+    }
+    return value
+  }
+
+  return parseValue(result)
+}
+
+const replaceVBindProp = (prop: VBindProp | SpanComponent): any => {
+  if (prop.Replace) {
+    const data = getValueByPath(prop.Data)
+    if (typeof data === 'string') {
+      return prop.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
+        return data
+      })
+    }
+  }
+  return getValueByPath(prop.Data)
+}
 const getPropValueFromReadOnlyPropVar = (prop: ReadOnlyPropVar): any => {
   switch (prop.Type) {
     case PropVarType.Value:
       return prop.Data
     case PropVarType.VBind:
-      return getValueByPath(prop.Data)
+      return replaceVBindProp(prop)
     default:
       return null
   }
@@ -255,7 +358,7 @@ const processedProps = computed(() => {
         propsObj[propName] = prop.Data
         break
       case PropVarType.VBind:
-        propsObj[propName] = getValueByPath(prop.Data)
+        propsObj[propName] = replaceVBindProp(prop)
         break
       case PropVarType.VModel:
         propsObj[propName] = getValueByPath(prop.Data)
@@ -265,60 +368,98 @@ const processedProps = computed(() => {
         break
       case PropVarType.Function:
         const prop_Functions = prop as FunctionProp
-        for (const prop_Function of prop_Functions.Funcs) {
-          if (prop_Function.Func == FunctionPropType.ADDITEM) {
-            const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
-            if (!!ItemKey && !!ItemValue && !!DstPath) {
-              propsObj[propName] = () =>
-                addItemByPath(
-                  DstPath,
-                  getPropValueFromReadOnlyPropVar(ItemKey),
-                  cloneDeep(ItemValue),
-                )
-            } else {
-              console.error('Invalid add item function')
+        const functions: (() => void)[] = []
+        const f_Context: Record<string, any> = {}
+        const getValueFrom_f_Context = (propvar: ReadOnlyPropVar | null | undefined) => {
+          if (!propvar) return null
+          if (propvar.Type === PropVarType.VBind && propvar.Data[0] === CONTEXT_ARG) {
+            const data = propvar.Data.slice(1).reduce((acc, key) => acc?.[key], f_Context)
+            if (propvar.Replace && typeof data === 'string') {
+              return propvar.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
+                return data
+              })
             }
+            return data
+          }
+          return getPropValueFromReadOnlyPropVar(propvar)
+        }
+
+        for (const prop_Function of prop_Functions.Funcs) {
+          if (prop_Function.Func == FunctionPropType.SETCONTEXT) {
+            const { Key, Value } = prop_Function.Arg
+            if (Key && Value) {
+              f_Context[getPropValueFromReadOnlyPropVar(Key)] =
+                getPropValueFromReadOnlyPropVar(Value)
+            } else {
+              console.error('Invalid set context function')
+            }
+          } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
+            const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
+            functions.push(() =>
+              addItemByPath(DstPath, getValueFrom_f_Context(ItemKey), cloneDeep(ItemValue)),
+            )
           } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
             const { ItemKey, DstPath } = prop_Function.Arg
-            if (!!ItemKey && !!DstPath) {
-              propsObj[propName] = () =>
-                removeItemByPath(DstPath, getPropValueFromReadOnlyPropVar(ItemKey))
-            } else {
-              console.error('Invalid remove item function')
-            }
+            functions.push(() => removeItemByPath(DstPath, getValueFrom_f_Context(ItemKey)))
           } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
             const { DstPath, ItemValue } = prop_Function.Arg
-            if (!!ItemValue && !!DstPath) {
-              propsObj[propName] = () => appendItemByPath(DstPath, cloneDeep(ItemValue))
-            } else {
-              console.error('Invalid append item function')
-            }
+            functions.push(() => appendItemByPath(DstPath, cloneDeep(ItemValue)))
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
-            const { HandleId, Result } = prop_Function.Arg
-            if (!!HandleId && !!Result) {
-              propsObj[propName] = () => addItem2Results(HandleId, cloneDeep(Result))
-            } else {
-              console.error('Invalid add result function')
-            }
+            const { HandleId, Result, ResultId, DataId } = prop_Function.Arg
+            functions.push(() =>
+              addItem2Results(
+                getValueFrom_f_Context(HandleId),
+                cloneDeep(parseResult(Result, getValueFrom_f_Context)),
+                getValueFrom_f_Context(ResultId),
+                getValueFrom_f_Context(DataId),
+              ),
+            )
           } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
             const { ResultId } = prop_Function.Arg
-            if (!!ResultId) {
-              propsObj[propName] = () =>
-                removeItem4Results(getPropValueFromReadOnlyPropVar(ResultId))
-            } else {
-              console.error('Invalid remove result function')
-            }
+            functions.push(() => removeItem4Results(getValueFrom_f_Context(ResultId)))
+          } else if (prop_Function.Func == FunctionPropType.ADDHANDLE) {
+            const { HandleType, HandleId, HandleLabel } = prop_Function.Arg
+            functions.push(() =>
+              addHandle(
+                HandleType,
+                getValueFrom_f_Context(HandleId),
+                getValueFrom_f_Context(HandleLabel),
+              ),
+            )
+          } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLE) {
+            const { HandleType, HandleId } = prop_Function.Arg
+            functions.push(() => removeHandle(HandleType, getValueFrom_f_Context(HandleId)))
+          } else if (prop_Function.Func == FunctionPropType.ADDHANDLEDATA) {
+            const { HandleType, HandleId, Data, DataId } = prop_Function.Arg
+            functions.push(() =>
+              addHandleData(
+                HandleType,
+                getValueFrom_f_Context(HandleId),
+                Data,
+                getValueFrom_f_Context(DataId),
+              ),
+            )
+          } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLEDATA) {
+            const { HandleType, HandleId, DataId } = prop_Function.Arg
+            functions.push(() =>
+              removeHandleData(
+                HandleType,
+                getValueFrom_f_Context(HandleId),
+                getValueFrom_f_Context(DataId),
+              ),
+            )
           } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
             const { DstPath, Language } = prop_Function.Arg
-            if (!!DstPath && !!Language) {
-              propsObj[propName] = () => openCodeEditor(DstPath, Language)
-            } else {
-              console.error('Invalid open code editor function')
-            }
+            functions.push(() => openCodeEditor(DstPath, Language))
           } else if (prop_Function.Func == FunctionPropType.UPDATENODEINTERNAL) {
-            propsObj[propName] = () => {
+            functions.push(() => {
               if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
-            }
+            })
+          }
+        }
+        propsObj[propName] = () => {
+          for (const func of functions) {
+            func()
           }
         }
         break
@@ -367,7 +508,7 @@ const handleLogical = (config: LogicalCondition) => {
 
 // 获取Span组件的值
 const getSpanValue = (config: SpanComponent): any => {
-  return config.Type === PropVarType.VBind ? getValueByPath(config.Data) : config.Data
+  return config.Type === PropVarType.VBind ? replaceVBindProp(config) : config.Data
 }
 
 // 循环处理器
@@ -378,7 +519,7 @@ const handleForLoop = (config: ForLoopComponent) => {
   if (config.Items.Type === PropVarType.Value) {
     items = config.Items.Data
   } else if (config.Items.Type === PropVarType.VBind) {
-    items = getValueByPath(config.Items.Data)
+    items = replaceVBindProp(config.Items)
   }
   const itemLabel = config.ItemLabel || '@Item'
   const indexLabel = config.IndexLabel || '@Index'

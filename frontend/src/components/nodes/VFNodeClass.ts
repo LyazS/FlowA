@@ -147,6 +147,13 @@ class VFNode implements BaseVFNodeData {
 
   // 连接点操作 ====================================================
   addHandle(connectType: VFNodeConnectionType, handleId: string, label?: string): this {
+    if (connectType === VFNodeConnectionType.Inputs && !handleId.startsWith("input")) {
+      throw new Error(`Handle ID must start with 'input' for ${connectType}`);
+    }
+    if (connectType === VFNodeConnectionType.Outputs && !handleId.startsWith("output")) {
+      throw new Error(`Handle ID must start with 'output' for ${connectType}`);
+    }
+
     this.Connections[connectType].ById[handleId] = {
       Label: label || handleId,
       Data: {},

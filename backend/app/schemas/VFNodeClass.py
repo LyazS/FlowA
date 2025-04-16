@@ -140,6 +140,15 @@ class VFNode(VFNodeData):
         handle_id: str,
         label: Optional[str] = None,
     ) -> "VFNode":
+        if connect_type == VFNodeConnectionType.Inputs and not handle_id.startswith(
+            "input"
+        ):
+            raise ValueError(f"Handle ID must start with 'input' for {connect_type}")
+        if connect_type == VFNodeConnectionType.Outputs and not handle_id.startswith(
+            "output"
+        ):
+            raise ValueError(f"Handle ID must start with 'output' for {connect_type}")
+
         connection: VFNodeConnection = getattr(self.Connections, connect_type.value)
         connection.ById[handle_id] = VFNodeHandle(Label=label or handle_id, Data={})
         connection.Order.append(handle_id)

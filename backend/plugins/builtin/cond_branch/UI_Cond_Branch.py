@@ -1,9 +1,16 @@
-from app.uisdk import *
+from app.schemas.VFNodeInterface import (
+    VFNodeConnectionType,
+    VFNodeConnectionDataType,
+    VFNodeContentData,
+)
 
+from app.uisdk import *
 from ..UI_Components.NFlex import NFlex
 from ..UI_Components.Header import Header
 from ..UI_Components.NText import NText
 from ..UI_Components.NButton import NButton
+from .cond_branch import ConditionType, Single_Condition, Single_ConditionDict
+from ..UI_Components.UI_InputVars import VarType
 
 
 class branch_header(NFlex):
@@ -103,9 +110,7 @@ class UI_Cond_Card(NFlex):
                             "hoverable": True,
                             "size": "small",
                         },
-                        Slots={
-                            
-                        },
+                        Slots={},
                     ),
                     NButton(
                         style={"width": "5%"},
@@ -210,10 +215,88 @@ class UI_Cond_Branch(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(Funcs=[]),
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            SETCONTEXT_FuncProp(
+                                                Arg=FuncArg_SETCONTEXT(
+                                                    Key=ValueProp(Data="bid"),
+                                                    Value=VBindProp(
+                                                        Data=[GENERATE_UUID]
+                                                    ),
+                                                )
+                                            ),
+                                            ADDHANDLE_FuncProp(
+                                                Arg=FuncArg_ADDHANDLE(
+                                                    HandleType=VFNodeConnectionType.Outputs,
+                                                    HandleId=VBindProp(
+                                                        Data=[
+                                                            CONTEXT_ARG,
+                                                            "bid",
+                                                        ],
+                                                        Replace="output-{{Data}}",  # handle必须以output|input开头
+                                                    ),
+                                                    HandleLabel=ValueProp(
+                                                        Data="分支【请修改名字】"
+                                                    ),
+                                                )
+                                            ),
+                                            ADDHANDLEDATA_FuncProp(
+                                                Arg=FuncArg_ADDHANDLEDATA(
+                                                    HandleType=VFNodeConnectionType.Outputs,
+                                                    HandleId=VBindProp(
+                                                        Data=[
+                                                            CONTEXT_ARG,
+                                                            "bid",
+                                                        ],
+                                                        Replace="output-{{Data}}",
+                                                    ),
+                                                    Data=VFNodeHandleData(
+                                                        Type=VFNodeConnectionDataType.FromOuter,
+                                                        HandleId="input-var",
+                                                    ),
+                                                )
+                                            ),
+                                            ADDRESULT2OUT_FuncProp(
+                                                Arg=FuncArg_ADDRESULT2OUT(
+                                                    HandleId=VBindProp(
+                                                        Data=[
+                                                            CONTEXT_ARG,
+                                                            "bid",
+                                                        ],
+                                                        Replace="output-{{Data}}",
+                                                    ),
+                                                    Result=VFNodeContentData(
+                                                        Label="-",
+                                                        Type="Dict",
+                                                        Data=Single_ConditionDict(
+                                                            outputKey=VBindProp(
+                                                                Data=[
+                                                                    CONTEXT_ARG,
+                                                                    "bid",
+                                                                ],
+                                                                Replace="output-{{Data}}",
+                                                            ),
+                                                            condType=ConditionType.AND,
+                                                            conditions=[
+                                                                Single_Condition(
+                                                                    refdata="",
+                                                                    operator="==",
+                                                                    comparetype=VarType.Ref,
+                                                                    valueStr="",
+                                                                    valueNum=0,
+                                                                    valueBool=False,
+                                                                )
+                                                            ],
+                                                        ),
+                                                    ),
+                                                )
+                                            ),
+                                        ]
+                                    ),
                                     slots={
                                         "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="新增分支"
+                                            Type=ComponentType.VALUE,
+                                            Data="新增分支",
                                         ),
                                         "icon": NormalComponent(Type="Add"),
                                     },

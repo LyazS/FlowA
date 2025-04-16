@@ -1,7 +1,11 @@
 from typing import Literal, Union, List, Dict, Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from enum import StrEnum
-
+from app.schemas.VFNodeInterface import (
+    VFNodeConnectionType,
+    VFNodeHandleData,
+    VFNodeContentData,
+)
 
 """
 vue数据结构定义
@@ -76,6 +80,7 @@ class VBindProp(PropVarBase):
     Data: List[Union[str, int]] = Field(
         ..., description="数据路径数组，如 ['path', 'to', 'data']", min_length=1
     )
+    Replace: Optional[str] = Field(None, description="替换模板")
 
 
 class VModelProp(PropVarBase):
@@ -87,6 +92,7 @@ class VModelProp(PropVarBase):
 
 # ================= 函数类型增强 =================
 class FunctionPropType(StrEnum):
+    SETCONTEXT = "@SETCONTEXT@"
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
     APPENDITEM = "@APPENDITEM@"
@@ -101,11 +107,17 @@ class FunctionPropType(StrEnum):
     pass
 
 
+class FuncArg_SETCONTEXT(BaseModel):
+    Key: "ReadOnlyPropVar" = Field(..., description="上下文键名")
+    Value: "ReadOnlyPropVar" = Field(..., description="上下文值")
+    pass
+
+
 class FuncArg_ADDITEM(BaseModel):
     DstPath: List[Union[str, int]] = Field(
         ..., description="目标路径数组", min_length=1
     )
-    ItemValue: Any = Field(None, description="item的value数据")
+    ItemValue: Any = Field(..., description="item的value数据")
     ItemKey: "ReadOnlyPropVar" = Field(..., description="item的key")
     pass
 
@@ -122,13 +134,15 @@ class FuncArg_APPENDITEM(BaseModel):
     DstPath: List[Union[str, int]] = Field(
         ..., description="目标路径数组", min_length=1
     )
-    ItemValue: Any = Field(None, description="item的value数据")
+    ItemValue: Any = Field(..., description="item的value数据")
     pass
 
 
 class FuncArg_ADDRESULT2OUT(BaseModel):
-    HandleId: str = Field(..., description="输出句柄id")
-    Result: Any = Field(..., description="结果数据")
+    HandleId: "ReadOnlyPropVar" = Field(..., description="输出句柄id")
+    Result: VFNodeContentData = Field(..., description="结果数据")
+    ResultId: Optional["ReadOnlyPropVar"] = Field(None, description="结果id")
+    DataId: Optional["ReadOnlyPropVar"] = Field(None, description="连接数据id")
     pass
 
 
@@ -146,18 +160,30 @@ class FuncArg_OPENEDITOR(BaseModel):
 
 
 class FuncArg_ADDHANDLE(BaseModel):
+    HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
+    HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
+    HandleLabel: Optional["ReadOnlyPropVar"] = Field(None, description="句柄标签")
     pass
 
 
 class FuncArg_REMOVEHANDLE(BaseModel):
+    HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
+    HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
     pass
 
 
 class FuncArg_ADDHANDLEDATA(BaseModel):
+    HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
+    HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
+    Data: VFNodeHandleData = Field(..., description="数据")
+    DataId: Optional["ReadOnlyPropVar"] = Field(None, description="连接数据id")
     pass
 
 
 class FuncArg_REMOVEHANDLEDATA(BaseModel):
+    HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
+    HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
+    DataId: Optional["ReadOnlyPropVar"] = Field(..., description="连接数据id")
     pass
 
 
@@ -167,6 +193,11 @@ class FuncArg_REMOVEHANDLEDATA(BaseModel):
 class _FuncPropBase(BaseModel):
     Func: FunctionPropType
     Arg: Any
+
+
+class SETCONTEXT_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.SETCONTEXT] = FunctionPropType.SETCONTEXT
+    Arg: FuncArg_SETCONTEXT
 
 
 class ADDITEM_FuncProp(_FuncPropBase):
@@ -227,6 +258,7 @@ class OPENEDITOR_FuncProp(_FuncPropBase):
 
 
 SingleFunctionProp = Union[
+    SETCONTEXT_FuncProp,
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
     APPENDITEM_FuncProp,
@@ -331,6 +363,7 @@ class NormalComponent(BaseComponent):
 class SpanComponent(BaseComponent):
     Type: Literal[ComponentType.VALUE, ComponentType.VBIND]
     Data: Union[Any, List[Union[str, int]]]  # 联合类型
+    Replace: Optional[str] = Field(None, description="替换模板")
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
 

@@ -39,6 +39,29 @@ from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
+class ConditionType(StrEnum):
+    AND = "AND"
+    OR = "OR"
+    pass
+
+
+class Single_Condition(BaseModel):
+    refdata: str
+    operator: str
+    comparetype: VarType
+    valueStr: str
+    valueNum: int | float
+    valueBool: bool
+    pass
+
+
+class Single_ConditionDict(BaseModel):
+    outputKey: ReadOnlyPropVar
+    condType: ConditionType
+    conditions: List[Single_Condition]
+    pass
+
+
 class CondBranch(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)

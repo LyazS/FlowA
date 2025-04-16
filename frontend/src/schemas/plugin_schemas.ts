@@ -1,4 +1,9 @@
-import { type CodeEditorLanguage } from '@/components/nodes/VFNodeInterface'
+import {
+  type CodeEditorLanguage,
+  type VFNodeHandleData,
+  VFNodeConnectionType,
+  type VFNodeContentData,
+} from '@/components/nodes/VFNodeInterface'
 
 // 特殊定义 =====================================================================
 
@@ -8,6 +13,9 @@ export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
 export const VFOR_DATA = '@VFOR_DATA@' as const
 export const NODE_CONFIG_DATA = '@NODE_CONFIG_DATA@' as const
 export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
+export const CONTEXT_ARG = '@CONTEXT_ARG@' as const
+// 专供FUNCTION_CONTEXT
+export const GENERATE_UUID = '@GENERATE_UUID@' as const
 // 连接项定义，路径为[CONNECT_*, <Handle Type>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
 export const CONNECT_DATA = '@CONNECT_DATA@' as const
 export const CONNECT_DATA_HANDLE = '@CONNECT_DATA_HANDLE@' as const
@@ -23,6 +31,7 @@ export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
 export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
 export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
 export enum FunctionPropType {
+  SETCONTEXT = '@SETCONTEXT@',
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
   APPENDITEM = '@APPENDITEM@',
@@ -32,7 +41,7 @@ export enum FunctionPropType {
   REMOVEHANDLE = '@REMOVEHANDLE@',
   ADDHANDLEDATA = '@ADDHANDLEDATA@',
   REMOVEHANDLEDATA = '@REMOVEHANDLEDATA@',
-  UPDATENODEINTERNAL = "@UPDATENODEINTERNAL@",
+  UPDATENODEINTERNAL = '@UPDATENODEINTERNAL@',
   OPENEDITOR = '@OPENEDITOR@',
 }
 export enum PropVarType {
@@ -55,6 +64,7 @@ export interface ValueProp<T = any> extends PropVarBase {
 export interface VBindProp extends PropVarBase {
   Type: PropVarType.VBind
   Data: (string | number)[]
+  Replace?: string
 }
 
 export interface VModelProp extends PropVarBase {
@@ -62,20 +72,155 @@ export interface VModelProp extends PropVarBase {
   Data: (string | number)[]
 }
 
+// 函数参数接口定义
+export interface FuncArg_SETCONTEXT {
+  Key: ReadOnlyPropVar
+  Value: ReadOnlyPropVar
+}
+
+export interface FuncArg_ADDITEM {
+  DstPath: (string | number)[]
+  ItemKey: ReadOnlyPropVar
+  ItemValue: any
+}
+
+export interface FuncArg_REMOVEITEM {
+  DstPath: (string | number)[]
+  ItemKey: ReadOnlyPropVar
+}
+
+export interface FuncArg_APPENDITEM {
+  DstPath: (string | number)[]
+  ItemValue: any
+}
+
+export interface FuncArg_ADDRESULT2OUT {
+  Result: VFNodeContentData
+  HandleId: ReadOnlyPropVar
+  ResultId?: ReadOnlyPropVar
+  DataId?: ReadOnlyPropVar
+}
+
+export interface FuncArg_REMOVERESULT4OUT {
+  ResultId: ReadOnlyPropVar
+}
+
+export interface FuncArg_ADDHANDLE {
+  HandleType: VFNodeConnectionType
+  HandleId: ReadOnlyPropVar
+  HandleLabel?: ReadOnlyPropVar
+}
+
+export interface FuncArg_REMOVEHANDLE {
+  HandleType: VFNodeConnectionType
+  HandleId: ReadOnlyPropVar
+}
+
+export interface FuncArg_ADDHANDLEDATA {
+  HandleType: VFNodeConnectionType
+  HandleId: ReadOnlyPropVar
+  Data: VFNodeHandleData
+  DataId?: ReadOnlyPropVar
+}
+
+export interface FuncArg_REMOVEHANDLEDATA {
+  HandleType: VFNodeConnectionType
+  HandleId: ReadOnlyPropVar
+  DataId: ReadOnlyPropVar
+}
+
+export interface FuncArg_OPENEDITOR {
+  Language: CodeEditorLanguage
+  Value: ReadOnlyPropVar
+  DstPath: (string | number)[]
+}
+
+// 函数属性基类
+export interface _FuncPropBase {
+  Func: FunctionPropType
+  Arg: any
+}
+
+// 特定函数类型接口
+export interface SETCONTEXT_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.SETCONTEXT
+  Arg: FuncArg_SETCONTEXT
+}
+
+export interface ADDITEM_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDITEM
+  Arg: FuncArg_ADDITEM
+}
+
+export interface REMOVEITEM_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVEITEM
+  Arg: FuncArg_REMOVEITEM
+}
+
+export interface APPENDITEM_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.APPENDITEM
+  Arg: FuncArg_APPENDITEM
+}
+
+export interface ADDRESULT2OUT_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDRESULT2OUT
+  Arg: FuncArg_ADDRESULT2OUT
+}
+
+export interface REMOVERESULT4OUT_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVERESULT4OUT
+  Arg: FuncArg_REMOVERESULT4OUT
+}
+
+export interface ADDHANDLE_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDHANDLE
+  Arg: FuncArg_ADDHANDLE
+}
+
+export interface REMOVEHANDLE_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVEHANDLE
+  Arg: FuncArg_REMOVEHANDLE
+}
+
+export interface ADDHANDLEDATA_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDHANDLEDATA
+  Arg: FuncArg_ADDHANDLEDATA
+}
+
+export interface REMOVEHANDLEDATA_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVEHANDLEDATA
+  Arg: FuncArg_REMOVEHANDLEDATA
+}
+
+export interface UPDATENODEINTERNAL_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.UPDATENODEINTERNAL
+  Arg: any
+}
+
+export interface OPENEDITOR_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.OPENEDITOR
+  Arg: FuncArg_OPENEDITOR
+}
+
+// 单个函数属性联合类型
+export type SingleFunctionProp =
+  | SETCONTEXT_FuncProp
+  | ADDITEM_FuncProp
+  | REMOVEITEM_FuncProp
+  | APPENDITEM_FuncProp
+  | ADDRESULT2OUT_FuncProp
+  | REMOVERESULT4OUT_FuncProp
+  | ADDHANDLE_FuncProp
+  | REMOVEHANDLE_FuncProp
+  | ADDHANDLEDATA_FuncProp
+  | REMOVEHANDLEDATA_FuncProp
+  | UPDATENODEINTERNAL_FuncProp
+  | OPENEDITOR_FuncProp
+
+// 函数属性接口
 export interface FunctionProp extends PropVarBase {
   Type: PropVarType.Function
-  Funcs: {
-    Func: FunctionPropType
-    Arg: {
-      DstPath?: (string | number)[]
-      ItemKey?: ReadOnlyPropVar
-      ItemValue?: any
-      HandleId?: string
-      Result?: any
-      ResultId?: ReadOnlyPropVar
-      Language?: CodeEditorLanguage
-    }
-  }[]
+  Funcs: SingleFunctionProp[]
 }
 
 export type PropVar = ValueProp | VBindProp | VModelProp | FunctionProp
@@ -95,6 +240,7 @@ export interface SpanComponent {
   Type: typeof TYPE_VALUE | typeof TYPE_VBIND
   Data: (string | number)[] | any
   IfCondition?: Condition
+  Replace?: string
   // 特殊绑定组件不允许有子组件
   Slots?: never
   Props?: never

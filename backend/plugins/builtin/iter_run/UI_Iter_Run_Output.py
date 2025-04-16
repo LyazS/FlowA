@@ -51,7 +51,7 @@ class UI_Iter_Run_Output(NFlex):
                                         Funcs=[
                                             ADDRESULT2OUT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT2OUT(
-                                                    HandleId="output",
+                                                    HandleId=ValueProp(Data="output"),
                                                     Result=VFNodeContentData(
                                                         Label="",
                                                         Type="List",
