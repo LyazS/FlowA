@@ -107,6 +107,22 @@ const saveTitle = () => {
   }
 }
 
+/*
+对于连接的使用需求：
+1. 节点
+  1.1. 本节点
+  1.2. 父节点
+  1.3. 子节点
+  1.4. 附属节点
+  1.5. 前导节点
+2. handle
+  2.1. 节点的输入输出handle
+3. 变量（总是递归的）
+  3.1. handle的递归变量
+4. 最终格式
+  NODE{xxx}HANDLE{xxx}VAR{xxx}
+*/
+
 // 连接变量选择相关
 const _VarSelection: Record<string, ComputedRef<VarItem[]>> = {}
 const getOrCreateVarSelection = (path: string[]) => {
@@ -177,6 +193,10 @@ const getOrCreateVarSelectionWHandle = (path: string[]) => {
   return _VarSelectionWHandle[key].value
 }
 provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
+
+const getConnectionsByPath = (path: (string | number)[]) => {
+
+}
 
 // 节点config相关
 const getNodeConfig = (nid: string) => {

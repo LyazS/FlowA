@@ -322,7 +322,7 @@ const openCodeEditor = (path: (string | number)[], lang: CodeEditorLanguage) => 
 }
 
 // 这里需要递归解析result，解包ReadOnlyPropVar
-const parseResult = (result: VFNodeContentData, getValueFunc: Function) => {
+const parseResult = (result: any, getValueFunc: Function) => {
   const parseValue = (value: any): any => {
     if (typeof value === 'object' && value !== null) {
       // 使用 zod 进行类型验证
@@ -414,14 +414,16 @@ const processedProps = computed(() => {
           } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
             functions.push((getFunc, setFunc) =>
-              addItemByPath(DstPath, getFunc(ItemKey), cloneDeep(ItemValue)),
+              addItemByPath(DstPath, getFunc(ItemKey), cloneDeep(parseResult(ItemValue, getFunc))),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
             const { ItemKey, DstPath } = prop_Function.Arg
             functions.push((getFunc, setFunc) => removeItemByPath(DstPath, getFunc(ItemKey)))
           } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
             const { DstPath, ItemValue } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => appendItemByPath(DstPath, cloneDeep(ItemValue)))
+            functions.push((getFunc, setFunc) =>
+              appendItemByPath(DstPath, cloneDeep(parseResult(ItemValue, getFunc))),
+            )
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT) {
             const { Result, ResultId, Position } = prop_Function.Arg
             functions.push((getFunc, setFunc) =>

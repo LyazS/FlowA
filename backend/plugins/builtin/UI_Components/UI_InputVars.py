@@ -19,6 +19,7 @@ class VarType(StrEnum):
     Number = "Number"
     Boolean = "Boolean"
     File = "File"
+    Any = "Any"
     pass
 
 
