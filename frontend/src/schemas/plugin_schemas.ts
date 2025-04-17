@@ -5,8 +5,8 @@ import {
   type VFNodeContentData,
 } from '@/components/nodes/VFNodeInterface'
 import { InsertPos } from '@/components/nodes/VFNodeClass'
-// 特殊定义 =====================================================================
 
+// 特殊定义 =====================================================================
 // 路径定义
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
 export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
@@ -20,6 +20,12 @@ export const GENERATE_UUID = '@GENERATE_UUID@' as const
 export const CONNECT_DATA = '@CONNECT_DATA@' as const
 export const CONNECT_DATA_HANDLE = '@CONNECT_DATA_HANDLE@' as const
 export const CONNECT_DATA_TO_SELECT = '@CONNECT_DATA_TO_SELECT@' as const
+// 连接项的路径定义
+export const CONNECT_ALL_DATA = '@CONNECT_ALL_DATA@'
+export const CONNECT_CUR_NODE = '@CONNECT_CUR_NODE@'
+export const CONNECT_PARENT_NODE = '@CONNECT_PARENT_NODE@'
+export const CONNECT_CHILD_NODE = '@CONNECT_CHILD_NODE@'
+export const CONNECT_PRE_NODE = '@CONNECT_PRE_NODE@'
 // 类型定义
 export const TYPE_VFOR = '@VFOR@' as const
 export const TYPE_VALUE = '@VALUE@' as const

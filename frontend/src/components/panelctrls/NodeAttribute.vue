@@ -42,6 +42,11 @@ import {
   CONTEXT_FUNCTION,
   VFOR_DATA,
   CONNECT_DATA_TO_SELECT,
+  CONNECT_ALL_DATA,
+  CONNECT_CUR_NODE,
+  CONNECT_PARENT_NODE,
+  CONNECT_CHILD_NODE,
+  CONNECT_PRE_NODE,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -60,6 +65,7 @@ import {
   type VFNodeHandle,
   VFNodeConnectionDataType,
 } from '@/components/nodes/VFNodeInterface'
+import { object } from 'zod'
 const { recursiveFindVariables, mapVarItemToSelect } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
 
@@ -107,21 +113,179 @@ const saveTitle = () => {
   }
 }
 
-/*
-对于连接的使用需求：
-1. 节点
-  1.1. 本节点
-  1.2. 父节点
-  1.3. 子节点
-  1.4. 附属节点
-  1.5. 前导节点
-2. handle
-  2.1. 节点的输入输出handle
-3. 变量（总是递归的）
-  3.1. handle的递归变量
-4. 最终格式
-  NODE{xxx}HANDLE{xxx}VAR{xxx}
-*/
+const getConnectionsByPath = (args: string[]) => {
+  /*
+  对于连接的使用需求：
+  1. 节点
+    1.1. 本节点
+    1.2. 父节点
+    1.3. 子节点
+    1.4. 前导节点
+  2. handle
+    2.1. 节点的输入输出handle
+  3. 变量（总是递归的）
+    3.1. handle的递归变量
+  4. 最终格式
+    NODE{xxx}HANDLE{xxx}VAR{xxx}
+  */
+  /* args应该符合这个格式
+  参考python的argparse方式
+  ====================================================
+  --node 必填
+    CONNECT_CUR_NODE
+      该节点
+    CONNECT_PARENT_NODE
+      该节点的父节点
+    CONNECT_CHILD_NODE
+      --child 如果是CONNECT_CHILD_NODE则必填
+        CONNECT_ALL_DATA：表示该节点的所有child节点
+        string 该节点child节点名字
+    CONNECT_PRE_NODE
+      --inhid 如果是CONNECT_PRE_NODE必填
+        CONNECT_ALL_DATA：表示该节点所有输入handels的id
+        string：表示该节点输入handels的id
+  ====================================================
+  --handle 必填
+    VFNodeConnectionType：表示上述节点的handels类型
+    CONNECT_ALL_DATA：表示上述节点的所有handels类型
+  --hid 非必填，
+    CONNECT_ALL_DATA：表示上述节点的所有handels
+    string 上述节点的handle的id
+  ====================================================
+  --var 非必填，如有则--hid必须要有
+    存在则表示所有变量
+    不存在则表示不需要变量
+  ====================================================
+  --outfmt 必填
+    CONNECT_ALL_DATA：表示输出对应Dict
+    string：NODE{xxx}HANDLE{xxx}VAR{xxx}
+  ====================================================
+  */
+  let elementId = 0
+  // 节点 ====================================================
+  const nodeids: string[] = []
+  if (args[elementId] === CONNECT_CUR_NODE) {
+    nodeids.push(nodeId.value)
+  } else if (args[elementId] === CONNECT_PARENT_NODE) {
+    if (curSelectedNode.value.parentNode) nodeids.push(curSelectedNode.value.parentNode)
+  } else if (args[elementId] === CONNECT_CHILD_NODE) {
+    if (curSelectedNode.value.data.isNestedNode()) {
+      const childName = args[elementId + 1]
+      if (childName === CONNECT_ALL_DATA) {
+        for (const anode of Object.values(curSelectedNode.value.data.Nesting.ANodes)) {
+          if (anode.Nid) nodeids.push(anode.Nid)
+        }
+      } else {
+        const anode = curSelectedNode.value.data.Nesting.ANodes[childName]
+        if (anode && anode.Nid) {
+          nodeids.push(anode.Nid)
+        }
+      }
+    }
+    elementId += 1
+  } else if (args[elementId] === CONNECT_PRE_NODE) {
+    const inHandle = args[elementId + 1]
+    const inHandles: string[] = []
+    if (inHandle === CONNECT_ALL_DATA) {
+      inHandles.push(...curSelectedNode.value.data.Connections.Inputs.Order)
+    } else {
+      inHandles.push(inHandle)
+    }
+    for (const handle of inHandles) {
+      const edges = getHandleConnections({
+        id: handle,
+        type: 'target',
+        nodeId: nodeId.value,
+      })
+      for (const edge of Object.values(edges)) {
+        nodeids.push(edge.source)
+      }
+    }
+    elementId += 1
+  }
+  // handle ====================================================
+  elementId += 1
+  const handlesWnidWvars: [string, VFNodeConnectionType, string, VarItem[]][] = []
+  const handleType = args[elementId]
+  const handleId = args[elementId + 1]
+  for (const nid of nodeids) {
+    const node = findNode(nid) as NodeWithVFData
+    if (!node) continue
+
+    // 获取handle类型
+    if (handleType === CONNECT_ALL_DATA) {
+      // 所有handle类型
+      for (const ctype of Object.values(VFNodeConnectionType)) {
+        if (handleId === CONNECT_ALL_DATA) {
+          // 所有handle
+          for (const hid of node.data.Connections[ctype].Order) {
+            handlesWnidWvars.push([nid, ctype as VFNodeConnectionType, hid, []])
+          }
+        } else {
+          // 特定handle
+          if (node.data.Connections[ctype].ById[handleId]) {
+            handlesWnidWvars.push([nid, ctype as VFNodeConnectionType, handleId, []])
+          }
+        }
+      }
+    } else if (Object.values(VFNodeConnectionType).includes(handleType as VFNodeConnectionType)) {
+      // 特定handle类型
+      const ctype = handleType as VFNodeConnectionType
+      if (handleId === CONNECT_ALL_DATA) {
+        // 所有handle
+        for (const hid of node.data.Connections[ctype].Order) {
+          handlesWnidWvars.push([nid, ctype, hid, []])
+        }
+      } else {
+        // 特定handle
+        if (node.data.Connections[ctype].ById[handleId]) {
+          handlesWnidWvars.push([nid, ctype, handleId, []])
+        }
+      }
+    }
+  }
+  elementId += 1
+
+  // var变量 ====================================================
+  elementId += 1
+  for (let i = 0; i < handlesWnidWvars.length; i++) {
+    const [nid, ctype, hid, varArray] = handlesWnidWvars[i]
+    const vars = recursiveFindVariables(nid, ctype, [hid])
+    if (args[elementId] === CONNECT_ALL_DATA) {
+      // 所有变量
+      varArray.push(...vars)
+    } else {
+      // 特定变量
+      // 将变量添加到对应handle的第四个元素数组中
+      varArray.push(...vars)
+    }
+  }
+
+  // 输出格式 ====================================================
+  elementId += 1
+  if (args[elementId] === CONNECT_ALL_DATA) {
+    // 返回字典
+    return {
+      nodeids,
+      handlesWnid: handlesWnidWvars,
+    }
+  } else {
+    // 返回特定格式
+    const format = args[elementId]
+    // 这里可以根据格式进行处理
+    // 从 handlesWnidWvars 中提取所有变量
+    const allVars: VarItem[] = []
+    for (const [_, __, ___, varArray] of handlesWnidWvars) {
+      allVars.push(...varArray)
+    }
+    return allVars.map((item) => {
+      return format
+        .replace('NODE{xxx}', `NODE{${item.NodeId}}`)
+        .replace('HANDLE{xxx}', `HANDLE{${item.DataPath.ContentId}}`)
+        .replace('VAR{xxx}', `VAR{${item.DataLabel}}`)
+    })
+  }
+}
 
 // 连接变量选择相关
 const _VarSelection: Record<string, ComputedRef<VarItem[]>> = {}
@@ -193,10 +357,6 @@ const getOrCreateVarSelectionWHandle = (path: string[]) => {
   return _VarSelectionWHandle[key].value
 }
 provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
-
-const getConnectionsByPath = (path: (string | number)[]) => {
-
-}
 
 // 节点config相关
 const getNodeConfig = (nid: string) => {
