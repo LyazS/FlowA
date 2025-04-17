@@ -601,7 +601,7 @@ onMounted(async () => {
       <template #header>
         <n-flex class="flexctitem" justify="flex-start">
           <n-icon size="24">
-            <img src="/public/favicon.ico" alt="Logo" style="width: 24px; height: 24px" />
+            <img src="/favicon.ico" alt="Logo" style="width: 24px; height: 24px" />
           </n-icon>
           <n-text type="info" style="font-family: 'Georgia', cursive; font-size: 1.5em">
             FlowA
