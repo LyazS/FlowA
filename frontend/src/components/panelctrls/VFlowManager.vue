@@ -9,6 +9,7 @@ import {
   NH6,
   NButton,
   NIcon,
+  NTag,
   NButtonGroup,
   NScrollbar,
   NModal,
@@ -596,12 +597,17 @@ onMounted(async () => {
 </script>
 <template>
   <n-modal v-model:show="isShowVFlowMgr" :close-on-esc="true" transform-origin="center">
-    <n-card
-      title="工作流管理器"
-      closable
-      @close="isShowVFlowMgr = false"
-      :style="{ width: '80%', maxWidth: '1000px' }"
-    >
+    <n-card closable @close="isShowVFlowMgr = false" :style="{ width: '80%', maxWidth: '1000px' }">
+      <template #header>
+        <n-flex class="flexctitem" justify="flex-start">
+          <n-icon size="24">
+            <img src="/public/favicon.ico" alt="Logo" style="width: 24px; height: 24px" />
+          </n-icon>
+          <n-text type="info" style="font-family: 'Georgia', cursive; font-size: 1.5em">
+            FlowA
+          </n-text>
+        </n-flex>
+      </template>
       <n-grid x-gap="0" :cols="31">
         <n-grid-item :span="16">
           <n-flex vertical>
