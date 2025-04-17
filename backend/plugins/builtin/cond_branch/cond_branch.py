@@ -71,9 +71,9 @@ ContainsTypeSelections = [
 
 
 class Single_Condition(BaseModel):
-    refdata: str
-    operator: str
-    comparetype: VarType
+    Refdata: str
+    Operator: str
+    CompareType: VarType
     valueStr: str
     valueNum: int | float
     valueBool: bool
@@ -81,9 +81,9 @@ class Single_Condition(BaseModel):
 
 
 class Single_ConditionDict(BaseModel):
-    outputKey: ReadOnlyPropVar | str
-    condIsAnd: bool
-    conditions: List[Single_Condition]
+    OutputKey: ReadOnlyPropVar | str
+    CondIsAnd: bool
+    Conditions: List[Single_Condition]
     pass
 
 
@@ -95,12 +95,6 @@ class CondBranch(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
-            # 首先要检查输入
-            # 收集输出名字
-            # 然后检查代码需求的输入是否在输入data里边
-            # 然后检查输出data是否在输出data里边
-            CodeInputArgs = set()
-            CodeOutputArgs = []
             node_payloads = self.data.Payloads
             node_results = self.data.Results
 
@@ -112,57 +106,6 @@ class CondBranch(FATaskNode):
                     "self",
                 ],
             )
-
-            D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
-            for var_dict in D_INPUT_VARS.Data.value:
-                var = InputVarModel.model_validate(var_dict)
-                if var.type == VarType.Ref and var.valueStr not in selfVars:
-                    error_msgs.append(f"没有该变量选项{var.valueStr}")
-                else:
-                    CodeInputArgs.add(var.key)
-            for pid in node_results.Order:
-                item: VFNodeContentData = node_results.ById[pid]
-                CodeOutputArgs.append(item.Label)
-                pass
-
-            D_CODE: VFNodeContentData = node_payloads.ById["D_CODE"]
-            if not isinstance(D_CODE.Data.value, str):
-                raise Exception(f"Python代码格式错误")
-            try:
-                tree = ast.parse(D_CODE.Data.value)
-                hasMain = False
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.FunctionDef) and node.name == "main":
-                        hasMain = True
-                        # 检查输入名字是否对上
-                        input_params = [arg.arg for arg in node.args.args]
-                        for in_arg in input_params:
-                            if in_arg not in CodeInputArgs:
-                                error_msgs.append(f"缺少输入参数【{in_arg}】")
-                            pass
-                        # 检查输出名字是否对上
-                        return_statements = [
-                            n for n in ast.walk(node) if isinstance(n, ast.Return)
-                        ]
-                        for return_node in return_statements:
-                            if isinstance(return_node.value, ast.Dict):
-                                outputs = set([key.s for key in return_node.value.keys])
-                                for out_arg in CodeOutputArgs:
-                                    if out_arg not in outputs:
-                                        error_msgs.append(
-                                            f"代码返回值缺少输出参数【{out_arg}】"
-                                        )
-                                    pass
-                            else:
-                                error_msgs.append(f"main函数返回值必须为字典")
-                            pass
-                        break
-                if not hasMain:
-                    error_msgs.append(f"未找到main函数")
-            except SyntaxError:
-                error_msgs.append(f"Python代码格式错误")
-            except Exception as e:
-                error_msgs.append(str(e))
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -206,13 +149,13 @@ class CondBranch(FATaskNode):
                 Label="CASE 1",
                 Type="Dict",
                 Data=Single_ConditionDict(
-                    outputKey="output-init",
-                    condIsAnd=True,
-                    conditions=[
+                    OutputKey="output-init",
+                    CondIsAnd=True,
+                    Conditions=[
                         Single_Condition(
-                            refdata="",
-                            operator="eq",
-                            comparetype=VarType.Ref,
+                            Refdata="",
+                            Operator="eq",
+                            CompareType=VarType.Ref,
                             valueStr="",
                             valueNum=0,
                             valueBool=False,
@@ -221,8 +164,9 @@ class CondBranch(FATaskNode):
                 ),
             ),
             handle_id="output-init",
+            result_id="output-init",
         )
-        
+
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else", "ELSE")
         thisnode.add_handle_data(
             VFNodeConnectionType.Outputs,
