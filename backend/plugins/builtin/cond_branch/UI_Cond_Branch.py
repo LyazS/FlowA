@@ -8,6 +8,8 @@ from app.uisdk import *
 from ..UI_Components.NFlex import NFlex
 from ..UI_Components.Header import Header
 from ..UI_Components.NText import NText
+from ..UI_Components.NInput import NInput
+from ..UI_Components.NSwitch import NSwitch
 from ..UI_Components.NButton import NButton
 from ..UI_Components.UI_InputVars import VarType
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
@@ -80,7 +82,7 @@ class branch_header(NFlex):
                                     Slots={
                                         "default": SpanComponent(
                                             Type=ComponentType.VALUE,
-                                            Data="分支名",
+                                            Data="•",
                                         )
                                     },
                                 ),
@@ -113,6 +115,328 @@ class branch_header(NFlex):
         )
 
 
+class VarTypeSelect(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NSelect",
+            Props={
+                "style": {"width": "20%"},
+                "size": "small",
+                "consistent-menu-width": False,
+                "options": [
+                    {"label": "引用", "value": VarType.Ref},
+                    {"label": "字符串", "value": VarType.String},
+                    {"label": "整数", "value": VarType.Integer},
+                    {"label": "数字", "value": VarType.Number},
+                    {"label": "布尔", "value": VarType.Boolean},
+                ],
+                "value": VModelProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "comparetype",
+                    ]
+                ),
+            },
+        )
+
+
+class VarStringInput(NInput):
+    def __init__(self):
+        super().__init__(
+            size="small",
+            style={"width": "80%"},
+            value=VModelProp(
+                Data=[
+                    THIS_NODE_DATA,
+                    "Results",
+                    "ById",
+                    "@OutHandleName",
+                    "Data",
+                    "conditions",
+                    "@CondIndex",
+                    "valueStr",
+                ],
+            ),
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "comparetype",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp(Data=VarType.String),
+            ),
+        )
+
+
+class VarIntegerInput(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NInputNumber",
+            Props={
+                "size": "small",
+                "style": {"width": "80%"},
+                "value": VModelProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "valueNum",
+                    ],
+                ),
+                "precision": 0,
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "comparetype",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp(Data=VarType.Integer),
+            ),
+        )
+
+
+class VarNumberInput(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NInputNumber",
+            Props={
+                "size": "small",
+                "style": {"width": "80%"},
+                "value": VModelProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "valueNum",
+                    ],
+                ),
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "comparetype",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp(Data=VarType.Number),
+            ),
+        )
+
+
+class VarBooleanInput(NFlex):
+    def __init__(self):
+        super().__init__(
+            justify="start",
+            style={"width": "50%"},
+            slots={
+                "default": NSwitch(
+                    size="medium",
+                    style={"width": "50%"},
+                    value=VModelProp(
+                        Data=[
+                            THIS_NODE_DATA,
+                            "Results",
+                            "ById",
+                            "@OutHandleName",
+                            "Data",
+                            "conditions",
+                            "@CondIndex",
+                            "valueBool",
+                        ],
+                    ),
+                )
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    Data=[
+                        THIS_NODE_DATA,
+                        "Results",
+                        "ById",
+                        "@OutHandleName",
+                        "Data",
+                        "conditions",
+                        "@CondIndex",
+                        "comparetype",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp(Data=VarType.Boolean),
+            ),
+        )
+
+    pass
+
+
+class UI_Cond_Card_Content(NFlex):
+    def __init__(self):
+        super().__init__(
+            vertical=True,
+            slots={
+                "default": [
+                    NFlex(
+                        vertical=False,
+                        wrap=False,
+                        justify="flex-start",
+                        style={
+                            "align-content": "center",
+                            "align-items": "center",
+                        },
+                        slots={
+                            "default": [
+                                UI_RefVarSelect(
+                                    style={"width": "65%"},
+                                    size="small",
+                                    value=VModelProp(
+                                        Data=[
+                                            THIS_NODE_DATA,
+                                            "Results",
+                                            "ById",
+                                            "@OutHandleName",
+                                            "Data",
+                                            "conditions",
+                                            "@CondIndex",
+                                            "refdata",
+                                        ]
+                                    ),
+                                    options=VBindProp(
+                                        Data=[
+                                            CONNECT_DATA_TO_SELECT,
+                                            VFNodeConnectionType.Self,
+                                            "self",
+                                        ]
+                                    ),
+                                ),
+                                NormalComponent(
+                                    Type="NSelect",
+                                    Props={
+                                        "size": "small",
+                                        "style": {"width": "35%"},
+                                        "consistent-menu-width": False,
+                                        "options": []
+                                        + EqualTypeSelections
+                                        + NotEqualTypeSelections
+                                        + StartEndTypeSelections
+                                        + LengthTypeSelections
+                                        + ContainsTypeSelections
+                                        + NullTypeSelections
+                                        + [],
+                                        "value": VModelProp(
+                                            Data=[
+                                                THIS_NODE_DATA,
+                                                "Results",
+                                                "ById",
+                                                "@OutHandleName",
+                                                "Data",
+                                                "conditions",
+                                                "@CondIndex",
+                                                "operator",
+                                            ]
+                                        ),
+                                    },
+                                ),
+                            ]
+                        },
+                    ),
+                    NFlex(
+                        vertical=False,
+                        wrap=False,
+                        justify="flex-start",
+                        style={
+                            "align-content": "center",
+                            "align-items": "center",
+                        },
+                        slots={
+                            "default": [
+                                VarTypeSelect(),
+                                VarStringInput(),
+                                VarIntegerInput(),
+                                VarNumberInput(),
+                                VarBooleanInput(),
+                                UI_RefVarSelect(
+                                    size="small",
+                                    style={"width": "80%"},
+                                    options=VBindProp(
+                                        Data=[
+                                            CONNECT_DATA_TO_SELECT,
+                                            VFNodeConnectionType.Self,
+                                            "self",
+                                        ]
+                                    ),
+                                    value=VModelProp(
+                                        Data=[
+                                            THIS_NODE_DATA,
+                                            "Results",
+                                            "ById",
+                                            "@OutHandleName",
+                                            "Data",
+                                            "conditions",
+                                            "@CondIndex",
+                                            "valueStr",
+                                        ],
+                                    ),
+                                    IfCondition=CompareCondition(
+                                        Left=VBindProp(
+                                            Data=[
+                                                THIS_NODE_DATA,
+                                                "Results",
+                                                "ById",
+                                                "@OutHandleName",
+                                                "Data",
+                                                "conditions",
+                                                "@CondIndex",
+                                                "comparetype",
+                                            ]
+                                        ),
+                                        Operator="==",
+                                        Right=ValueProp(Data=VarType.Ref),
+                                    ),
+                                ),
+                            ]
+                        },
+                    ),
+                ]
+            },
+        )
+
+
 class UI_Cond_Card(NFlex):
     def __init__(self):
         super().__init__(
@@ -131,72 +455,7 @@ class UI_Cond_Card(NFlex):
                             "size": "small",
                         },
                         Slots={
-                            "default": [
-                                NFlex(
-                                    vertical=False,
-                                    wrap=False,
-                                    justify="flex-start",
-                                    style={
-                                        "align-content": "center",
-                                        "align-items": "center",
-                                    },
-                                    slots={
-                                        "default": [
-                                            UI_RefVarSelect(
-                                                style={"width": "65%"},
-                                                size="small",
-                                                value=VModelProp(
-                                                    Data=[
-                                                        THIS_NODE_DATA,
-                                                        "Results",
-                                                        "ById",
-                                                        "@OutHandleName",
-                                                        "Data",
-                                                        "conditions",
-                                                        "@CondIndex",
-                                                        "refdata",
-                                                    ]
-                                                ),
-                                                options=VBindProp(
-                                                    Data=[
-                                                        CONNECT_DATA_TO_SELECT,
-                                                        VFNodeConnectionType.Self,
-                                                        "self",
-                                                    ]
-                                                ),
-                                            ),
-                                            NormalComponent(
-                                                Type="NSelect",
-                                                Props={
-                                                    "size": "small",
-                                                    "style": {"width": "35%"},
-                                                    "consistent-menu-width": False,
-                                                    "options": []
-                                                    + EqualTypeSelections
-                                                    + NotEqualTypeSelections
-                                                    + StartEndTypeSelections
-                                                    + LengthTypeSelections
-                                                    + ContainsTypeSelections
-                                                    + NullTypeSelections
-                                                    + [],
-                                                    "value": VModelProp(
-                                                        Data=[
-                                                            THIS_NODE_DATA,
-                                                            "Results",
-                                                            "ById",
-                                                            "@OutHandleName",
-                                                            "Data",
-                                                            "conditions",
-                                                            "@CondIndex",
-                                                            "operator",
-                                                        ]
-                                                    ),
-                                                },
-                                            ),
-                                        ]
-                                    },
-                                )
-                            ]
+                            "default": UI_Cond_Card_Content(),
                         },
                     ),
                     NButton(
@@ -422,7 +681,7 @@ class UI_Cond_Branch(NFlex):
                                                         Replace="output-{{Data}}",  # handle必须以output|input开头
                                                     ),
                                                     HandleLabel=ValueProp(
-                                                        Data="分支【请修改名字】"
+                                                        Data="CASE X"
                                                     ),
                                                     Position=InsertPos.Start,
                                                 )

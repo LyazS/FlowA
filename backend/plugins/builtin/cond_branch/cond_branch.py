@@ -38,47 +38,6 @@ from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
-# const _LengthTypeSelections = [
-#   { label: '长度等于', value: 'len_eq' },
-#   { label: '长度不等于', value: 'len_ne' },
-#   { label: '长度大于', value: 'len_gt' },
-#   { label: '长度大于等于', value: 'len_gte' },
-#   { label: '长度小于', value: 'len_lt' },
-#   { label: '长度小于等于', value: 'len_lte' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _StartEndTypeSelections = [
-#   { label: '开头是', value: 'startwith' },
-#   { label: '结尾是', value: 'endwith' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _NullTypeSelections = [
-#   { label: '为空', value: 'isnull' },
-#   { label: '不为空', value: 'notnull' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _EqualTypeSelections = [
-#   { label: '等于', value: 'eq' },
-#   { label: '不等于', value: 'ne' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _NotEuqalTypeSelections = [
-#   { label: '大于', value: 'gt' },
-#   { label: '大于等于', value: 'gte' },
-#   { label: '小于', value: 'lt' },
-#   { label: '小于等于', value: 'lte' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _ContainsTypeSelections = [
-#   { label: '包含', value: 'contains' },
-#   { label: '不包含', value: 'notcontains' },
-# ] as const satisfies readonly SelectOption[]
-
-# const _BooleanTypeSelections = [
-#   { label: '为true', value: 'istrue' },
-#   { label: '为false', value: 'isfalse' },
-# ] as const satisfies readonly SelectOption[]
-
 LengthTypeSelections = [
     SelectOptions(label="长度等于", value="len_eq"),
     SelectOptions(label="长度不等于", value="len_ne"),
@@ -111,7 +70,6 @@ ContainsTypeSelections = [
 ]
 
 
-
 class Single_Condition(BaseModel):
     refdata: str
     operator: str
@@ -123,7 +81,7 @@ class Single_Condition(BaseModel):
 
 
 class Single_ConditionDict(BaseModel):
-    outputKey: ReadOnlyPropVar
+    outputKey: ReadOnlyPropVar | str
     condIsAnd: bool
     conditions: List[Single_Condition]
     pass
@@ -224,7 +182,6 @@ class CondBranch(FATaskNode):
         thisnode.set_size(80, 80)
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input-cond", "CONDITION")
         thisnode.add_handle(VFNodeConnectionType.Inputs, "input-var", "VARIABLE")
-        thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else", "ELSE")
         thisnode.add_handle(VFNodeConnectionType.Self, "self")
         thisnode.add_handle_data(
             VFNodeConnectionType.Self,
@@ -234,6 +191,39 @@ class CondBranch(FATaskNode):
                 HandleId="input-cond",
             ),
         )
+
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output-init", "CASE 1")
+        thisnode.add_handle_data(
+            VFNodeConnectionType.Outputs,
+            "output-init",
+            VFNodeHandleData(
+                Type=VFNodeConnectionDataType.FromOuter,
+                HandleId="input-var",
+            ),
+        )
+        thisnode.add_result_into_outputs(
+            VFNodeContentData(
+                Label="CASE 1",
+                Type="Dict",
+                Data=Single_ConditionDict(
+                    outputKey="output-init",
+                    condIsAnd=True,
+                    conditions=[
+                        Single_Condition(
+                            refdata="",
+                            operator="eq",
+                            comparetype=VarType.Ref,
+                            valueStr="",
+                            valueNum=0,
+                            valueBool=False,
+                        )
+                    ],
+                ),
+            ),
+            handle_id="output-init",
+        )
+        
+        thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else", "ELSE")
         thisnode.add_handle_data(
             VFNodeConnectionType.Outputs,
             "output-else",
@@ -242,6 +232,7 @@ class CondBranch(FATaskNode):
                 HandleId="input-var",
             ),
         )
+
         thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_COND_BRANCH")
         return thisnode
 
