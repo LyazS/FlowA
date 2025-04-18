@@ -281,6 +281,8 @@ class UI_SingleInputVars(NFlex):
                                 "self",
                                 "--outfmt",
                                 CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
                             ]
                         ),
                         value=VModelProp(

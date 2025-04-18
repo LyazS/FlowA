@@ -35,7 +35,6 @@ import {
   GENERATE_UUID,
   VFOR_DATA,
   CONNECT_DATA,
-  CONNECT_DATA_HANDLE,
   CONNECT_DATA_TO_SELECT,
   TYPE_VFOR,
   TYPE_VALUE,
@@ -135,11 +134,8 @@ const getValueByPath = (path: (string | number)[]): any => {
     }
   } else if (resolvePath[0] === CONNECT_DATA) {
     if (resolvePath.length >= 2) {
-      return getConnectionsByArgs(resolvePath.slice(1) as string[])
-    }
-  } else if (resolvePath[0] === CONNECT_DATA_HANDLE) {
-    if (resolvePath.length >= 2) {
-      return getOrCreateVarSelectionWHandle(resolvePath.slice(1) as string[])
+      const res = getConnectionsByArgs(resolvePath.slice(1) as string[])
+      return res
     }
   } else if (resolvePath[0] === NODE_CONFIG_DATA) {
     const nodeConfig = getNodeConfig(selectedNodeId.value as string)

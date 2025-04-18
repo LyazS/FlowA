@@ -144,8 +144,6 @@ class UI_TAG_OUTPUTS(NFlex):
                     ForLoopComponent(
                         Items=VBindProp(
                             Data=[
-                                CONNECT_DATA_HANDLE,
-                                VFNodeConnectionType.Outputs,
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -153,6 +151,9 @@ class UI_TAG_OUTPUTS(NFlex):
                                 VFNodeConnectionType.Outputs,
                                 "--outfmt",
                                 CONNECT_ALL_DATA,
+                                "--level",
+                                CONNECT_HANDLE_LEVEL,
+                                "--nonode",
                             ]
                         ),
                         ItemLabel="@ConnectHandles",

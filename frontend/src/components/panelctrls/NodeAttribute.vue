@@ -47,6 +47,9 @@ import {
   CONNECT_PARENT_NODE,
   CONNECT_CHILD_NODE,
   CONNECT_PRE_NODE,
+  CONNECT_NODE_LEVEL,
+  CONNECT_HANDLE_LEVEL,
+  CONNECT_VAR_LEVEL,
   TYPE_VFOR,
   TYPE_VALUE,
   TYPE_VBIND,
@@ -116,10 +119,6 @@ const saveTitle = () => {
 
 const _CacheConnectionsByArgs: Record<string, any> = {}
 const getConnectionsByArgs = (args: string[]) => {
-  const key = args.join('-')
-  if (key in _CacheConnectionsByArgs) {
-    return _CacheConnectionsByArgs[key]
-  }
   /*
   节点层级（Node Level）
   句柄层级（Handle Level）
@@ -157,6 +156,13 @@ const getConnectionsByArgs = (args: string[]) => {
     string 上述节点的handle的id
     不填，则只收集到handle层级
   ====================================================
+  --level 必填，输出层级
+    CONNECT_NODE_LEVEL
+    CONNECT_HANDLE_LEVEL
+    CONNECT_VAR_LEVEL
+  ====================================================
+  --nonode 非必填，为true可用于在只有一个node的时候，去掉根节点
+  ====================================================
   --outfmt 必填
     CONNECT_ALL_DATA：表示输出对应原始数据
       节点层级 [<node_id>]
@@ -168,26 +174,35 @@ const getConnectionsByArgs = (args: string[]) => {
       变量层级 使用mapVarItemToSelect
   ====================================================
   */
-  const parsed_args: Record<string, string | undefined> = {
+
+  // 返回缓存
+  const key = args.join('-')
+  if (key in _CacheConnectionsByArgs) {
+    return _CacheConnectionsByArgs[key]
+  }
+  // 解析参数
+  const parsed_args: Record<string, string | boolean | undefined> = {
+    level: undefined,
     node: undefined,
     child: undefined,
     inhid: undefined,
     handle: undefined,
     hid: undefined,
-    var: undefined,
     outfmt: undefined,
+    nonode: undefined,
   }
   for (const arg of args) {
     if (arg.startsWith('--')) {
       const key = arg.slice(2)
       if (!(key in parsed_args)) continue
+      if (key === 'nonode') parsed_args[key] = true
       const key_idx = args.indexOf(arg)
       if (key_idx + 1 >= args.length) continue
       const value = args[args.indexOf(arg) + 1]
       parsed_args[key] = value
     }
   }
-  if (!parsed_args.node || !parsed_args.outfmt) {
+  if (!parsed_args.node || !parsed_args.level || !parsed_args.outfmt) {
     _CacheConnectionsByArgs[key] = null
     return _CacheConnectionsByArgs[key]
   }
@@ -208,7 +223,7 @@ const getConnectionsByArgs = (args: string[]) => {
     }
   } else if (nodeType === CONNECT_CHILD_NODE) {
     // 子节点
-    const childName = parsed_args.child
+    const childName = parsed_args.child as string
     if (!childName) {
       _CacheConnectionsByArgs[key] = null
       return _CacheConnectionsByArgs[key]
@@ -242,14 +257,14 @@ const getConnectionsByArgs = (args: string[]) => {
     // 获取所有连接到这些输入handles的源节点
     inHandles.forEach((handle) => {
       const edges = getHandleConnections({
-        id: handle,
+        id: handle as string,
         type: 'target',
         nodeId: nodeId.value,
       })
       Object.values(edges).forEach((edge) => nodeIds.push(edge.source))
     })
   }
-  if (!parsed_args.handle) {
+  if (parsed_args.level === CONNECT_NODE_LEVEL) {
     if (parsed_args.outfmt === CONNECT_ALL_DATA) {
       _CacheConnectionsByArgs[key] = nodeIds
       return _CacheConnectionsByArgs[key]
@@ -267,8 +282,8 @@ const getConnectionsByArgs = (args: string[]) => {
   }
   // ====================================================
   // 句柄层级（Handle Level）
-  // ====================================================
-  const handleType = parsed_args.handle
+  let handleType = parsed_args.handle as string
+  if (!handleType) handleType = CONNECT_ALL_DATA
   const handleTypes: VFNodeConnectionType[] = []
   const handleIds: [string, VFNodeConnectionType, string][] = []
   if (handleType === CONNECT_ALL_DATA) {
@@ -289,7 +304,7 @@ const getConnectionsByArgs = (args: string[]) => {
       }
     }
   }
-  if (!parsed_args.hid) {
+  if (parsed_args.level === CONNECT_HANDLE_LEVEL) {
     if (parsed_args.outfmt === CONNECT_ALL_DATA) {
       const res: Record<string, Record<string, string[]>> = {}
       for (const [nid, ctype, hid] of handleIds) {
@@ -300,6 +315,10 @@ const getConnectionsByArgs = (args: string[]) => {
           res[nid][ctype] = []
         }
         res[nid][ctype].push(hid)
+      }
+      if (parsed_args.nonode && Object.keys(res).length === 1) {
+        _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
+        return _CacheConnectionsByArgs[key]
       }
       _CacheConnectionsByArgs[key] = res
       return _CacheConnectionsByArgs[key]
@@ -318,7 +337,8 @@ const getConnectionsByArgs = (args: string[]) => {
   // ====================================================
   // 变量层级（Variable Level）
   // ====================================================
-  const handleId = parsed_args.hid
+  let handleId = parsed_args.hid
+  if (!handleId) handleId = CONNECT_ALL_DATA
   let varItems: VarItem[] = []
   for (const [nid, ctype, hid] of handleIds) {
     console.log(nid, ctype, hid)
@@ -329,16 +349,19 @@ const getConnectionsByArgs = (args: string[]) => {
     }
   }
   varItems = uniqueVarItems(varItems)
-  if (parsed_args.outfmt === CONNECT_ALL_DATA) {
-    _CacheConnectionsByArgs[key] = varItems
-    return _CacheConnectionsByArgs[key]
-  } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-    _CacheConnectionsByArgs[key] = varItems.map(mapVarItemToSelect)
-    return _CacheConnectionsByArgs[key]
-  } else {
-    _CacheConnectionsByArgs[key] = null
-    return _CacheConnectionsByArgs[key]
+  if (parsed_args.level === CONNECT_VAR_LEVEL) {
+    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+      _CacheConnectionsByArgs[key] = varItems
+      return _CacheConnectionsByArgs[key]
+    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
+      _CacheConnectionsByArgs[key] = varItems.map(mapVarItemToSelect)
+      return _CacheConnectionsByArgs[key]
+    } else {
+      _CacheConnectionsByArgs[key] = null
+      return _CacheConnectionsByArgs[key]
+    }
   }
+  return null
 }
 provide('getConnectionsByArgs', getConnectionsByArgs)
 

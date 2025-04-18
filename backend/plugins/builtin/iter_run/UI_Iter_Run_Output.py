@@ -117,6 +117,8 @@ class UI_Iter_Run_Output(NFlex):
                                                             "attach_output",
                                                             "--outfmt",
                                                             CONNECT_DATA_TO_SELECT,
+                                                            "--level",
+                                                            CONNECT_VAR_LEVEL,
                                                         ]
                                                     ),
                                                     value=VModelProp(

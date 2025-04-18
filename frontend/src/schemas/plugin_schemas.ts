@@ -18,7 +18,6 @@ export const CONTEXT_ARG = '@CONTEXT_ARG@' as const
 export const GENERATE_UUID = '@GENERATE_UUID@' as const
 // 连接项定义，路径为[CONNECT_*, <Handle Type>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
 export const CONNECT_DATA = '@CONNECT_DATA@' as const
-export const CONNECT_DATA_HANDLE = '@CONNECT_DATA_HANDLE@' as const
 export const CONNECT_DATA_TO_SELECT = '@CONNECT_DATA_TO_SELECT@' as const
 // 连接项的参数定义
 export const CONNECT_ALL_DATA = '@CONNECT_ALL_DATA@'
@@ -26,6 +25,9 @@ export const CONNECT_CUR_NODE = '@CONNECT_CUR_NODE@'
 export const CONNECT_PARENT_NODE = '@CONNECT_PARENT_NODE@'
 export const CONNECT_CHILD_NODE = '@CONNECT_CHILD_NODE@'
 export const CONNECT_PRE_NODE = '@CONNECT_PRE_NODE@'
+export const CONNECT_NODE_LEVEL = '@CONNECT_NODE_LEVEL@'
+export const CONNECT_HANDLE_LEVEL = '@CONNECT_HANDLE_LEVEL@'
+export const CONNECT_VAR_LEVEL = '@CONNECT_VAR_LEVEL@'
 // 类型定义
 export const TYPE_VFOR = '@VFOR@' as const
 export const TYPE_VALUE = '@VALUE@' as const

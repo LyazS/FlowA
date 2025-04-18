@@ -69,6 +69,8 @@ class SingleAttrBoolean(NFlex):
                                 "self",
                                 "--outfmt",
                                 CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
                             ]
                         ),
                         IfCondition=CompareCondition(
@@ -151,6 +153,8 @@ class SingleAttrNumber(NFlex):
                                 "self",
                                 "--outfmt",
                                 CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
                             ]
                         ),
                         IfCondition=CompareCondition(
@@ -237,6 +241,8 @@ class SingleAttrSelect(NFlex):
                                 "self",
                                 "--outfmt",
                                 CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
                             ]
                         ),
                         IfCondition=CompareCondition(

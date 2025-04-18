@@ -347,6 +347,8 @@ class UI_Cond_Card_Content(NFlex):
                                             "self",
                                             "--outfmt",
                                             CONNECT_DATA_TO_SELECT,
+                                            "--level",
+                                            CONNECT_VAR_LEVEL,
                                         ]
                                     ),
                                 ),
@@ -410,6 +412,8 @@ class UI_Cond_Card_Content(NFlex):
                                             "self",
                                             "--outfmt",
                                             CONNECT_DATA_TO_SELECT,
+                                            "--level",
+                                            CONNECT_VAR_LEVEL,
                                         ]
                                     ),
                                     value=VModelProp(

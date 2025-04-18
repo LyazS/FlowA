@@ -67,6 +67,8 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                             "self",
                                             "--outfmt",
                                             CONNECT_DATA_TO_SELECT,
+                                            "--level",
+                                            CONNECT_VAR_LEVEL,
                                         ]
                                     ),
                                 ),
@@ -122,6 +124,8 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                             "attach_output",
                                             "--outfmt",
                                             CONNECT_DATA_TO_SELECT,
+                                            "--level",
+                                            CONNECT_VAR_LEVEL,
                                         ]
                                     ),
                                 ),
