@@ -58,9 +58,15 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                     ),
                                     options=VBindProp(
                                         Data=[
-                                            CONNECT_DATA_TO_SELECT,
+                                            CONNECT_DATA,
+                                            "--node",
+                                            CONNECT_CUR_NODE,
+                                            "--handle",
                                             VFNodeConnectionType.Self,
+                                            "--hid",
                                             "self",
+                                            "--outfmt",
+                                            CONNECT_DATA_TO_SELECT,
                                         ]
                                     ),
                                 ),
@@ -107,9 +113,15 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                     ),
                                     options=VBindProp(
                                         Data=[
-                                            CONNECT_DATA_TO_SELECT,
+                                            CONNECT_DATA,
+                                            "--node",
+                                            CONNECT_CUR_NODE,
+                                            "--handle",
                                             VFNodeConnectionType.Self,
+                                            "--hid",
                                             "attach_output",
+                                            "--outfmt",
+                                            CONNECT_DATA_TO_SELECT,
                                         ]
                                     ),
                                 ),

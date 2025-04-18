@@ -6,6 +6,7 @@ from ..UI_Components.Header import Header
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
 from ..UI_Components.NFlex import NFlex
 
+
 class UI_Iter_Run_Iter_Array(NFlex):
     def __init__(self):
         super().__init__(
@@ -28,9 +29,15 @@ class UI_Iter_Run_Iter_Array(NFlex):
                         size="medium",
                         options=VBindProp(
                             Data=[
-                                CONNECT_DATA_TO_SELECT,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
                                 VFNodeConnectionType.Self,
+                                "--hid",
                                 "self",
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
                             ]
                         ),
                         value=VModelProp(

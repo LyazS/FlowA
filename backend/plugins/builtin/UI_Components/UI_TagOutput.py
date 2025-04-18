@@ -146,6 +146,13 @@ class UI_TAG_OUTPUTS(NFlex):
                             Data=[
                                 CONNECT_DATA_HANDLE,
                                 VFNodeConnectionType.Outputs,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
+                                VFNodeConnectionType.Outputs,
+                                "--outfmt",
+                                CONNECT_ALL_DATA,
                             ]
                         ),
                         ItemLabel="@ConnectHandles",

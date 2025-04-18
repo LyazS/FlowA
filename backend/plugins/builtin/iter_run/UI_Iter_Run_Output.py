@@ -108,9 +108,15 @@ class UI_Iter_Run_Output(NFlex):
                                                     style={"width": "50%"},
                                                     options=VBindProp(
                                                         Data=[
-                                                            CONNECT_DATA_TO_SELECT,
+                                                            CONNECT_DATA,
+                                                            "--node",
+                                                            CONNECT_CUR_NODE,
+                                                            "--handle",
                                                             VFNodeConnectionType.Self,
+                                                            "--hid",
                                                             "attach_output",
+                                                            "--outfmt",
+                                                            CONNECT_DATA_TO_SELECT,
                                                         ]
                                                     ),
                                                     value=VModelProp(

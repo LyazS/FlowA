@@ -92,6 +92,15 @@ const getOrCreateVarSelectionWHandle = inject<(path: string[]) => Record<string,
 )!
 const getNodeConfig = inject<(nid: string) => any>('getNodeConfig')!
 
+const getConnectionsByArgs = inject<
+  (args: string[]) =>
+    | string[] // 节点层级-节点数组
+    | Record<string, Record<string, string[]>> // 句柄层级-句柄字典
+    | VarItem[] // 变量层级-变量数组
+    | SelectOption[] // 变量层级-变量选项/句柄层级-句柄选项
+    | null
+>('getConnectionsByArgs')!
+
 // 数据路径解析器
 const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
   // 解析路径
@@ -126,7 +135,7 @@ const getValueByPath = (path: (string | number)[]): any => {
     }
   } else if (resolvePath[0] === CONNECT_DATA) {
     if (resolvePath.length >= 2) {
-      return getOrCreateVarSelection(resolvePath.slice(1) as string[])
+      return getConnectionsByArgs(resolvePath.slice(1) as string[])
     }
   } else if (resolvePath[0] === CONNECT_DATA_HANDLE) {
     if (resolvePath.length >= 2) {

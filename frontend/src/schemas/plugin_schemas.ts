@@ -20,7 +20,7 @@ export const GENERATE_UUID = '@GENERATE_UUID@' as const
 export const CONNECT_DATA = '@CONNECT_DATA@' as const
 export const CONNECT_DATA_HANDLE = '@CONNECT_DATA_HANDLE@' as const
 export const CONNECT_DATA_TO_SELECT = '@CONNECT_DATA_TO_SELECT@' as const
-// 连接项的路径定义
+// 连接项的参数定义
 export const CONNECT_ALL_DATA = '@CONNECT_ALL_DATA@'
 export const CONNECT_CUR_NODE = '@CONNECT_CUR_NODE@'
 export const CONNECT_PARENT_NODE = '@CONNECT_PARENT_NODE@'

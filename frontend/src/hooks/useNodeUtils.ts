@@ -33,6 +33,7 @@ interface NodeUtilsInstance {
     handleType: VFNodeConnectionType,
     handles: string[] | null,
   ) => VarItem[]
+  uniqueVarItems: (varitems: VarItem[]) => VarItem[]
   mapVarItemToSelect: (item: VarItem) => SelectOption
 }
 let instance: NodeUtilsInstance | null = null
@@ -40,9 +41,7 @@ let instance: NodeUtilsInstance | null = null
 export const useNodeUtils = () => {
   if (instance) return instance
   const { findNode, getHandleConnections } = useVueFlow()
-  const resolveValueByPath = (path: (string | number)[], dataContext: any): any => {
-    return path.reduce((acc, key) => acc?.[key], dataContext)
-  }
+
   const findVarFromIO = (
     nid: string,
     findconnect: VFNodeConnectionType,
@@ -134,6 +133,22 @@ export const useNodeUtils = () => {
     return result
   }
 
+  const uniqueVarItems = (varitems: VarItem[]): VarItem[] => {
+    // 使用Map来高效去重，键为唯一标识字符串，值为VarItem对象
+    const uniqueMap = new Map<string, VarItem>()
+
+    // 为每个VarItem创建唯一键并存入Map
+    varitems.forEach((item) => {
+      const key = `${item.NodeId}:${item.DataPath.ContentName}:${item.DataPath.ContentId}`
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item)
+      }
+    })
+
+    // 返回Map中的所有值
+    return Array.from(uniqueMap.values())
+  }
+
   const mapVarItemToSelect = (item: VarItem): SelectOption => {
     return {
       label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,
@@ -149,6 +164,7 @@ export const useNodeUtils = () => {
   instance = {
     findVarFromIO,
     recursiveFindVariables,
+    uniqueVarItems,
     mapVarItemToSelect,
   }
   return instance

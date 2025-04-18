@@ -60,9 +60,15 @@ class SingleAttrBoolean(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_DATA_TO_SELECT,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
                                 VFNodeConnectionType.Self,
+                                "--hid",
                                 "self",
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
                             ]
                         ),
                         IfCondition=CompareCondition(
@@ -136,9 +142,15 @@ class SingleAttrNumber(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_DATA_TO_SELECT,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
                                 VFNodeConnectionType.Self,
+                                "--hid",
                                 "self",
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
                             ]
                         ),
                         IfCondition=CompareCondition(
@@ -216,9 +228,15 @@ class SingleAttrSelect(NFlex):
                         size="tiny",
                         options=VBindProp(
                             Data=[
-                                CONNECT_DATA_TO_SELECT,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
                                 VFNodeConnectionType.Self,
+                                "--hid",
                                 "self",
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
                             ]
                         ),
                         IfCondition=CompareCondition(

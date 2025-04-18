@@ -338,9 +338,15 @@ class UI_Cond_Card_Content(NFlex):
                                     ),
                                     options=VBindProp(
                                         Data=[
-                                            CONNECT_DATA_TO_SELECT,
+                                            CONNECT_DATA,
+                                            "--node",
+                                            CONNECT_CUR_NODE,
+                                            "--handle",
                                             VFNodeConnectionType.Self,
+                                            "--hid",
                                             "self",
+                                            "--outfmt",
+                                            CONNECT_DATA_TO_SELECT,
                                         ]
                                     ),
                                 ),
@@ -395,9 +401,15 @@ class UI_Cond_Card_Content(NFlex):
                                     style={"width": "80%"},
                                     options=VBindProp(
                                         Data=[
-                                            CONNECT_DATA_TO_SELECT,
+                                            CONNECT_DATA,
+                                            "--node",
+                                            CONNECT_CUR_NODE,
+                                            "--handle",
                                             VFNodeConnectionType.Self,
+                                            "--hid",
                                             "self",
+                                            "--outfmt",
+                                            CONNECT_DATA_TO_SELECT,
                                         ]
                                     ),
                                     value=VModelProp(
