@@ -28,7 +28,10 @@ class handleTag(NormalComponent):
                         "default": SpanComponent(
                             Type=ComponentType.VBIND,
                             Data=[
-                                VFOR_DATA,
+                                THIS_NODE_DATA,
+                                "Connections",
+                                VFNodeConnectionType.Outputs,
+                                "ById",
                                 "@ConnectHandles",
                                 "Label",
                             ],
@@ -48,9 +51,17 @@ class outputTag(NFlex):
                     ForLoopComponent(
                         Items=VBindProp(
                             Data=[
-                                VFOR_DATA,
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
+                                VFNodeConnectionType.Outputs,
+                                "--hid",
                                 "@ConnectHandles",
-                                "Data",
+                                "--outfmt",
+                                CONNECT_ALL_DATA,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
                             ]
                         ),
                         ItemLabel="@ConnectItems",
@@ -153,11 +164,11 @@ class UI_TAG_OUTPUTS(NFlex):
                                 CONNECT_ALL_DATA,
                                 "--level",
                                 CONNECT_HANDLE_LEVEL,
-                                "--nonode",
+                                "--notop",
                             ]
                         ),
                         ItemLabel="@ConnectHandles",
-                        IndexLabel="@HandleId",
+                        IndexLabel="@ConnectHandlesIndex",
                         Template=NFlex(
                             vertical=True,
                             slots={

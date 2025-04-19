@@ -106,7 +106,7 @@ const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
   const resolvePath: (string | number)[] = []
   for (const element of path) {
     if (
-      resolvePath[0] === THIS_NODE_DATA &&
+      (resolvePath[0] === THIS_NODE_DATA || resolvePath[0] === CONNECT_DATA) &&
       props.dataContext[CONTEXT_FUNCTION].hasOwnProperty(element) &&
       typeof props.dataContext[CONTEXT_FUNCTION][element] === 'function'
     ) {

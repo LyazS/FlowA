@@ -69,6 +69,7 @@ import {
   VFNodeConnectionDataType,
   type FromInnerPath,
 } from '@/components/nodes/VFNodeInterface'
+import { object } from 'zod'
 
 const { recursiveFindVariables, mapVarItemToSelect, uniqueVarItems } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
@@ -120,6 +121,12 @@ const saveTitle = () => {
 const _CacheConnectionsByArgs: Record<string, any> = {}
 const getConnectionsByArgs = (args: string[]) => {
   /*
+  真正想要的是什么
+  1. 句柄
+  2. 变量
+  其实不需要具体节点
+  */
+  /*
   节点层级（Node Level）
   句柄层级（Handle Level）
   变量层级（Variable Level）
@@ -161,7 +168,7 @@ const getConnectionsByArgs = (args: string[]) => {
     CONNECT_HANDLE_LEVEL
     CONNECT_VAR_LEVEL
   ====================================================
-  --nonode 非必填，为true可用于在只有一个node的时候，去掉根节点
+  --notop 非必填，为true可用于在只有一个node的时候，去掉根节点
   ====================================================
   --outfmt 必填
     CONNECT_ALL_DATA：表示输出对应原始数据
@@ -189,13 +196,13 @@ const getConnectionsByArgs = (args: string[]) => {
     handle: undefined,
     hid: undefined,
     outfmt: undefined,
-    nonode: undefined,
+    notop: undefined,
   }
   for (const arg of args) {
     if (arg.startsWith('--')) {
       const key = arg.slice(2)
       if (!(key in parsed_args)) continue
-      if (key === 'nonode') parsed_args[key] = true
+      if (key === 'notop') parsed_args[key] = true
       const key_idx = args.indexOf(arg)
       if (key_idx + 1 >= args.length) continue
       const value = args[args.indexOf(arg) + 1]
@@ -316,7 +323,12 @@ const getConnectionsByArgs = (args: string[]) => {
         }
         res[nid][ctype].push(hid)
       }
-      if (parsed_args.nonode && Object.keys(res).length === 1) {
+      if (parsed_args.notop && Object.keys(res).length === 1) {
+        const res_handles = res[Object.keys(res)[0]]
+        if (Object.keys(res_handles).length === 1) {
+          _CacheConnectionsByArgs[key] = res_handles[Object.keys(res_handles)[0]]
+          return _CacheConnectionsByArgs[key]
+        }
         _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
         return _CacheConnectionsByArgs[key]
       }
