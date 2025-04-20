@@ -12,11 +12,11 @@ class Header(NormalComponent):
     ):
         ntextslot = None
         if isinstance(text, str):
-            ntextslot = SpanComponent(Type=ComponentType.VALUE, Data=text)
+            ntextslot = SpanComponent(ValueProp(text))
         elif isinstance(text, ValueProp):
-            ntextslot = SpanComponent(Type=ComponentType.VALUE, Data=text.Data)
+            ntextslot = SpanComponent(text)
         elif isinstance(text, VBindProp):
-            ntextslot = SpanComponent(Type=ComponentType.VBIND, Data=text.Data)
+            ntextslot = SpanComponent(text)
         else:
             raise ValueError("text must be str or ValueProp")
 

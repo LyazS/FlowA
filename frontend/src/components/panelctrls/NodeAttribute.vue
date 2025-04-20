@@ -51,9 +51,7 @@ import {
   CONNECT_HANDLE_LEVEL,
   CONNECT_VAR_LEVEL,
   TYPE_VFOR,
-  TYPE_VALUE,
-  TYPE_VBIND,
-  TYPE_VMODEL,
+  TYPE_VSPAN,
   TYPE_CONDITION_COMPARE,
   TYPE_CONDITION_LOGICAL,
   TYPE_CONDITION_DIRECT,
@@ -480,7 +478,7 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
     const context = {
       [THIS_NODE_DATA]: curSelectedNode.value.data,
       [CONTEXT_FUNCTION]: {
-        [PAYLOADS_ID]: () => [pid],
+        [PAYLOADS_ID]: pid,
       },
     }
     const uitype = curSelectedNode.value.data.Payloads.ById[pid].UiType

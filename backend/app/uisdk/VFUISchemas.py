@@ -8,55 +8,6 @@ from app.schemas.VFNodeInterface import (
 )
 from app.schemas.VFNodeClass import InsertPos
 
-"""
-vue数据结构定义
-=============================
-Type Value|VBind|VModel
-Data 
-    Value  对应vue的 :xxx="xxx"
-    VBind  对应vue的单向绑定
-    VModel  对应vue的双向绑定
-"""
-
-"""
-vue组件定义
-=============================
-普通UI组件
-Type 指向组件的类型，例如NInput，NFlex等
-Props 字典，包含组件的属性，仅限于基础属性，不能包含事件属性
-    对于v-bind，可以直接在Props中定义路径数组，将自动设置计算属性
-    对于v-model，可以直接在Props中定义路径数组，将自动设置事件
-Slots 字典，可以包含子组件，将会设置()=>{}的事件
-=============================
-Type 如果是@开头结尾，则表示是特殊组件
-=============================
-Type @Value@|@VBind@ 视作span
-Data 对应组件的属性值，可以是字符串，数字，布尔值，也可以是路径数组
-=============================
-Type @FOR@ 视作 <template v-for="item in items"/>
-Items vue数据结构
-ItemLabel vue数据结构
-IndexLabel vue数据结构
-Template 组件|组件数组
-"""
-"""
-v-if属性 使用IfCondition字段
-=============================
-Type 
-    Value 直接使用数据作为判断条件
-    VBind 直接使用数据作为判断条件
-    Compare 
-    Logical 
-
-Type==Compare: 
-    Left vue数据结构
-    Operator 比较运算符，支持==，!=，>，<，>=，<=
-    Right vue数据结构
-Type==Logical: 
-    Operator: 'AND' | 'OR'
-    Conditions: Condition[] 可嵌套的条件数组
-"""
-
 
 # ================= 基础类型定义 =================
 class PropVarType(StrEnum):
@@ -75,20 +26,64 @@ class ValueProp(PropVarBase):
     Type: Literal[PropVarType.Value] = PropVarType.Value
     Data: Any = Field(..., description="静态值")
 
+    def __init__(self, data=None, **kwargs):
+        if not "Data" in kwargs:
+            kwargs["Data"] = data
+        super().__init__(**kwargs)
+
 
 class VBindProp(PropVarBase):
     Type: Literal[PropVarType.VBind] = PropVarType.VBind
-    Data: List[Union[str, int]] = Field(
-        ..., description="数据路径数组，如 ['path', 'to', 'data']", min_length=1
+    Data: List[Union[str, int, ValueProp, "VBindProp"]] = Field(
+        ..., description="数据路径数组", min_length=1
     )
     Replace: Optional[str] = Field(None, description="替换模板")
+
+    def __init__(self, data=None, replace=None, **kwargs):
+        """
+        初始化 VBindProp 对象
+        如果传入的第一个参数是列表，则将其作为 Data 字段的值
+        否则使用标准的关键字参数初始化
+        """
+        if data is not None and isinstance(data, list) and not "Data" in kwargs:
+            kwargs["Data"] = data
+        if replace is not None:
+            kwargs["Replace"] = replace
+        super().__init__(**kwargs)
+
+    @model_validator(mode="after")
+    def check_data_type(self):
+        """
+        递归将Data中的str, int转换为ValueProp
+        需要递归解包VBindProp的内容
+        """
+        for i, item in enumerate(self.Data):
+            if isinstance(item, (str, int)):
+                self.Data[i] = ValueProp(Data=item)
+            elif isinstance(item, VBindProp):
+                item.check_data_type()
+        return self
 
 
 class VModelProp(PropVarBase):
     Type: Literal[PropVarType.VModel] = PropVarType.VModel
-    Data: List[Union[str, int]] = Field(
+    Data: List[Union[str, int, ValueProp, VBindProp]] = Field(
         ..., description="双向绑定路径数组", min_length=1
     )
+
+    def __init__(self, data=None, **kwargs):
+        if data is not None and isinstance(data, list) and not "Data" in kwargs:
+            kwargs["Data"] = data
+        super().__init__(**kwargs)
+
+    @model_validator(mode="after")
+    def check_data_type(self):
+        for i, item in enumerate(self.Data):
+            if isinstance(item, (str, int)):
+                self.Data[i] = ValueProp(Data=item)
+            elif isinstance(item, VBindProp):
+                item.check_data_type()
+        return self
 
 
 # ================= 函数类型增强 =================
@@ -117,26 +112,20 @@ class FuncArg_SETCONTEXT(BaseModel):
 
 
 class FuncArg_ADDITEM(BaseModel):
-    DstPath: List[Union[str, int]] = Field(
-        ..., description="目标路径数组", min_length=1
-    )
+    DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemValue: Any = Field(..., description="item的value数据")
     ItemKey: "ReadOnlyPropVar" = Field(..., description="item的key")
     pass
 
 
 class FuncArg_REMOVEITEM(BaseModel):
-    DstPath: List[Union[str, int]] = Field(
-        ..., description="目标路径数组", min_length=1
-    )
+    DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemKey: "ReadOnlyPropVar" = Field(..., description="item的key")
     pass
 
 
 class FuncArg_APPENDITEM(BaseModel):
-    DstPath: List[Union[str, int]] = Field(
-        ..., description="目标路径数组", min_length=1
-    )
+    DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemValue: Any = Field(..., description="item的value数据")
     pass
 
@@ -169,9 +158,7 @@ class FuncArg_REMOVERESULT4OUT(BaseModel):
 
 class FuncArg_OPENEDITOR(BaseModel):
     Language: str = Field(..., description="编辑器语言")
-    DstPath: List[Union[str, int]] = Field(
-        ..., description="目标路径数组", min_length=1
-    )
+    DstPath: VBindProp = Field(..., description="目标路径数组")
     pass
 
 
@@ -343,15 +330,13 @@ Condition = Union[CompareCondition, LogicalCondition, DirectCondition]
 # ================= 组件系统 =================
 class ComponentType(StrEnum):
     VFOR = "@VFOR@"
-    VALUE = "@VALUE@"
-    VBIND = "@VBIND@"
+    VSPAN = "@VSPAN@"
 
 
 class BaseComponent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     Type: str
     IfCondition: Optional[Condition] = None
-    pass
 
 
 class NormalComponent(BaseComponent):
@@ -362,7 +347,7 @@ class NormalComponent(BaseComponent):
     @model_validator(mode="after")
     def check_type_conflict(self):
         # 确保 Type 不与其他子类的固定值冲突
-        forbidden_types = [ComponentType.VFOR, ComponentType.VBIND, ComponentType.VALUE]
+        forbidden_types = [ComponentType.VFOR, ComponentType.VSPAN]
         if self.Type in forbidden_types:
             raise ValueError(
                 f"NormalComponent Type cannot be {self.Type}, "
@@ -383,15 +368,15 @@ class NormalComponent(BaseComponent):
             if value is None:
                 continue
             if not isinstance(value, PropVar):
-                result_props[key] = ValueProp(Data=value)
+                result_props[key] = ValueProp(value)
             else:
                 result_props[key] = value
         return result_props
 
 
 class SpanComponent(BaseComponent):
-    Type: Literal[ComponentType.VALUE, ComponentType.VBIND]
-    Data: Union[Any, List[Union[str, int]]]  # 联合类型
+    Type: str = Field(default=ComponentType.VSPAN, frozen=True)  # 固定值但允许校验
+    Data: "ReadOnlyPropVar"
     Replace: Optional[str] = Field(None, description="替换模板")
     Props: Optional[Literal[None]] = Field(None, exclude=True)
     Slots: Optional[Literal[None]] = Field(None, exclude=True)
@@ -399,10 +384,16 @@ class SpanComponent(BaseComponent):
     @field_validator("Type")
     @classmethod
     def validate_type(cls, v: str) -> str:
-        allowed = [ComponentType.VBIND, ComponentType.VALUE]
-        if v not in allowed:
-            raise ValueError(f"Type must be one of {allowed}")
+        if v != ComponentType.VSPAN:
+            raise ValueError(f"Type must be {ComponentType.VSPAN}")
         return v
+
+    def __init__(self, data=None, replace=None, **kwargs):
+        if data is not None and isinstance(data, ReadOnlyPropVar):
+            kwargs["Data"] = data
+        if replace is not None:
+            kwargs["Replace"] = replace
+        super().__init__(**kwargs)
 
 
 class ForLoopComponent(BaseComponent):
@@ -423,11 +414,30 @@ class ForLoopComponent(BaseComponent):
 
 
 UnionComponent = Union[NormalComponent, SpanComponent, ForLoopComponent]
-for cls in [ForLoopComponent, SpanComponent, NormalComponent]:
+for cls in [
+    ForLoopComponent,
+    SpanComponent,
+    NormalComponent,
+    ValueProp,
+    VBindProp,
+    VModelProp,
+    FunctionProp,
+]:
     cls.model_rebuild()
 
 
 class SelectOptions(BaseModel):
     label: str
     value: str
+    pass
+
+
+class VarType(StrEnum):
+    Ref = "Ref"
+    String = "String"
+    Integer = "Integer"
+    Number = "Number"
+    Boolean = "Boolean"
+    File = "File"
+    Any = "Any"
     pass

@@ -24,6 +24,7 @@ import type {
   Condition,
   VBindProp,
   ValueProp,
+  VModelProp,
 } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
@@ -37,9 +38,7 @@ import {
   CONNECT_DATA,
   CONNECT_DATA_TO_SELECT,
   TYPE_VFOR,
-  TYPE_VALUE,
-  TYPE_VBIND,
-  TYPE_VMODEL,
+  TYPE_VSPAN,
   TYPE_CONDITION_COMPARE,
   TYPE_CONDITION_LOGICAL,
   TYPE_CONDITION_DIRECT,
@@ -101,56 +100,98 @@ const getConnectionsByArgs = inject<
 >('getConnectionsByArgs')!
 
 // 数据路径解析器
-const resolveDataPath = (path: (string | number)[]): (string | number)[] => {
-  // 解析路径
+// 数据获取依赖数组第一个元素来决定使用字典
+const resolveVBindDataPath = (
+  vbdata: VBindProp | VModelProp,
+  tmpFunction?: Record<string, (args: (string | number)[]) => number | string>,
+): ValueProp => {
   const resolvePath: (string | number)[] = []
+  const path = vbdata.Data
   for (const element of path) {
-    if (
-      (resolvePath[0] === THIS_NODE_DATA || resolvePath[0] === CONNECT_DATA) &&
-      props.dataContext[CONTEXT_FUNCTION].hasOwnProperty(element) &&
-      typeof props.dataContext[CONTEXT_FUNCTION][element] === 'function'
-    ) {
-      resolvePath.push(...props.dataContext[CONTEXT_FUNCTION][element]())
-    } else {
-      resolvePath.push(element)
+    if (element.Type === PropVarType.Value) {
+      resolvePath.push(element.Data)
+    } else if (element.Type === PropVarType.VBind) {
+      // 递归解析VBindProp
+      const bindValue = resolveVBindDataPath(element, tmpFunction)
+      resolvePath.push(bindValue.Data)
+    }
+  }
+
+  let res
+  if (resolvePath[0] === THIS_NODE_DATA) {
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
+  } else if (resolvePath[0] === VFOR_DATA) {
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
+  } else if (resolvePath[0] === NODE_CONFIG_DATA) {
+    const nodeConfig = getNodeConfig(selectedNodeId.value as string)
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], nodeConfig)
+  } else if (resolvePath[0] === CONTEXT_FUNCTION) {
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[CONTEXT_FUNCTION])
+  } else if (resolvePath[0] === GENERATE_UUID) {
+    res = getUuid()
+  } else if (tmpFunction) {
+    if (resolvePath[0] in tmpFunction) {
+      res = tmpFunction[resolvePath[0]](resolvePath.slice(1))
+    }
+  }
+  if (typeof res != 'number' || typeof res != 'string') {
+    return {
+      Type: PropVarType.Value,
+      Data: res,
+    }
+  }
+  throw new Error(`Unsupported data path: ${resolvePath}`)
+}
+const resolveDataPath = (
+  vbdata: VBindProp | VModelProp,
+  tmpFunction?: Record<string, (args: (string | number)[]) => any>,
+): (string | number)[] => {
+  const resolvePath: (string | number)[] = []
+  const path = vbdata.Data
+  for (const element of path) {
+    if (element.Type === PropVarType.Value) {
+      resolvePath.push(element.Data)
+    } else if (element.Type === PropVarType.VBind) {
+      // 递归解析VBindProp
+      const bindValue = resolveVBindDataPath(element, tmpFunction)
+      resolvePath.push(bindValue.Data)
     }
   }
   return resolvePath
 }
+const getValueByPath = (
+  vbdata: VBindProp | VModelProp,
+  tmpFunction?: Record<string, (args: (string | number)[]) => any>,
+) => {
+  const resolvePath = resolveDataPath(vbdata, tmpFunction)
 
-// 数据获取依赖数组第一个元素来决定使用字典
-const getValueByPath = (path: (string | number)[]): any => {
-  const resolvePath: (string | number)[] = resolveDataPath(path)
-  // 根据路径取值
+  let res
   if (resolvePath[0] === THIS_NODE_DATA) {
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
   } else if (resolvePath[0] === VFOR_DATA) {
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
-  } else if (resolvePath[0] === CONNECT_DATA_TO_SELECT) {
-    if (resolvePath.length >= 2) {
-      return getOrCreateVarSelection(resolvePath.slice(1) as string[]).map((item) =>
-        mapVarItemToSelect(item),
-      )
-    }
-  } else if (resolvePath[0] === CONNECT_DATA) {
-    if (resolvePath.length >= 2) {
-      const res = getConnectionsByArgs(resolvePath.slice(1) as string[])
-      return res
-    }
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[VFOR_DATA])
   } else if (resolvePath[0] === NODE_CONFIG_DATA) {
     const nodeConfig = getNodeConfig(selectedNodeId.value as string)
-    return resolvePath.slice(1).reduce((acc, key) => acc?.[key], nodeConfig)
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], nodeConfig)
+  } else if (resolvePath[0] === CONTEXT_FUNCTION) {
+    res = resolvePath.slice(1).reduce((acc, key) => acc?.[key], props.dataContext[CONTEXT_FUNCTION])
   } else if (resolvePath[0] === GENERATE_UUID) {
-    return getUuid()
+    res = getUuid()
+  } else if (resolvePath[0] === CONNECT_DATA) {
+    if (resolvePath.length >= 2) {
+      res = getConnectionsByArgs(resolvePath.slice(1) as string[])
+    }
+  } else if (tmpFunction) {
+    if (resolvePath[0] in tmpFunction) {
+      res = tmpFunction[resolvePath[0]](resolvePath.slice(1))
+    }
   }
-  console.error('Invalid connect option path')
-  return null
+  return res
 }
 
 // 数据更新
-const updateValueByPath = (path: (string | number)[], value: any) => {
-  // 解析路径
-  const resolvePath: (string | number)[] = resolveDataPath(path)
+const updateValueByPath = (vbdata: VBindProp | VModelProp, value: any) => {
+  const resolvePath = resolveDataPath(vbdata)
   // 根据路径更新值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -158,14 +199,12 @@ const updateValueByPath = (path: (string | number)[], value: any) => {
     const parent = resolvePath.reduce((acc, key) => acc?.[key], props.dataContext[THIS_NODE_DATA])
     if (parent) parent[lastKey] = value
   } else {
-    console.error('Unsupported update path')
+    console.error(`Unsupported update path: ${resolvePath}`)
   }
 }
 
 // Object类型数据添加项
-const addItemByPath = (path: (string | number)[], key: string | number, value: any) => {
-  // 解析路径
-  const resolvePath: (string | number)[] = resolveDataPath(path)
+const addItemByPath = (resolvePath: (string | number)[], key: string | number, value: any) => {
   // 根据路径添加值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -175,12 +214,10 @@ const addItemByPath = (path: (string | number)[], key: string | number, value: a
       return
     }
   }
-  console.error('Unsupported add path')
+  console.error(`Unsupported add path: ${resolvePath}`)
 }
 // Object|Array类型数据删除项
-const removeItemByPath = (path: (string | number)[], key: string | number) => {
-  // 解析路径
-  const resolvePath: (string | number)[] = resolveDataPath(path)
+const removeItemByPath = (resolvePath: (string | number)[], key: string | number) => {
   // 根据路径删除值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -195,13 +232,11 @@ const removeItemByPath = (path: (string | number)[], key: string | number) => {
       }
     }
   }
-  console.error('Unsupported delete path')
+  console.error(`Unsupported delete path: ${resolvePath}`)
 }
 
 // Array类型数据添加项
-const appendItemByPath = (path: (string | number)[], value: any) => {
-  // 解析路径
-  const resolvePath: (string | number)[] = resolveDataPath(path)
+const appendItemByPath = (resolvePath: (string | number)[], value: any) => {
   // 根据路径插入值
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -211,7 +246,7 @@ const appendItemByPath = (path: (string | number)[], value: any) => {
       return
     }
   }
-  console.error('Unsupported append path')
+  console.error(`Unsupported append path: ${resolvePath}`)
 }
 
 // 添加Result
@@ -225,7 +260,7 @@ const addItem2Result = (
     nodedata.addResult(content, rid, pos)
     return
   }
-  console.error('Unsupported append path')
+  console.error(`addItem2Result error`)
 }
 
 // 删除Result
@@ -235,7 +270,7 @@ const removeItem4Result = (rid: string) => {
     nodedata.rmResult(rid)
     return
   }
-  console.error('Unsupported remove path')
+  console.error(`Unsupported remove path: ${rid}`)
 }
 
 // Results添加项进Connect
@@ -314,9 +349,7 @@ const removeHandleData = (handleType: VFNodeConnectionType, handleId: string, da
 }
 
 // 打开编辑器
-const openCodeEditor = (path: (string | number)[], lang: CodeEditorLanguage) => {
-  // 解析路径
-  const resolvePath: (string | number)[] = resolveDataPath(path)
+const openCodeEditor = (resolvePath: (string | number)[], lang: CodeEditorLanguage) => {
   // 根据路径打开编辑器
   const firstKey = resolvePath.shift()!
   if (firstKey === THIS_NODE_DATA) {
@@ -357,16 +390,16 @@ const parseResult = (result: any, getValueFunc: Function) => {
   return parseValue(result)
 }
 
-const replaceVBindProp = (prop: VBindProp | SpanComponent): any => {
+const replaceVBindProp = (prop: VBindProp): any => {
   if (prop.Replace) {
-    const data = getValueByPath(prop.Data)
+    const data = getValueByPath(prop)
     if (typeof data === 'string') {
       return prop.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
         return data
       })
     }
   }
-  return getValueByPath(prop.Data)
+  return getValueByPath(prop)
 }
 const getPropValueFromReadOnlyPropVar = (prop: ReadOnlyPropVar): any => {
   switch (prop.Type) {
@@ -398,9 +431,9 @@ const processedProps = computed(() => {
         propsObj[propName] = replaceVBindProp(prop)
         break
       case PropVarType.VModel:
-        propsObj[propName] = getValueByPath(prop.Data)
+        propsObj[propName] = getValueByPath(prop)
         eventsObj[`onUpdate:${propName}`] = (val: any) => {
-          updateValueByPath(prop.Data, val)
+          updateValueByPath(prop, val)
         }
         break
       case PropVarType.Function:
@@ -412,34 +445,43 @@ const processedProps = computed(() => {
 
         for (const prop_Function of prop_Functions.Funcs) {
           if (prop_Function.Func == FunctionPropType.SETCONTEXT) {
-            functions.push((getFunc, setFunc) => {
+            functions.push((_, setFunc) => {
               const { Key, Value } = prop_Function.Arg
               setFunc(getPropValueFromReadOnlyPropVar(Key), getPropValueFromReadOnlyPropVar(Value))
             })
           } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
-              addItemByPath(DstPath, getFunc(ItemKey), cloneDeep(parseResult(ItemValue, getFunc))),
+            functions.push((getFunc, _) =>
+              addItemByPath(
+                resolveDataPath(DstPath),
+                getFunc(ItemKey),
+                cloneDeep(parseResult(ItemValue, getFunc)),
+              ),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEITEM) {
             const { ItemKey, DstPath } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => removeItemByPath(DstPath, getFunc(ItemKey)))
+            functions.push((getFunc, _) =>
+              removeItemByPath(resolveDataPath(DstPath), getFunc(ItemKey)),
+            )
           } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
             const { DstPath, ItemValue } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
-              appendItemByPath(DstPath, cloneDeep(parseResult(ItemValue, getFunc))),
+            functions.push((getFunc, _) =>
+              appendItemByPath(
+                resolveDataPath(DstPath),
+                cloneDeep(parseResult(ItemValue, getFunc)),
+              ),
             )
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT) {
             const { Result, ResultId, Position } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
+            functions.push((getFunc, _) =>
               addItem2Result(cloneDeep(parseResult(Result, getFunc)), getFunc(ResultId), Position),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVERESULT) {
             const { ResultId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => removeItem4Result(getFunc(ResultId)))
+            functions.push((getFunc, _) => removeItem4Result(getFunc(ResultId)))
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT2OUT) {
             const { HandleId, Result, ResultId, Position, DataId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
+            functions.push((getFunc, _) =>
               addResults2Connect(
                 getFunc(HandleId),
                 cloneDeep(parseResult(Result, getFunc)),
@@ -450,30 +492,30 @@ const processedProps = computed(() => {
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVERESULT4OUT) {
             const { ResultId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => removeResults4Connect(getFunc(ResultId)))
+            functions.push((getFunc, _) => removeResults4Connect(getFunc(ResultId)))
           } else if (prop_Function.Func == FunctionPropType.ADDHANDLE) {
             const { HandleType, HandleId, Position, HandleLabel } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
+            functions.push((getFunc, _) =>
               addHandle(HandleType, getFunc(HandleId), cloneDeep(getFunc(HandleLabel)), Position),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLE) {
             const { HandleType, HandleId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => removeHandle(HandleType, getFunc(HandleId)))
+            functions.push((getFunc, _) => removeHandle(HandleType, getFunc(HandleId)))
           } else if (prop_Function.Func == FunctionPropType.ADDHANDLEDATA) {
             const { HandleType, HandleId, Data, DataId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
+            functions.push((getFunc, _) =>
               addHandleData(HandleType, getFunc(HandleId), Data, getFunc(DataId)),
             )
           } else if (prop_Function.Func == FunctionPropType.REMOVEHANDLEDATA) {
             const { HandleType, HandleId, DataId } = prop_Function.Arg
-            functions.push((getFunc, setFunc) =>
+            functions.push((getFunc, _) =>
               removeHandleData(HandleType, getFunc(HandleId), getFunc(DataId)),
             )
           } else if (prop_Function.Func == FunctionPropType.OPENEDITOR) {
             const { DstPath, Language } = prop_Function.Arg
-            functions.push((getFunc, setFunc) => openCodeEditor(DstPath, Language))
+            functions.push((__, _) => openCodeEditor(resolveDataPath(DstPath), Language))
           } else if (prop_Function.Func == FunctionPropType.UPDATENODEINTERNAL) {
-            functions.push((getFunc, setFunc) => {
+            functions.push((__, _) => {
               if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
             })
           }
@@ -482,8 +524,14 @@ const processedProps = computed(() => {
           const f_Context: Record<string, any> = {}
           const getValueFrom_f_Context = (propvar: ReadOnlyPropVar | null | undefined) => {
             if (!propvar) return null
-            if (propvar.Type === PropVarType.VBind && propvar.Data[0] === CONTEXT_ARG) {
-              const data = propvar.Data.slice(1).reduce((acc, key) => acc?.[key], f_Context)
+            if (propvar.Type === PropVarType.Value) {
+              return propvar.Data
+            } else if (propvar.Type === PropVarType.VBind) {
+              const tmpfunc = {
+                [CONTEXT_ARG]: (path: (string | number)[]) =>
+                  path.slice(1).reduce((acc, key) => acc?.[key], f_Context),
+              }
+              const data = getValueByPath(propvar, tmpfunc)
               if (propvar.Replace && typeof data === 'string') {
                 return propvar.Replace.replace(/\{\{Data\}\}/g, (match, key) => {
                   return data
@@ -491,7 +539,6 @@ const processedProps = computed(() => {
               }
               return data
             }
-            return getPropValueFromReadOnlyPropVar(propvar)
           }
           const set_f_Context = (key: string, value: any) => {
             f_Context[key] = value
@@ -546,7 +593,13 @@ const handleLogical = (config: LogicalCondition) => {
 
 // 获取Span组件的值
 const getSpanValue = (config: SpanComponent): any => {
-  return config.Type === PropVarType.VBind ? replaceVBindProp(config) : config.Data
+  if (config.Data.Type === PropVarType.VBind) {
+    return replaceVBindProp(config.Data)
+  } else if (config.Data.Type === PropVarType.Value) {
+    return config.Data.Data
+  } else {
+    return null
+  }
 }
 
 // 循环处理器
@@ -641,7 +694,7 @@ const resolveNormalComponent = (componentType: string) => {
     />
 
     <!-- 处理@Value@或@VBind@类型组件 -->
-    <span v-else-if="componentData.Type === TYPE_VALUE || componentData.Type === TYPE_VBIND">
+    <span v-else-if="componentData.Type === TYPE_VSPAN">
       {{ getSpanValue(componentData as SpanComponent) }}
     </span>
 

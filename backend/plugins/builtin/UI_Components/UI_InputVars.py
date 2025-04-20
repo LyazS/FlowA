@@ -12,17 +12,6 @@ from .NButton import NButton
 from .NFlex import NFlex
 
 
-class VarType(StrEnum):
-    Ref = "Ref"
-    String = "String"
-    Integer = "Integer"
-    Number = "Number"
-    Boolean = "Boolean"
-    File = "File"
-    Any = "Any"
-    pass
-
-
 class InputVarModel(BaseModel):
     key: str = ""
     type: VarType = VarType.String
@@ -59,13 +48,18 @@ class VarNameInput(NInput):
             style={"width": "30%"},
             size="small",
             value=VModelProp(
-                Data=[
+                [
                     THIS_NODE_DATA,
                     "Payloads",
                     "ById",
-                    PAYLOADS_ID,
+                    VBindProp(
+                        [
+                            CONTEXT_FUNCTION,
+                            PAYLOADS_ID,
+                        ]
+                    ),
                     "Data",
-                    "@Index",
+                    VBindProp([VFOR_DATA, "@Index"]),
                     "key",
                 ]
             ),
@@ -88,13 +82,18 @@ class VarTypeSelect(NormalComponent):
                     {"label": "布尔", "value": "Boolean"},
                 ],
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "type",
                     ]
                 ),
@@ -108,30 +107,40 @@ class VarStringInput(NInput):
             size="small",
             style={"width": "50%"},
             value=VModelProp(
-                Data=[
+                [
                     THIS_NODE_DATA,
                     "Payloads",
                     "ById",
-                    PAYLOADS_ID,
+                    VBindProp(
+                        [
+                            CONTEXT_FUNCTION,
+                            PAYLOADS_ID,
+                        ]
+                    ),
                     "Data",
-                    "@Index",
+                    VBindProp([VFOR_DATA, "@Index"]),
                     "valueStr",
                 ],
             ),
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "type",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data="String"),
+                Right=ValueProp("String"),
             ),
         )
 
@@ -144,13 +153,18 @@ class VarIntegerInput(NormalComponent):
                 "size": "small",
                 "style": {"width": "50%"},
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "valueNum",
                     ],
                 ),
@@ -158,18 +172,23 @@ class VarIntegerInput(NormalComponent):
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "type",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data="Integer"),
+                Right=ValueProp("Integer"),
             ),
         )
 
@@ -182,31 +201,41 @@ class VarNumberInput(NormalComponent):
                 "size": "small",
                 "style": {"width": "50%"},
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "valueNum",
                     ],
                 ),
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "type",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data="Number"),
+                Right=ValueProp("Number"),
             ),
         )
 
@@ -221,13 +250,18 @@ class VarBooleanInput(NFlex):
                     size="medium",
                     style={"width": "50%"},
                     value=VModelProp(
-                        Data=[
+                        [
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
-                            "@Index",
+                            VBindProp([VFOR_DATA, "@Index"]),
                             "valueBool",
                         ],
                     ),
@@ -235,18 +269,23 @@ class VarBooleanInput(NFlex):
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
-                        "@Index",
+                        VBindProp([VFOR_DATA, "@Index"]),
                         "type",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data="Boolean"),
+                Right=ValueProp("Boolean"),
             ),
         )
 
@@ -271,7 +310,7 @@ class UI_SingleInputVars(NFlex):
                         size="small",
                         style={"width": "50%"},
                         options=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -286,30 +325,40 @@ class UI_SingleInputVars(NFlex):
                             ]
                         ),
                         value=VModelProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Data",
-                                "@Index",
+                                VBindProp([VFOR_DATA, "@Index"]),
                                 "valueStr",
                             ],
                         ),
                         IfCondition=CompareCondition(
                             Left=VBindProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
-                                    "@Index",
+                                    VBindProp([VFOR_DATA, "@Index"]),
                                     "type",
                                 ]
                             ),
                             Operator="==",
-                            Right=ValueProp(Data="Ref"),
+                            Right=ValueProp("Ref"),
                         ),
                     ),
                 ]
@@ -338,22 +387,27 @@ class UI_InputVars(NFlex):
                                         Funcs=[
                                             APPENDITEM_FuncProp(
                                                 Arg=FuncArg_APPENDITEM(
-                                                    DstPath=[
-                                                        THIS_NODE_DATA,
-                                                        "Payloads",
-                                                        "ById",
-                                                        PAYLOADS_ID,
-                                                        "Data",
-                                                    ],
+                                                    DstPath=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    CONTEXT_FUNCTION,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                        ]
+                                                    ),
                                                     ItemValue=InputVarModel(),
                                                 )
                                             )
                                         ]
                                     ),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="添加"
-                                        ),
+                                        "default": SpanComponent(ValueProp("添加")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),
@@ -362,11 +416,16 @@ class UI_InputVars(NFlex):
                     ),
                     ForLoopComponent(
                         Items=VBindProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Data",
                             ]
                         ),
@@ -390,18 +449,22 @@ class UI_InputVars(NFlex):
                                             Funcs=[
                                                 REMOVEITEM_FuncProp(
                                                     Arg=FuncArg_REMOVEITEM(
-                                                        DstPath=[
-                                                            THIS_NODE_DATA,
-                                                            "Payloads",
-                                                            "ById",
-                                                            PAYLOADS_ID,
-                                                            "Data",
-                                                        ],
-                                                        ItemKey=VBindProp(
-                                                            Data=[
-                                                                VFOR_DATA,
-                                                                "@Index",
+                                                        DstPath=VBindProp(
+                                                            [
+                                                                THIS_NODE_DATA,
+                                                                "Payloads",
+                                                                "ById",
+                                                                VBindProp(
+                                                                    [
+                                                                        CONTEXT_FUNCTION,
+                                                                        PAYLOADS_ID,
+                                                                    ]
+                                                                ),
+                                                                "Data",
                                                             ]
+                                                        ),
+                                                        ItemKey=VBindProp(
+                                                            [VFOR_DATA, "@Index"]
                                                         ),
                                                     ),
                                                 )
@@ -421,3 +484,6 @@ class UI_InputVars(NFlex):
 
 
 EXPORT_UI = UI_InputVars
+
+with open("R:/output.json", "w", encoding="utf-8") as f:
+    f.write(UI_InputVars().model_dump_json())

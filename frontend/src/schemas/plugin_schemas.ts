@@ -30,9 +30,7 @@ export const CONNECT_HANDLE_LEVEL = '@CONNECT_HANDLE_LEVEL@'
 export const CONNECT_VAR_LEVEL = '@CONNECT_VAR_LEVEL@'
 // 类型定义
 export const TYPE_VFOR = '@VFOR@' as const
-export const TYPE_VALUE = '@VALUE@' as const
-export const TYPE_VBIND = '@VBIND@' as const
-export const TYPE_VMODEL = '@VMODEL@' as const
+export const TYPE_VSPAN = '@VSPAN@' as const
 export const TYPE_CONDITION_COMPARE = '@CONDITION_COMPARE@' as const
 export const TYPE_CONDITION_LOGICAL = '@CONDITION_LOGICAL@' as const
 export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
@@ -74,13 +72,13 @@ export interface ValueProp<T = any> extends PropVarBase {
 
 export interface VBindProp extends PropVarBase {
   Type: PropVarType.VBind
-  Data: (string | number)[]
+  Data: (ValueProp | VBindProp)[]
   Replace?: string
 }
 
 export interface VModelProp extends PropVarBase {
   Type: PropVarType.VModel
-  Data: (string | number)[]
+  Data: (ValueProp | VBindProp)[]
 }
 
 // 函数参数接口定义
@@ -90,18 +88,18 @@ export interface FuncArg_SETCONTEXT {
 }
 
 export interface FuncArg_ADDITEM {
-  DstPath: (string | number)[]
+  DstPath: VBindProp
   ItemKey: ReadOnlyPropVar
   ItemValue: any
 }
 
 export interface FuncArg_REMOVEITEM {
-  DstPath: (string | number)[]
+  DstPath: VBindProp
   ItemKey: ReadOnlyPropVar
 }
 
 export interface FuncArg_APPENDITEM {
-  DstPath: (string | number)[]
+  DstPath: VBindProp
   ItemValue: any
 }
 
@@ -154,8 +152,7 @@ export interface FuncArg_REMOVEHANDLEDATA {
 
 export interface FuncArg_OPENEDITOR {
   Language: CodeEditorLanguage
-  Value: ReadOnlyPropVar
-  DstPath: (string | number)[]
+  DstPath: VBindProp
 }
 
 // 函数属性基类
@@ -271,8 +268,8 @@ export interface NormalComponent {
 
 // 特殊绑定组件 (@Value@/@VBind@)
 export interface SpanComponent {
-  Type: typeof TYPE_VALUE | typeof TYPE_VBIND
-  Data: (string | number)[] | any
+  Type: typeof TYPE_VSPAN
+  Data: ReadOnlyPropVar
   IfCondition?: Condition
   Replace?: string
   // 特殊绑定组件不允许有子组件
@@ -319,7 +316,7 @@ export interface LogicalCondition {
   Conditions: Condition[]
 }
 
-// 插件系统保持不变
+// 插件系统
 export interface VFPluginSetting {
   Execute: string
 }
