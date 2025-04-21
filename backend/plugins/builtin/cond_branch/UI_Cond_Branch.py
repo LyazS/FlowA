@@ -45,25 +45,19 @@ class branch_header(NFlex):
                             "size": "small",
                             "style": {"width": "12em"},
                             "value": VModelProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Results",
                                     "ById",
-                                    "@OutHandleName",
+                                    VBindProp([VFOR_DATA, "@OutHandleName"]),
                                     "Data",
                                     "CondIsAnd",
                                 ]
                             ),
                         },
                         Slots={
-                            "checked": SpanComponent(
-                                Type=ComponentType.VALUE,
-                                Data="AND",
-                            ),
-                            "unchecked": SpanComponent(
-                                Type=ComponentType.VALUE,
-                                Data="OR",
-                            ),
+                            "checked": SpanComponent(ValueProp("AND")),
+                            "unchecked": SpanComponent(ValueProp("OR")),
                         },
                     ),
                     NormalComponent(
@@ -79,12 +73,7 @@ class branch_header(NFlex):
                                         "size": "small",
                                         "round": True,
                                     },
-                                    Slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE,
-                                            Data="•",
-                                        )
-                                    },
+                                    Slots={"default": SpanComponent(ValueProp("•"))},
                                 ),
                                 NormalComponent(
                                     Type="NInput",
@@ -96,12 +85,14 @@ class branch_header(NFlex):
                                         },
                                         "placeholder": "分支名",
                                         "value": VModelProp(
-                                            Data=[
+                                            [
                                                 THIS_NODE_DATA,
                                                 "Connections",
                                                 "Outputs",
                                                 "ById",
-                                                "@OutHandleName",
+                                                VBindProp(
+                                                    [VFOR_DATA, "@OutHandleName"]
+                                                ),
                                                 "Label",
                                             ]
                                         ),
@@ -131,15 +122,15 @@ class VarTypeSelect(NormalComponent):
                     {"label": "布尔", "value": VarType.Boolean},
                 ],
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
-                        "Comparetype",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
+                        "CompareType",
                     ]
                 ),
             },
@@ -152,32 +143,32 @@ class VarStringInput(NInput):
             size="small",
             style={"width": "80%"},
             value=VModelProp(
-                Data=[
+                [
                     THIS_NODE_DATA,
                     "Results",
                     "ById",
-                    "@OutHandleName",
+                    VBindProp([VFOR_DATA, "@OutHandleName"]),
                     "Data",
                     "Conditions",
-                    "@CondIndex",
-                    "valueStr",
+                    VBindProp([VFOR_DATA, "@CondIndex"]),
+                    "ValueStr",
                 ],
             ),
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
                         "CompareType",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data=VarType.String),
+                Right=ValueProp(VarType.String),
             ),
         )
 
@@ -190,34 +181,34 @@ class VarIntegerInput(NormalComponent):
                 "size": "small",
                 "style": {"width": "80%"},
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
-                        "valueNum",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
+                        "ValueNum",
                     ],
                 ),
                 "precision": 0,
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
                         "CompareType",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data=VarType.Integer),
+                Right=ValueProp(VarType.Integer),
             ),
         )
 
@@ -230,33 +221,33 @@ class VarNumberInput(NormalComponent):
                 "size": "small",
                 "style": {"width": "80%"},
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
-                        "valueNum",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
+                        "ValueNum",
                     ],
                 ),
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
                         "CompareType",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data=VarType.Number),
+                Right=ValueProp(VarType.Number),
             ),
         )
 
@@ -271,34 +262,34 @@ class VarBooleanInput(NFlex):
                     size="medium",
                     style={"width": "50%"},
                     value=VModelProp(
-                        Data=[
+                        [
                             THIS_NODE_DATA,
                             "Results",
                             "ById",
-                            "@OutHandleName",
+                            VBindProp([VFOR_DATA, "@OutHandleName"]),
                             "Data",
                             "Conditions",
-                            "@CondIndex",
-                            "valueBool",
+                            VBindProp([VFOR_DATA, "@CondIndex"]),
+                            "ValueBool",
                         ],
                     ),
                 )
             },
             IfCondition=CompareCondition(
                 Left=VBindProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@OutHandleName",
+                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
                         "Conditions",
-                        "@CondIndex",
+                        VBindProp([VFOR_DATA, "@CondIndex"]),
                         "CompareType",
                     ]
                 ),
                 Operator="==",
-                Right=ValueProp(Data=VarType.Boolean),
+                Right=ValueProp(VarType.Boolean),
             ),
         )
 
@@ -325,19 +316,19 @@ class UI_Cond_Card_Content(NFlex):
                                     style={"width": "65%"},
                                     size="small",
                                     value=VModelProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Results",
                                             "ById",
-                                            "@OutHandleName",
+                                            VBindProp([VFOR_DATA, "@OutHandleName"]),
                                             "Data",
                                             "Conditions",
-                                            "@CondIndex",
+                                            VBindProp([VFOR_DATA, "@CondIndex"]),
                                             "Refdata",
                                         ]
                                     ),
                                     options=VBindProp(
-                                        Data=[
+                                        [
                                             CONNECT_DATA,
                                             "--node",
                                             CONNECT_CUR_NODE,
@@ -367,14 +358,16 @@ class UI_Cond_Card_Content(NFlex):
                                         + NullTypeSelections
                                         + [],
                                         "value": VModelProp(
-                                            Data=[
+                                            [
                                                 THIS_NODE_DATA,
                                                 "Results",
                                                 "ById",
-                                                "@OutHandleName",
+                                                VBindProp(
+                                                    [VFOR_DATA, "@OutHandleName"]
+                                                ),
                                                 "Data",
                                                 "Conditions",
-                                                "@CondIndex",
+                                                VBindProp([VFOR_DATA, "@CondIndex"]),
                                                 "Operator",
                                             ]
                                         ),
@@ -402,7 +395,7 @@ class UI_Cond_Card_Content(NFlex):
                                     size="small",
                                     style={"width": "80%"},
                                     options=VBindProp(
-                                        Data=[
+                                        [
                                             CONNECT_DATA,
                                             "--node",
                                             CONNECT_CUR_NODE,
@@ -417,32 +410,34 @@ class UI_Cond_Card_Content(NFlex):
                                         ]
                                     ),
                                     value=VModelProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Results",
                                             "ById",
-                                            "@OutHandleName",
+                                            VBindProp([VFOR_DATA, "@OutHandleName"]),
                                             "Data",
                                             "Conditions",
-                                            "@CondIndex",
-                                            "valueStr",
+                                            VBindProp([VFOR_DATA, "@CondIndex"]),
+                                            "ValueRef",
                                         ],
                                     ),
                                     IfCondition=CompareCondition(
                                         Left=VBindProp(
-                                            Data=[
+                                            [
                                                 THIS_NODE_DATA,
                                                 "Results",
                                                 "ById",
-                                                "@OutHandleName",
+                                                VBindProp(
+                                                    [VFOR_DATA, "@OutHandleName"]
+                                                ),
                                                 "Data",
                                                 "Conditions",
-                                                "@CondIndex",
+                                                VBindProp([VFOR_DATA, "@CondIndex"]),
                                                 "CompareType",
                                             ]
                                         ),
                                         Operator="==",
-                                        Right=ValueProp(Data=VarType.Ref),
+                                        Right=ValueProp(VarType.Ref),
                                     ),
                                 ),
                             ]
@@ -484,17 +479,19 @@ class UI_Cond_Card(NFlex):
                             Funcs=[
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
-                                        DstPath=[
-                                            THIS_NODE_DATA,
-                                            "Results",
-                                            "ById",
-                                            "@OutHandleName",
-                                            "Data",
-                                            "Conditions",
-                                        ],
-                                        ItemKey=VBindProp(
-                                            Data=[VFOR_DATA, "@CondIndex"]
+                                        DstPath=VBindProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Results",
+                                                "ById",
+                                                VBindProp(
+                                                    [VFOR_DATA, "@OutHandleName"]
+                                                ),
+                                                "Data",
+                                                "Conditions",
+                                            ]
                                         ),
+                                        ItemKey=VBindProp([VFOR_DATA, "@CondIndex"]),
                                     )
                                 )
                             ]
@@ -513,7 +510,7 @@ class UI_Branch_Card(NormalComponent):
         super().__init__(
             Type="NCard",
             Props={
-                "key": VBindProp(Data=[VFOR_DATA, "@OutHandleName"]),
+                "key": VBindProp([VFOR_DATA, "@OutHandleName"]),
                 "bordered": True,
                 "hoverable": True,
                 "size": "small",
@@ -528,25 +525,19 @@ class UI_Branch_Card(NormalComponent):
                         Funcs=[
                             REMOVERESULT_FuncProp(
                                 Arg=FuncArg_REMOVERESULT(
-                                    ResultId=VBindProp(
-                                        Data=[VFOR_DATA, "@OutHandleName"]
-                                    ),
+                                    ResultId=VBindProp([VFOR_DATA, "@OutHandleName"]),
                                 )
                             ),
                             REMOVEHANDLE_FuncProp(
                                 Arg=FuncArg_REMOVEHANDLE(
                                     HandleType=VFNodeConnectionType.Outputs,
-                                    HandleId=VBindProp(
-                                        Data=[VFOR_DATA, "@OutHandleName"]
-                                    ),
+                                    HandleId=VBindProp([VFOR_DATA, "@OutHandleName"]),
                                 )
                             ),
                         ]
                     ),
                     slots={
-                        "default": SpanComponent(
-                            Type=ComponentType.VALUE, Data="删除分支"
-                        ),
+                        "default": SpanComponent(ValueProp("删除分支")),
                         "icon": NormalComponent(Type="Close"),
                     },
                 ),
@@ -556,11 +547,11 @@ class UI_Branch_Card(NormalComponent):
                         "default": [
                             ForLoopComponent(
                                 Items=VBindProp(
-                                    Data=[
+                                    [
                                         THIS_NODE_DATA,
                                         "Results",
                                         "ById",
-                                        "@OutHandleName",
+                                        VBindProp([VFOR_DATA, "@OutHandleName"]),
                                         "Data",
                                         "Conditions",
                                     ]
@@ -577,31 +568,28 @@ class UI_Branch_Card(NormalComponent):
                                     Funcs=[
                                         APPENDITEM_FuncProp(
                                             Arg=FuncArg_APPENDITEM(
-                                                DstPath=[
-                                                    THIS_NODE_DATA,
-                                                    "Results",
-                                                    "ById",
-                                                    "@OutHandleName",
-                                                    "Data",
-                                                    "Conditions",
-                                                ],
-                                                ItemValue=Single_Condition(
-                                                    Refdata="",
-                                                    Operator="eq",
-                                                    CompareType=VarType.Ref,
-                                                    valueStr="",
-                                                    valueNum=0,
-                                                    valueBool=False,
+                                                DstPath=VBindProp(
+                                                    [
+                                                        THIS_NODE_DATA,
+                                                        "Results",
+                                                        "ById",
+                                                        VBindProp(
+                                                            [
+                                                                VFOR_DATA,
+                                                                "@OutHandleName",
+                                                            ]
+                                                        ),
+                                                        "Data",
+                                                        "Conditions",
+                                                    ]
                                                 ),
+                                                ItemValue=Single_Condition(),
                                             )
                                         )
                                     ]
                                 ),
                                 slots={
-                                    "default": SpanComponent(
-                                        Type=ComponentType.VALUE,
-                                        Data="添加条件",
-                                    ),
+                                    "default": SpanComponent(ValueProp("添加条件")),
                                     "icon": NormalComponent(Type="Add"),
                                 },
                             ),
@@ -610,9 +598,9 @@ class UI_Branch_Card(NormalComponent):
                 ),
             },
             IfCondition=CompareCondition(
-                Left=VBindProp(Data=[VFOR_DATA, "@OutHandleName"]),
+                Left=VBindProp([VFOR_DATA, "@OutHandleName"]),
                 Operator="!=",
-                Right=ValueProp(Data="output-else"),
+                Right=ValueProp("output-else"),
             ),
         )
 
@@ -625,7 +613,7 @@ class UI_Drag_Branch(NormalComponent):
                 "ghostClass": "ghost",
                 "animation": 150,
                 "modelValue": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Connections",
                         "Outputs",
@@ -641,7 +629,7 @@ class UI_Drag_Branch(NormalComponent):
             Slots={
                 "default": ForLoopComponent(
                     Items=VBindProp(
-                        Data=[
+                        [
                             THIS_NODE_DATA,
                             "Connections",
                             "Outputs",
@@ -671,7 +659,7 @@ class UI_Cond_Branch(NFlex):
                             "default": [
                                 Header(
                                     type="warning",
-                                    text=ValueProp(Data="分支设计"),
+                                    text=ValueProp("分支设计"),
                                 ),
                                 NButton(
                                     type="warning",
@@ -680,25 +668,21 @@ class UI_Cond_Branch(NFlex):
                                         Funcs=[
                                             SETCONTEXT_FuncProp(
                                                 Arg=FuncArg_SETCONTEXT(
-                                                    Key=ValueProp(Data="bid"),
-                                                    Value=VBindProp(
-                                                        Data=[GENERATE_UUID]
-                                                    ),
+                                                    Key=ValueProp("bid"),
+                                                    Value=VBindProp([GENERATE_UUID]),
                                                 )
                                             ),
                                             ADDHANDLE_FuncProp(
                                                 Arg=FuncArg_ADDHANDLE(
                                                     HandleType=VFNodeConnectionType.Outputs,
                                                     HandleId=VBindProp(
-                                                        Data=[
+                                                        [
                                                             CONTEXT_ARG,
                                                             "bid",
                                                         ],
                                                         Replace="output-{{Data}}",  # handle必须以output|input开头
                                                     ),
-                                                    HandleLabel=ValueProp(
-                                                        Data="CASE X"
-                                                    ),
+                                                    HandleLabel=ValueProp("CASE X"),
                                                     Position=InsertPos.Start,
                                                 )
                                             ),
@@ -706,7 +690,7 @@ class UI_Cond_Branch(NFlex):
                                                 Arg=FuncArg_ADDHANDLEDATA(
                                                     HandleType=VFNodeConnectionType.Outputs,
                                                     HandleId=VBindProp(
-                                                        Data=[
+                                                        [
                                                             CONTEXT_ARG,
                                                             "bid",
                                                         ],
@@ -721,7 +705,7 @@ class UI_Cond_Branch(NFlex):
                                             ADDRESULT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT(
                                                     ResultId=VBindProp(
-                                                        Data=[
+                                                        [
                                                             CONTEXT_ARG,
                                                             "bid",
                                                         ],
@@ -732,7 +716,7 @@ class UI_Cond_Branch(NFlex):
                                                         Type="Dict",
                                                         Data=Single_ConditionDict(
                                                             OutputKey=VBindProp(
-                                                                Data=[
+                                                                [
                                                                     CONTEXT_ARG,
                                                                     "bid",
                                                                 ],
@@ -740,14 +724,7 @@ class UI_Cond_Branch(NFlex):
                                                             ),
                                                             CondIsAnd=True,
                                                             Conditions=[
-                                                                Single_Condition(
-                                                                    Refdata="",
-                                                                    Operator="eq",
-                                                                    CompareType=VarType.Ref,
-                                                                    valueStr="",
-                                                                    valueNum=0,
-                                                                    valueBool=False,
-                                                                )
+                                                                Single_Condition()
                                                             ],
                                                         ),
                                                     ),
@@ -756,10 +733,7 @@ class UI_Cond_Branch(NFlex):
                                         ]
                                     ),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE,
-                                            Data="新增分支",
-                                        ),
+                                        "default": SpanComponent(ValueProp("新增分支")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),

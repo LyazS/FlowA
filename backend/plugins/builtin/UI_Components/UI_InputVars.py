@@ -13,29 +13,29 @@ from .NFlex import NFlex
 
 
 class InputVarModel(BaseModel):
-    key: str = ""
-    type: VarType = VarType.String
-    valueRef: Optional[Dict] = None
-    valueStr: str = ""
-    valueNum: int | float = 0
-    valueBool: bool = False
+    Key: str = ""
+    Type: VarType = VarType.String
+    ValueRef: Optional[Dict] = None
+    ValueStr: str = ""
+    ValueNum: int | float = 0
+    ValueBool: bool = False
     pass
 
     @classmethod
     async def get_value(
         cls, var: "InputVarModel", cur_nid: str, getRef: Callable[[str], Any] = None
     ):
-        if var.type == VarType.String:
-            return var.valueStr
-        elif var.type == VarType.Integer:
-            return var.valueNum
-        elif var.type == VarType.Number:
-            return var.valueNum
-        elif var.type == VarType.Boolean:
-            return var.valueBool
-        elif var.type == VarType.Ref:
+        if var.Type == VarType.String:
+            return var.ValueStr
+        elif var.Type == VarType.Integer:
+            return var.ValueNum
+        elif var.Type == VarType.Number:
+            return var.ValueNum
+        elif var.Type == VarType.Boolean:
+            return var.ValueBool
+        elif var.Type == VarType.Ref:
             if getRef:
-                return await getRef(cur_nid, var.valueStr)
+                return await getRef(cur_nid, var.ValueStr)
             else:
                 logger.error("getRef function is not provided")
                 return None
@@ -60,7 +60,7 @@ class VarNameInput(NInput):
                     ),
                     "Data",
                     VBindProp([VFOR_DATA, "@Index"]),
-                    "key",
+                    "Key",
                 ]
             ),
         )
@@ -94,7 +94,7 @@ class VarTypeSelect(NormalComponent):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "type",
+                        "Type",
                     ]
                 ),
             },
@@ -119,7 +119,7 @@ class VarStringInput(NInput):
                     ),
                     "Data",
                     VBindProp([VFOR_DATA, "@Index"]),
-                    "valueStr",
+                    "ValueStr",
                 ],
             ),
             IfCondition=CompareCondition(
@@ -136,7 +136,7 @@ class VarStringInput(NInput):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "type",
+                        "Type",
                     ]
                 ),
                 Operator="==",
@@ -165,7 +165,7 @@ class VarIntegerInput(NormalComponent):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "valueNum",
+                        "ValueNum",
                     ],
                 ),
                 "precision": 0,
@@ -184,7 +184,7 @@ class VarIntegerInput(NormalComponent):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "type",
+                        "Type",
                     ]
                 ),
                 Operator="==",
@@ -213,7 +213,7 @@ class VarNumberInput(NormalComponent):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "valueNum",
+                        "ValueNum",
                     ],
                 ),
             },
@@ -231,7 +231,7 @@ class VarNumberInput(NormalComponent):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "type",
+                        "Type",
                     ]
                 ),
                 Operator="==",
@@ -262,7 +262,7 @@ class VarBooleanInput(NFlex):
                             ),
                             "Data",
                             VBindProp([VFOR_DATA, "@Index"]),
-                            "valueBool",
+                            "ValueBool",
                         ],
                     ),
                 )
@@ -281,7 +281,7 @@ class VarBooleanInput(NFlex):
                         ),
                         "Data",
                         VBindProp([VFOR_DATA, "@Index"]),
-                        "type",
+                        "Type",
                     ]
                 ),
                 Operator="==",
@@ -337,7 +337,7 @@ class UI_SingleInputVars(NFlex):
                                 ),
                                 "Data",
                                 VBindProp([VFOR_DATA, "@Index"]),
-                                "valueRef",
+                                "ValueRef",
                             ],
                         ),
                         IfCondition=CompareCondition(
@@ -354,7 +354,7 @@ class UI_SingleInputVars(NFlex):
                                     ),
                                     "Data",
                                     VBindProp([VFOR_DATA, "@Index"]),
-                                    "type",
+                                    "Type",
                                 ]
                             ),
                             Operator="==",

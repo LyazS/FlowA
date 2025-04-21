@@ -70,6 +70,14 @@
       "Description": "迭代运行，可以嵌套",
       "Execute": "iter_run/iter_run.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/CondBranch",
+      "Label": "条件分支",
+      "Description": "条件分支",
+      "Execute": "cond_branch/cond_branch.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
@@ -112,6 +120,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
       "Component": "iter_run/UI_Iter_Run_Inner_Var.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_COND_BRANCH",
+      "Component": "cond_branch/UI_Cond_Branch.py"
     }
   ]
 }

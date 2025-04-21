@@ -292,13 +292,14 @@ const getConnectionsByArgs = (args: string[]) => {
     nodeIds.push(nodeType)
   }
   if (parsed_args.level === CONNECT_NODE_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA || parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
+    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+      _CacheConnectionsByArgs[key] = nodeIds.map((nid) => findNode(nid))
+    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = nodeIds
-      return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
-      return _CacheConnectionsByArgs[key]
     }
+    return _CacheConnectionsByArgs[key]
   }
   // ====================================================
   // 句柄层级（Handle Level）
@@ -340,20 +341,15 @@ const getConnectionsByArgs = (args: string[]) => {
         const res_handles = res[Object.keys(res)[0]]
         if (Object.keys(res_handles).length === 1) {
           _CacheConnectionsByArgs[key] = res_handles[Object.keys(res_handles)[0]]
-          return _CacheConnectionsByArgs[key]
         }
         _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
-        return _CacheConnectionsByArgs[key]
-      }
-      _CacheConnectionsByArgs[key] = res
-      return _CacheConnectionsByArgs[key]
+      } else _CacheConnectionsByArgs[key] = res
     } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = handleIds
-      return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
-      return _CacheConnectionsByArgs[key]
     }
+    return _CacheConnectionsByArgs[key]
   }
   // ====================================================
   // 变量层级（Variable Level）
@@ -373,11 +369,10 @@ const getConnectionsByArgs = (args: string[]) => {
   if (parsed_args.level === CONNECT_VAR_LEVEL) {
     if (parsed_args.outfmt === CONNECT_ALL_DATA || parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = varItems
-      return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
-      return _CacheConnectionsByArgs[key]
     }
+    return _CacheConnectionsByArgs[key]
   }
   return null
 }

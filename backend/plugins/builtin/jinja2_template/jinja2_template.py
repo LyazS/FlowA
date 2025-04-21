@@ -107,8 +107,8 @@ class Jinja2Template(FABaseNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.type == VarType.Ref:
-                    refdata = RefVarItem.model_validate_json(var.valueStr)
+                if var.Type == VarType.Ref:
+                    refdata = RefVarItem.model_validate_json(var.ValueStr)
                     thenode = runner.getNode(refdata.Nid)
                     (
                         await thenode.getContentByPath(
@@ -116,7 +116,7 @@ class Jinja2Template(FABaseNode):
                             refdata.Path,
                         )
                     ).Data.add_dependency(
-                        lambda triggerdata, key=var.key, wid=self.wid, nid=self.id, oriid=self.oriid: (
+                        lambda triggerdata, key=var.Key, wid=self.wid, nid=self.id, oriid=self.oriid: (
                             self.report(
                                 triggerdata,
                                 key,
@@ -143,7 +143,7 @@ class Jinja2Template(FABaseNode):
             curData.append(
                 FANodeUpdateData(
                     type=FANodeUpdateType.dontcare,
-                    path=[var.key],
+                    path=[var.Key],
                     data=RefTriggerData(
                         path=[],
                         operation=RefOptions.Set,
@@ -187,8 +187,8 @@ class Jinja2Template(FABaseNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.type == VarType.Ref and var.valueStr not in selfVars:
-                    error_msgs.append(f"变量未定义{var.valueStr}")
+                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
+                    error_msgs.append(f"变量未定义{var.ValueStr}")
         except Exception as e:
             errmsg = traceback.format_exc()
             error_msgs.append(f"获取内容失败{str(errmsg)}")
@@ -216,8 +216,8 @@ class Jinja2Template(FABaseNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    InputVarModel(key="arg1", valueStr="hello"),
-                    InputVarModel(key="arg2", valueStr="world"),
+                    InputVarModel(Key="arg1", ValueStr="hello"),
+                    InputVarModel(Key="arg2", ValueStr="world"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),

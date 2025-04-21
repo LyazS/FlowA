@@ -175,8 +175,8 @@ class LLMInference(FATaskNode):
             UI_INPUT_VARS: VFNodeContentData = node_payloads.ById["UI_INPUT_VARS"]
             for var_dict in UI_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.type == VarType.Ref and var.valueStr not in selfVars:
-                    error_msgs.append(f"变量未定义{var.valueStr}")
+                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
+                    error_msgs.append(f"变量未定义{var.ValueStr}")
             D_MODEL_SETTING: VFNodeContentData = node_payloads.ById["D_MODEL_SETTING"]
             model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
             if model_cfg.Model.Content not in MODELS:
@@ -208,9 +208,9 @@ class LLMInference(FATaskNode):
         if s_config.Type == LLMSettingType.Ref:
             return await InputVarModel.get_value(
                 InputVarModel(
-                    key="",
-                    type=VarType.Ref,
-                    valueStr=s_config.Content,
+                    Key="",
+                    Type=VarType.Ref,
+                    ValueStr=s_config.Content,
                 ),
                 self.id,
                 self.runner().getRefData,
@@ -241,7 +241,7 @@ class LLMInference(FATaskNode):
                 InputArgs = {}
                 for var_dict in D_INPUT_VARS.Data.value:
                     var = InputVarModel.model_validate(var_dict)
-                    InputArgs[var.key] = await InputVarModel.get_value(
+                    InputArgs[var.Key] = await InputVarModel.get_value(
                         var,
                         self.id,
                         self.runner().getRefData,
@@ -439,8 +439,8 @@ class LLMInference(FATaskNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    InputVarModel(key="arg1", valueStr="good"),
-                    InputVarModel(key="arg2", valueStr="assistant"),
+                    InputVarModel(Key="arg1", ValueStr="good"),
+                    InputVarModel(Key="arg2", ValueStr="assistant"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),

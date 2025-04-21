@@ -71,12 +71,13 @@ ContainsTypeSelections = [
 
 
 class Single_Condition(BaseModel):
-    Refdata: str
-    Operator: str
-    CompareType: VarType
-    valueStr: str
-    valueNum: int | float
-    valueBool: bool
+    Refdata: Optional[dict] = None
+    Operator: str = "eq"
+    CompareType: VarType = VarType.Ref
+    ValueRef: Optional[dict] = None
+    ValueStr: str = ""
+    ValueNum: int | float = 0
+    ValueBool: bool = False
     pass
 
 
@@ -151,16 +152,7 @@ class CondBranch(FATaskNode):
                 Data=Single_ConditionDict(
                     OutputKey="output-init",
                     CondIsAnd=True,
-                    Conditions=[
-                        Single_Condition(
-                            Refdata="",
-                            Operator="eq",
-                            CompareType=VarType.Ref,
-                            valueStr="",
-                            valueNum=0,
-                            valueBool=False,
-                        )
-                    ],
+                    Conditions=[Single_Condition()],
                 ),
             ),
             handle_id="output-init",

@@ -524,7 +524,7 @@ const processedProps = computed(() => {
             } else if (propvar.Type === PropVarType.VBind) {
               const tmpfunc = {
                 [CONTEXT_ARG]: (path: (string | number)[]) =>
-                  path.slice(1).reduce((acc, key) => acc?.[key], f_Context),
+                  path.reduce((acc, key) => acc?.[key], f_Context),
               }
               const data = getValueByPath(propvar, tmpfunc)
               if (propvar.Replace && typeof data === 'string') {

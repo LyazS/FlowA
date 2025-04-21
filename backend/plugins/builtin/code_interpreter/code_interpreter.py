@@ -161,10 +161,10 @@ class CodeInterpreter(FATaskNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.type == VarType.Ref and var.valueStr not in selfVars:
-                    error_msgs.append(f"没有该变量选项{var.valueStr}")
+                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
+                    error_msgs.append(f"没有该变量选项{var.ValueStr}")
                 else:
-                    CodeInputArgs.add(var.key)
+                    CodeInputArgs.add(var.Key)
             for pid in node_results.Order:
                 item: VFNodeContentData = node_results.ById[pid]
                 CodeOutputArgs.append(item.Label)
@@ -225,7 +225,7 @@ class CodeInterpreter(FATaskNode):
         D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
         for var_dict in D_INPUT_VARS.Data.value:
             var = InputVarModel.model_validate(var_dict)
-            CodeInputArgs[var.key] = await InputVarModel.get_value(
+            CodeInputArgs[var.Key] = await InputVarModel.get_value(
                 var,
                 self.id,
                 self.runner().getRefData,
@@ -283,8 +283,8 @@ class CodeInterpreter(FATaskNode):
                 Label="输入变量",
                 Type="List",
                 Data=[
-                    InputVarModel(key="arg1", valueStr="hello"),
-                    InputVarModel(key="arg2", valueStr="world"),
+                    InputVarModel(Key="arg1", ValueStr="hello"),
+                    InputVarModel(Key="arg2", ValueStr="world"),
                 ],
                 UiType="@/FlowABuiltin/UI_INPUT_VARS",
             ),
