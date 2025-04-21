@@ -23,6 +23,7 @@ from app.schemas.VFlowRunData import (
     VFNodeCacheKey,
     VFNodeCacheKeyBefore,
     VFNodeCacheKeyAfter,
+    RefVarItem,
 )
 from app.schemas.farequest import (
     ValidationError,
@@ -42,7 +43,6 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
-    RefVarItem,
 )
 from app.utils.tools import (
     read_yaml,

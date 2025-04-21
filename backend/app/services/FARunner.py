@@ -4,7 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from loguru import logger
 from app.schemas.VFlowData import VFlowData, VFNodeInfo, VFEdgeInfo
-from app.schemas.VFlowRunData import FARunStatus
+from app.schemas.VFlowRunData import FARunStatus, RefVarItem
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.CacheMgr import CacheMgr
 from app.schemas.farequest import (
@@ -27,7 +27,6 @@ from app.schemas.VFNodeInterface import (
     VFNodeFlag,
     FromInnerPath,
     VFNodeContentData,
-    RefVarItem,
 )
 
 if TYPE_CHECKING:

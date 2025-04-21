@@ -67,7 +67,6 @@ import {
   VFNodeConnectionDataType,
   type FromInnerPath,
 } from '@/components/nodes/VFNodeInterface'
-import { object } from 'zod'
 
 const { recursiveFindVariables, uniqueVarItems } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
@@ -303,6 +302,7 @@ const getConnectionsByArgs = (args: string[]) => {
   }
   // ====================================================
   // 句柄层级（Handle Level）
+  // ====================================================
   let handleType = parsed_args.handle
   if (!handleType) handleType = CONNECT_ALL_DATA
   const handleTypes: VFNodeConnectionType[] = []
@@ -341,8 +341,7 @@ const getConnectionsByArgs = (args: string[]) => {
         const res_handles = res[Object.keys(res)[0]]
         if (Object.keys(res_handles).length === 1) {
           _CacheConnectionsByArgs[key] = res_handles[Object.keys(res_handles)[0]]
-        }
-        _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
+        } else _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
       } else _CacheConnectionsByArgs[key] = res
     } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = handleIds

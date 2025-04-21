@@ -1,6 +1,7 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Literal
 from pydantic import BaseModel
 from enum import StrEnum
+from app.schemas.VFNodeInterface import VFNodeConnectionType, FromInnerPath
 
 
 class FARunStatus(StrEnum):
@@ -36,4 +37,17 @@ class VFNodeCacheKey(BaseModel):
     Before: VFNodeCacheKeyBefore = VFNodeCacheKeyBefore.Load
     Key: Optional[str] = None
     After: VFNodeCacheKeyAfter = VFNodeCacheKeyAfter.Save
+    pass
+
+
+class RefVarItem(BaseModel):
+    Nid: str
+    Path: FromInnerPath
+    pass
+
+
+class NodeHandleItem(BaseModel):
+    Node: str
+    HandleType: VFNodeConnectionType
+    Handle: str
     pass

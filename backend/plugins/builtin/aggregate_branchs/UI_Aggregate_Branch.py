@@ -13,12 +13,36 @@ from ..UI_Components.NSwitch import NSwitch
 from ..UI_Components.NButton import NButton
 from ..UI_Components.UI_InputVars import VarType
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
-from .aggregate_branchs import Single_AggregateBranch, NodeAndOutHandle
+from .aggregate_branchs import Single_AggregateBranch
 
 
 class UI_Branch_Card(NFlex):
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            vertical=False,
+            wrap=False,
+            justify="flex-start",
+            style={"align-content": "center", "align-items": "center"},
+            slots={
+                "default": [
+                    NormalComponent(
+                        Type="NIcon",
+                        Props={},
+                        Slots={"default": NormalComponent(Type="EllipsisVertical")},
+                    ),
+                    SpanComponent(ValueProp("分支变量")),
+                    SpanComponent(
+                        VBindProp(
+                            [
+                                VFOR_DATA,
+                                "@BranchItem",
+                                "Node",
+                            ]
+                        )
+                    ),
+                ]
+            },
+        )
 
 
 class UI_Drag_Branch(NormalComponent):
@@ -33,7 +57,12 @@ class UI_Drag_Branch(NormalComponent):
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
-                        PAYLOADS_ID,
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
                         "Data",
                     ]
                 ),
@@ -45,7 +74,12 @@ class UI_Drag_Branch(NormalComponent):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                         ]
                     ),
@@ -73,11 +107,16 @@ class UI_Aggregate_Branch(NFlex):
                                 Header(
                                     type="warning",
                                     text=VBindProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
-                                            PAYLOADS_ID,
+                                            VBindProp(
+                                                [
+                                                    CONTEXT_FUNCTION,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
                                             "Label",
                                         ]
                                     ),
@@ -85,48 +124,9 @@ class UI_Aggregate_Branch(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
-                                            SETCONTEXT_FuncProp(
-                                                Arg=FuncArg_SETCONTEXT(
-                                                    Key=ValueProp(Data="orderkey"),
-                                                    Value=VBindProp(
-                                                        Data=[GENERATE_UUID]
-                                                    ),
-                                                )
-                                            ),
-                                            APPENDITEM_FuncProp(
-                                                Arg=FuncArg_APPENDITEM(
-                                                    DstPath=[
-                                                        THIS_NODE_DATA,
-                                                        "Payloads",
-                                                        "ById",
-                                                        PAYLOADS_ID,
-                                                        "Data",
-                                                    ],
-                                                    ItemValue=Single_AggregateBranch(
-                                                        Node=NodeAndOutHandle(
-                                                            Node="",
-                                                            Handle="",
-                                                        ).model_dump_json(),
-                                                        RefData="",
-                                                        OrderKey=VBindProp(
-                                                            Data=[
-                                                                CONTEXT_ARG,
-                                                                "orderkey",
-                                                            ],
-                                                            Replace="{{Data}}",
-                                                        ),
-                                                    ),
-                                                )
-                                            ),
-                                        ]
-                                    ),
+                                    onClick=FunctionProp(Funcs=[]),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE,
-                                            Data="新增",
-                                        ),
+                                        "default": SpanComponent(ValueProp("新增")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),

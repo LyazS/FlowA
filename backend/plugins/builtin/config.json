@@ -78,6 +78,14 @@
       "Description": "条件分支",
       "Execute": "cond_branch/cond_branch.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/AggregateBranch",
+      "Label": "分支聚合",
+      "Description": "分支聚合",
+      "Execute": "aggregate_branchs/aggregate_branchs.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
@@ -125,6 +133,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_COND_BRANCH",
       "Component": "cond_branch/UI_Cond_Branch.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_AGGREGATE_BRANCH",
+      "Component": "aggregate_branchs/UI_Aggregate_Branch.py"
     }
   ]
 }

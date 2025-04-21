@@ -13,7 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
-from app.schemas.VFlowRunData import FARunStatus
+from app.schemas.VFlowRunData import FARunStatus, NodeHandleItem
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -39,15 +39,9 @@ from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
-class NodeAndOutHandle(BaseModel):
-    Node: str
-    Handle: str
-    pass
-
-
 class Single_AggregateBranch(BaseModel):
-    Node: str
-    RefData: str
+    NodeHandle: Optional[NodeHandleItem] = None
+    RefData: Optional[Dict] = None
     OrderKey: ReadOnlyPropVar | str
     pass
 
@@ -105,11 +99,7 @@ class AggregateBranch(FATaskNode):
                 Label="聚合分支变量",
                 Type="List",
                 Data=[
-                    Single_AggregateBranch(
-                        Node=NodeAndOutHandle(Node="", Handle="").model_dump_json(),
-                        RefData="",
-                        OrderKey=getUuid(),
-                    ),
+                    Single_AggregateBranch(OrderKey=getUuid()),
                 ],
                 UiType="@/FlowABuiltin/UI_AGGREGATE_BRANCH",
             ),
