@@ -30,11 +30,16 @@ class UI_CodeEditor(NFlex):
                                 Header(
                                     type="warning",
                                     text=VBindProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
-                                            PAYLOADS_ID,
+                                            VBindProp(
+                                                [
+                                                    CONTEXT_FUNCTION,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
                                             "Label",
                                         ]
                                     ),
@@ -46,13 +51,20 @@ class UI_CodeEditor(NFlex):
                                         Funcs=[
                                             OPENEDITOR_FuncProp(
                                                 Arg=FuncArg_OPENEDITOR(
-                                                    DstPath=[
-                                                        THIS_NODE_DATA,
-                                                        "Payloads",
-                                                        "ById",
-                                                        PAYLOADS_ID,
-                                                        "Data",
-                                                    ],
+                                                    DstPath=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    CONTEXT_FUNCTION,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                        ]
+                                                    ),
                                                     Language="python",
                                                 )
                                             )
@@ -60,9 +72,7 @@ class UI_CodeEditor(NFlex):
                                     ),
                                     otherProps=otherProps,
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="编辑"
-                                        ),
+                                        "default": SpanComponent(ValueProp("编辑")),
                                         "icon": NormalComponent(Type="CreateOutline"),
                                     },
                                 ),
@@ -74,21 +84,31 @@ class UI_CodeEditor(NFlex):
                         Props={
                             "word-wrap": True,
                             "language": VBindProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Config",
                                     "Language",
                                 ]
                             ),
                             "code": VModelProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
                                 ]
                             ),

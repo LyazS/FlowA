@@ -6,35 +6,22 @@ import {
   type VFNodeContentData,
   type FromInnerPath,
 } from '@/components/nodes/VFNodeInterface'
-import { type SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
 import type { NodeWithVFData } from '@/schemas/schemas'
 
-export interface VarItem {
-  NodeId: string | number
-  NodeLabel: string
-  DataPath: FromInnerPath
-  DataLabel: string
-  DataType: string
-}
-export interface HandleVarItem4Selects {
-  Label: string
-  Data: VarItem[]
-}
-export interface RefItemValue {
-  nid: string
-  path: FromInnerPath
+export interface RefVarItem {
+  Nid: string
+  Path: FromInnerPath
 }
 
 interface NodeUtilsInstance {
-  findVarFromIO: (nid: string, findconnect: VFNodeConnectionType, hid: string) => VarItem[]
+  findVarFromIO: (nid: string, findconnect: VFNodeConnectionType, hid: string) => RefVarItem[]
   recursiveFindVariables: (
     nid: string,
     handleType: VFNodeConnectionType,
     handles: string[] | null,
-  ) => VarItem[]
-  uniqueVarItems: (varitems: VarItem[]) => VarItem[]
-  mapVarItemToSelect: (item: VarItem) => SelectOption
+  ) => RefVarItem[]
+  uniqueVarItems: (varitems: RefVarItem[]) => RefVarItem[]
 }
 let instance: NodeUtilsInstance | null = null
 
@@ -46,8 +33,8 @@ export const useNodeUtils = () => {
     nid: string,
     findconnect: VFNodeConnectionType,
     hid: string,
-  ): VarItem[] => {
-    const result: VarItem[] = []
+  ): RefVarItem[] => {
+    const result: RefVarItem[] = []
     const thenode = findNode(nid) as NodeWithVFData
 
     if (!thenode || !thenode.data.Connections[findconnect]?.ById[hid]) {
@@ -62,11 +49,8 @@ export const useNodeUtils = () => {
           thenode.data[c_data.Path.ContentName].ById[c_data.Path.ContentId]
         if (pathData) {
           result.push({
-            NodeId: nid,
-            NodeLabel: thenodedata.Label,
-            DataPath: c_data.Path,
-            DataLabel: pathData.Label,
-            DataType: pathData.Type,
+            Nid: nid,
+            Path: c_data.Path,
           })
         }
       } else if (c_data.Type === VFNodeConnectionDataType.FromOuter && c_data.HandleId) {
@@ -106,8 +90,8 @@ export const useNodeUtils = () => {
     nid: string,
     handleType: VFNodeConnectionType,
     handles: string[] | null,
-  ): VarItem[] => {
-    const result: VarItem[] = []
+  ): RefVarItem[] => {
+    const result: RefVarItem[] = []
     const thenode = findNode(nid)
     if (!thenode) return result
 
@@ -133,13 +117,13 @@ export const useNodeUtils = () => {
     return result
   }
 
-  const uniqueVarItems = (varitems: VarItem[]): VarItem[] => {
+  const uniqueVarItems = (varitems: RefVarItem[]): RefVarItem[] => {
     // 使用Map来高效去重，键为唯一标识字符串，值为VarItem对象
-    const uniqueMap = new Map<string, VarItem>()
+    const uniqueMap = new Map<string, RefVarItem>()
 
     // 为每个VarItem创建唯一键并存入Map
     varitems.forEach((item) => {
-      const key = `${item.NodeId}:${item.DataPath.ContentName}:${item.DataPath.ContentId}`
+      const key = `${item.Nid}:${item.Path.ContentName}:${item.Path.ContentId}`
       if (!uniqueMap.has(key)) {
         uniqueMap.set(key, item)
       }
@@ -149,23 +133,10 @@ export const useNodeUtils = () => {
     return Array.from(uniqueMap.values())
   }
 
-  const mapVarItemToSelect = (item: VarItem): SelectOption => {
-    return {
-      label: `${item.NodeLabel}/${item.DataLabel}/${item.DataType}`,
-      // value: `${item.NodeId}/${item.DataPath.ContentName}/${item.DataPath.ContentId}`,
-      value: JSON.stringify({
-        // 符合 RefItemValue 类型
-        nid: item.NodeId,
-        path: item.DataPath,
-      }),
-    }
-  }
-
   instance = {
     findVarFromIO,
     recursiveFindVariables,
     uniqueVarItems,
-    mapVarItemToSelect,
   }
   return instance
 }

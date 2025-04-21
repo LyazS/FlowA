@@ -39,13 +39,18 @@ class UI_PromptOperate(NFlex):
                             "style": {"width": "100px", "margin-bottom": 0},
                             "options": LLMRoleOptions,
                             "value": VModelProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
-                                    "@PromptIndex",
+                                    VBindProp([VFOR_DATA, "@PromptIndex"]),
                                     "role",
                                 ]
                             ),
@@ -59,24 +64,29 @@ class UI_PromptOperate(NFlex):
                             Funcs=[
                                 OPENEDITOR_FuncProp(
                                     Arg=FuncArg_OPENEDITOR(
-                                        DstPath=[
-                                            THIS_NODE_DATA,
-                                            "Payloads",
-                                            "ById",
-                                            PAYLOADS_ID,
-                                            "Data",
-                                            "@PromptIndex",
-                                            "content",
-                                        ],
+                                        DstPath=VBindProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Payloads",
+                                                "ById",
+                                                VBindProp(
+                                                    [
+                                                        CONTEXT_FUNCTION,
+                                                        PAYLOADS_ID,
+                                                    ]
+                                                ),
+                                                "Data",
+                                                VBindProp([VFOR_DATA, "@PromptIndex"]),
+                                                "content",
+                                            ]
+                                        ),
                                         Language="text",
                                     )
                                 )
                             ]
                         ),
                         slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VALUE, Data="编辑"
-                            ),
+                            "default": SpanComponent(ValueProp("编辑")),
                             "icon": NormalComponent(Type="CreateOutline"),
                         },
                     ),
@@ -99,13 +109,18 @@ class UI_PromptContent(NFlex):
                         type="textarea",
                         showCount=True,
                         value=VModelProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Data",
-                                "@PromptIndex",
+                                VBindProp([VFOR_DATA, "@PromptIndex"]),
                                 "content",
                             ]
                         ),
@@ -120,19 +135,21 @@ class UI_PromptContent(NFlex):
                             Funcs=[
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
-                                        DstPath=[
-                                            THIS_NODE_DATA,
-                                            "Payloads",
-                                            "ById",
-                                            PAYLOADS_ID,
-                                            "Data",
-                                        ],
-                                        ItemKey=VBindProp(
-                                            Data=[
-                                                VFOR_DATA,
-                                                "@PromptIndex",
+                                        DstPath=VBindProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Payloads",
+                                                "ById",
+                                                VBindProp(
+                                                    [
+                                                        CONTEXT_FUNCTION,
+                                                        PAYLOADS_ID,
+                                                    ]
+                                                ),
+                                                "Data",
                                             ]
                                         ),
+                                        ItemKey=VBindProp([VFOR_DATA, "@PromptIndex"]),
                                     ),
                                 )
                             ]
@@ -165,13 +182,18 @@ class UI_SinglePrompt(NFlex):
                         type="textarea",
                         showCount=True,
                         value=VModelProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Data",
-                                "@PromptIndex",
+                                VBindProp([VFOR_DATA, "@PromptIndex"]),
                                 "content",
                             ]
                         ),
@@ -179,7 +201,6 @@ class UI_SinglePrompt(NFlex):
                 ]
             },
         )
-        pass
 
 
 class UI_SinglePromptWrmbtn(NFlex):
@@ -205,19 +226,21 @@ class UI_SinglePromptWrmbtn(NFlex):
                             Funcs=[
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
-                                        DstPath=[
-                                            THIS_NODE_DATA,
-                                            "Payloads",
-                                            "ById",
-                                            PAYLOADS_ID,
-                                            "Data",
-                                        ],
-                                        ItemKey=VBindProp(
-                                            Data=[
-                                                VFOR_DATA,
-                                                "@PromptIndex",
+                                        DstPath=VBindProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Payloads",
+                                                "ById",
+                                                VBindProp(
+                                                    [
+                                                        CONTEXT_FUNCTION,
+                                                        PAYLOADS_ID,
+                                                    ]
+                                                ),
+                                                "Data",
                                             ]
                                         ),
+                                        ItemKey=VBindProp([VFOR_DATA, "@PromptIndex"]),
                                     ),
                                 )
                             ]
@@ -252,22 +275,27 @@ class UI_LLM_PROMPTS(NFlex):
                                         Funcs=[
                                             APPENDITEM_FuncProp(
                                                 Arg=FuncArg_APPENDITEM(
-                                                    DstPath=[
-                                                        THIS_NODE_DATA,
-                                                        "Payloads",
-                                                        "ById",
-                                                        PAYLOADS_ID,
-                                                        "Data",
-                                                    ],
+                                                    DstPath=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    CONTEXT_FUNCTION,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                        ]
+                                                    ),
                                                     ItemValue=DefaultPrompt,
                                                 )
                                             )
                                         ]
                                     ),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="添加"
-                                        ),
+                                        "default": SpanComponent(ValueProp("添加")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),
@@ -280,11 +308,16 @@ class UI_LLM_PROMPTS(NFlex):
                         slots={
                             "default": ForLoopComponent(
                                 Items=VBindProp(
-                                    Data=[
+                                    [
                                         THIS_NODE_DATA,
                                         "Payloads",
                                         "ById",
-                                        PAYLOADS_ID,
+                                        VBindProp(
+                                            [
+                                                CONTEXT_FUNCTION,
+                                                PAYLOADS_ID,
+                                            ]
+                                        ),
                                         "Data",
                                     ]
                                 ),

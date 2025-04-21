@@ -2,6 +2,7 @@ from typing import Any, List, Dict, Union
 import copy
 from enum import Enum
 import asyncio
+from loguru import logger
 from pydantic_core import core_schema
 from typing_extensions import Annotated
 from pydantic import (
@@ -292,7 +293,10 @@ def serialize_ref(value):
         return serialize_ref(value.value)
     elif isinstance(value, BaseModel):
         return serialize_ref(value.model_dump())
+    elif value is None:
+        return None
     else:
+        logger.error(f"{value} Unsupported type: {type(value)}")
         return str(value)  # 默认转换为字符串
 
 

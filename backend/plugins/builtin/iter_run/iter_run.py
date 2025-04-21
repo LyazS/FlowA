@@ -42,7 +42,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
-    RefItemValue,
+    RefVarItem,
 )
 from app.utils.tools import (
     read_yaml,
@@ -209,15 +209,15 @@ class IterRun(FATaskNode):
             node_results_dict = {}
             for rid in node_results.Order:
                 item: VFNodeContentData = node_results.ById[rid]
-                item_ref = RefItemValue.model_validate_json(item.Config.Ref)
-                nid_layout = getNestedLayout(item_ref.nid)
+                item_ref = RefVarItem.model_validate_json(item.Config.Ref)
+                nid_layout = getNestedLayout(item_ref.Nid)
                 assert len(nest_layout) == len(nid_layout) - 1, "迭代节点嵌套层数不匹配"
-                re_nid, _ = regexMatchNodeId(item_ref.nid)
+                re_nid, _ = regexMatchNodeId(item_ref.Nid)
                 item_nid_pattern = concatNestedNodeId(re_nid, nest_layout)
                 item_nid_pattern = regexMatchOriginalNodeId(item_nid_pattern)
                 node_results_dict[rid] = {
                     "item_nid_pattern": item_nid_pattern,
-                    "contentpath": item_ref.path,
+                    "contentpath": item_ref.Path,
                 }
             # 构建其余子节点
             anode_ids = set([input_anode.oriid, output_anode.oriid, next_anode.oriid])

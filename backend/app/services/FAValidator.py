@@ -10,7 +10,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
-    RefItemValue,
+    RefVarItem,
 )
 from app.uisdk.VFUIDefine import *
 from app.nodes import FATaskNode, FANODE_REGISTRY
@@ -181,7 +181,7 @@ class FAValidator:
                     tmp_vars = self.recursive_find_variables(nid, ctype)
 
                 return [
-                    RefItemValue(nid=item.NodeId, path=item.DataPath).model_dump_json()
+                    RefVarItem(Nid=item.NodeId, Path=item.DataPath).model_dump_json()
                     for item in tmp_vars
                 ]
 

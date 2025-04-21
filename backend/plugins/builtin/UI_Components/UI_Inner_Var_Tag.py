@@ -31,19 +31,13 @@ class innerTag(NFlex):
                     NText(
                         depth=2,
                         slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VBIND,
-                                Data=label_path,
-                            ),
+                            "default": SpanComponent(VBindProp(label_path)),
                         },
                     ),
                     NText(
                         depth=2,
                         slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VALUE,
-                                Data=" - ",
-                            ),
+                            "default": SpanComponent(ValueProp(" - ")),
                         },
                     ),
                     NText(
@@ -51,10 +45,7 @@ class innerTag(NFlex):
                         type="info",
                         italic=True,
                         slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VBIND,
-                                Data=type_path,
-                            ),
+                            "default": SpanComponent(VBindProp(type_path)),
                         },
                     ),
                 ],

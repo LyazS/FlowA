@@ -30,7 +30,7 @@ import {
 } from 'naive-ui'
 import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
-import { useNodeUtils, type VarItem, type HandleVarItem4Selects } from '@/hooks/useNodeUtils'
+import { useNodeUtils, type RefVarItem } from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode } from '@/hooks/useVFlowAttribute'
@@ -69,7 +69,7 @@ import {
 } from '@/components/nodes/VFNodeInterface'
 import { object } from 'zod'
 
-const { recursiveFindVariables, mapVarItemToSelect, uniqueVarItems } = useNodeUtils()
+const { recursiveFindVariables, uniqueVarItems } = useNodeUtils()
 const { autoSaveWorkflow } = useVFlowSaver()
 
 const DynamicComponent = defineAsyncComponent(() => import('./editables/DynamicComponent.vue'))
@@ -172,21 +172,30 @@ const getConnectionsByArgs = (args: string[]) => {
     CONNECT_ALL_DATA：表示输出对应原始数据
       节点层级 [<node_id>]
       句柄层级 {<node_id>: {<handle_type>: [<handle_id>]}}
-      变量层级 [<VarItem>]
-    CONNECT_DATA_TO_SELECT: label和value一样，都用字符串
-      节点层级 NODE{<node_id>}
-      句柄层级 NODE{<node_id>}|HANDLE{<handle_type>}{<handle_id>}
-      变量层级 使用mapVarItemToSelect
+      变量层级 [<RefVarItem>]
+    CONNECT_DATA_TO_SELECT: 数组形式
+      节点层级 [<node_id>]
+      句柄层级 [<node_id>, <handle_type>, <handle_id>][]
+      变量层级 [<RefVarItem>]
   ====================================================
   */
 
   // 返回缓存
-  const key = args.join('-')
+  const key = selectedNodeId.value + args.join('-')
   if (key in _CacheConnectionsByArgs) {
     return _CacheConnectionsByArgs[key]
   }
   // 解析参数
-  const parsed_args: Record<string, string | boolean | undefined> = {
+  const parsed_args: {
+    level: string | undefined
+    node: string | undefined
+    child: string | undefined
+    inhid: string | undefined
+    handle: string | undefined
+    hid: string | undefined
+    outfmt: string | undefined
+    notop: boolean | undefined
+  } = {
     level: undefined,
     node: undefined,
     child: undefined,
@@ -196,15 +205,26 @@ const getConnectionsByArgs = (args: string[]) => {
     outfmt: undefined,
     notop: undefined,
   }
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
     if (arg.startsWith('--')) {
       const key = arg.slice(2)
       if (!(key in parsed_args)) continue
-      if (key === 'notop') parsed_args[key] = true
-      const key_idx = args.indexOf(arg)
-      if (key_idx + 1 >= args.length) continue
-      const value = args[args.indexOf(arg) + 1]
-      parsed_args[key] = value
+
+      // 对于布尔标志，直接设置为true
+      if (key === 'notop') {
+        parsed_args[key] = true
+        continue
+      }
+
+      // 检查是否有下一个参数作为值
+      if (i + 1 >= args.length) continue
+      const nextArg = args[i + 1]
+
+      // 确保下一个参数不是另一个选项
+      if (nextArg.startsWith('--')) continue
+      ;(parsed_args as any)[key] = nextArg
+      i++ // 跳过已处理的值
     }
   }
   if (!parsed_args.node || !parsed_args.level || !parsed_args.outfmt) {
@@ -228,7 +248,7 @@ const getConnectionsByArgs = (args: string[]) => {
     }
   } else if (nodeType === CONNECT_CHILD_NODE) {
     // 子节点
-    const childName = parsed_args.child as string
+    const childName = parsed_args.child
     if (!childName) {
       _CacheConnectionsByArgs[key] = null
       return _CacheConnectionsByArgs[key]
@@ -262,23 +282,18 @@ const getConnectionsByArgs = (args: string[]) => {
     // 获取所有连接到这些输入handles的源节点
     inHandles.forEach((handle) => {
       const edges = getHandleConnections({
-        id: handle as string,
+        id: handle,
         type: 'target',
         nodeId: nodeId.value,
       })
       Object.values(edges).forEach((edge) => nodeIds.push(edge.source))
     })
+  } else {
+    nodeIds.push(nodeType)
   }
   if (parsed_args.level === CONNECT_NODE_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+    if (parsed_args.outfmt === CONNECT_ALL_DATA || parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = nodeIds
-      return _CacheConnectionsByArgs[key]
-    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = nodeIds.map((nid) => {
-        const re_nid = `NODE{${nid}}`
-        // SelectOption
-        return { label: re_nid, value: re_nid }
-      })
       return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
@@ -287,7 +302,7 @@ const getConnectionsByArgs = (args: string[]) => {
   }
   // ====================================================
   // 句柄层级（Handle Level）
-  let handleType = parsed_args.handle as string
+  let handleType = parsed_args.handle
   if (!handleType) handleType = CONNECT_ALL_DATA
   const handleTypes: VFNodeConnectionType[] = []
   const handleIds: [string, VFNodeConnectionType, string][] = []
@@ -333,11 +348,7 @@ const getConnectionsByArgs = (args: string[]) => {
       _CacheConnectionsByArgs[key] = res
       return _CacheConnectionsByArgs[key]
     } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = handleIds.map((item) => {
-        const re_nid = `NODE{${item[0]}}|HANDLE{${item[1]}}{${item[2]}}`
-        // SelectOption
-        return { label: re_nid, value: re_nid }
-      })
+      _CacheConnectionsByArgs[key] = handleIds
       return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
@@ -349,7 +360,7 @@ const getConnectionsByArgs = (args: string[]) => {
   // ====================================================
   let handleId = parsed_args.hid
   if (!handleId) handleId = CONNECT_ALL_DATA
-  let varItems: VarItem[] = []
+  let varItems: RefVarItem[] = []
   for (const [nid, ctype, hid] of handleIds) {
     console.log(nid, ctype, hid)
     if (handleId === CONNECT_ALL_DATA) {
@@ -360,11 +371,8 @@ const getConnectionsByArgs = (args: string[]) => {
   }
   varItems = uniqueVarItems(varItems)
   if (parsed_args.level === CONNECT_VAR_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+    if (parsed_args.outfmt === CONNECT_ALL_DATA || parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
       _CacheConnectionsByArgs[key] = varItems
-      return _CacheConnectionsByArgs[key]
-    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = varItems.map(mapVarItemToSelect)
       return _CacheConnectionsByArgs[key]
     } else {
       _CacheConnectionsByArgs[key] = null
@@ -374,77 +382,6 @@ const getConnectionsByArgs = (args: string[]) => {
   return null
 }
 provide('getConnectionsByArgs', getConnectionsByArgs)
-
-// 连接变量选择相关
-const _VarSelection: Record<string, ComputedRef<VarItem[]>> = {}
-const getOrCreateVarSelection = (path: string[]) => {
-  const key = `${nodeId.value}-${path.join('/')}`
-  if (!(key in _VarSelection)) {
-    let ctype: VFNodeConnectionType
-    if (path[0] === 'Self') ctype = VFNodeConnectionType.Self
-    else if (path[0] === 'Attach') ctype = VFNodeConnectionType.Attach
-    else if (path[0] === 'Input') ctype = VFNodeConnectionType.Inputs
-    else if (path[0] === 'Output') ctype = VFNodeConnectionType.Outputs
-    else return []
-
-    if (path[1]) {
-      _VarSelection[key] = computed(() => recursiveFindVariables(nodeId.value, ctype, [path[1]]))
-    } else {
-      _VarSelection[key] = computed(() => recursiveFindVariables(nodeId.value, ctype, null))
-    }
-  }
-
-  return _VarSelection[key].value
-}
-provide('getOrCreateVarSelection', getOrCreateVarSelection)
-
-const _VarSelectionWHandle: Record<string, ComputedRef<Record<string, HandleVarItem4Selects>>> = {}
-const getOrCreateVarSelectionWHandle = (path: string[]) => {
-  const key = `${nodeId.value}-${path.join('/')}`
-  if (!(key in _VarSelectionWHandle)) {
-    let ctype: VFNodeConnectionType
-    let Connections: Record<string, VFNodeHandle>
-    if (path[0] == VFNodeConnectionType.Self) {
-      ctype = VFNodeConnectionType.Self
-      Connections = curSelectedNode.value.data.Connections.Self.ById
-    } else if (path[0] == VFNodeConnectionType.Attach) {
-      ctype = VFNodeConnectionType.Attach
-      Connections = curSelectedNode.value.data.Connections.Attach.ById
-    } else if (path[0] == VFNodeConnectionType.Inputs) {
-      ctype = VFNodeConnectionType.Inputs
-      Connections = curSelectedNode.value.data.Connections.Inputs.ById
-    } else if (path[0] == VFNodeConnectionType.Outputs) {
-      ctype = VFNodeConnectionType.Outputs
-      Connections = curSelectedNode.value.data.Connections.Outputs.ById
-    } else return []
-
-    if (path[1] && Connections.hasOwnProperty(path[1])) {
-      _VarSelectionWHandle[key] = computed(() => {
-        const selections: Record<string, HandleVarItem4Selects> = {
-          [path[1]]: {
-            Label: Connections[path[1]].Label,
-            Data: recursiveFindVariables(nodeId.value, ctype, [path[1]]),
-          },
-        }
-        return selections
-      })
-    } else {
-      _VarSelectionWHandle[key] = computed(() => {
-        const selections: Record<string, HandleVarItem4Selects> = {}
-        for (const hid of Object.keys(Connections)) {
-          selections[hid] = {
-            Label: Connections[hid].Label,
-            Data: recursiveFindVariables(nodeId.value, ctype, [hid]),
-          }
-        }
-        return selections
-      })
-    }
-  }
-
-  return _VarSelectionWHandle[key].value
-}
-provide('getOrCreateVarSelectionWHandle', getOrCreateVarSelectionWHandle)
 
 // 节点config相关
 const getNodeConfig = (nid: string) => {
@@ -459,11 +396,8 @@ watch(
   () => selectedNodeId.value,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      Object.keys(_VarSelection).forEach((key) => {
-        delete _VarSelection[key]
-      })
-      Object.keys(_VarSelectionWHandle).forEach((key) => {
-        delete _VarSelectionWHandle[key]
+      Object.keys(_CacheConnectionsByArgs).forEach((key) => {
+        delete _CacheConnectionsByArgs[key]
       })
     }
   },

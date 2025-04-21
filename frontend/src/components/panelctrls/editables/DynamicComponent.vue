@@ -59,7 +59,7 @@ import {
   CodeEditorLangType,
 } from '@/hooks/useVFlowAttribute'
 import { type SelectOption } from 'naive-ui'
-import { useNodeUtils, type VarItem } from '@/hooks/useNodeUtils'
+import { useNodeUtils, type RefVarItem } from '@/hooks/useNodeUtils'
 import {
   type CodeEditorLanguage,
   type VFNodeHandleData,
@@ -73,7 +73,6 @@ defineOptions({
   name: 'DynamicComponent',
 })
 const { updateNodeInternals } = useVueFlow()
-const { mapVarItemToSelect } = useNodeUtils()
 const props = defineProps({
   componentData: {
     type: Object as PropType<BaseComponent>,
@@ -84,17 +83,13 @@ const props = defineProps({
     required: true,
   },
 })
-const getOrCreateVarSelection = inject<(path: string[]) => VarItem[]>('getOrCreateVarSelection')!
-const getOrCreateVarSelectionWHandle = inject<(path: string[]) => Record<string, VarItem[]>>(
-  'getOrCreateVarSelectionWHandle',
-)!
-const getNodeConfig = inject<(nid: string) => any>('getNodeConfig')!
 
+const getNodeConfig = inject<(nid: string) => any>('getNodeConfig')!
 const getConnectionsByArgs = inject<
   (args: string[]) =>
     | string[] // 节点层级-节点数组
     | Record<string, Record<string, string[]>> // 句柄层级-句柄字典
-    | VarItem[] // 变量层级-变量数组
+    | RefVarItem[] // 变量层级-变量数组
     | SelectOption[] // 变量层级-变量选项/句柄层级-句柄选项
     | null
 >('getConnectionsByArgs')!
@@ -625,11 +620,6 @@ const handleForLoop = (config: ForLoopComponent) => {
   const nodes = entries.map(([key, item]) => {
     const loopContext = {
       ...props.dataContext,
-      [CONTEXT_FUNCTION]: {
-        ...props.dataContext[CONTEXT_FUNCTION],
-        [itemLabel]: () => [item],
-        [indexLabel]: () => [key],
-      },
       [VFOR_DATA]: {
         ...props.dataContext[VFOR_DATA],
         [itemLabel]: item,

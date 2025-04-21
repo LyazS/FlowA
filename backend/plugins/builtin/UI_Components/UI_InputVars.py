@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable, Any, Dict, Optional
 from loguru import logger
 from pydantic import BaseModel
 from enum import StrEnum
@@ -15,6 +15,7 @@ from .NFlex import NFlex
 class InputVarModel(BaseModel):
     key: str = ""
     type: VarType = VarType.String
+    valueRef: Optional[Dict] = None
     valueStr: str = ""
     valueNum: int | float = 0
     valueBool: bool = False
@@ -39,7 +40,6 @@ class InputVarModel(BaseModel):
                 logger.error("getRef function is not provided")
                 return None
         return None
-        pass
 
 
 class VarNameInput(NInput):
@@ -337,7 +337,7 @@ class UI_SingleInputVars(NFlex):
                                 ),
                                 "Data",
                                 VBindProp([VFOR_DATA, "@Index"]),
-                                "valueStr",
+                                "valueRef",
                             ],
                         ),
                         IfCondition=CompareCondition(
@@ -484,6 +484,3 @@ class UI_InputVars(NFlex):
 
 
 EXPORT_UI = UI_InputVars
-
-with open("R:/output.json", "w", encoding="utf-8") as f:
-    f.write(UI_InputVars().model_dump_json())

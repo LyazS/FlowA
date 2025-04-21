@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from app.schemas.VFNodeInterface import VFNodeContentData
 from app.uisdk import *
 from ..UI_Components.Header import Header
@@ -13,11 +12,11 @@ class VarNameInput(NInput):
             style={"width": "50%"},
             size="small",
             value=VModelProp(
-                Data=[
+                [
                     THIS_NODE_DATA,
                     "Results",
                     "ById",
-                    "@RID",
+                    VBindProp([VFOR_DATA, "@RID"]),
                     "Label",
                 ]
             ),
@@ -41,11 +40,11 @@ class VarTypeSelect(NormalComponent):
                     {"label": "字典 Dict", "value": "Dict"},
                 ],
                 "value": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Results",
                         "ById",
-                        "@RID",
+                        VBindProp([VFOR_DATA, "@RID"]),
                         "Type",
                     ]
                 ),
@@ -74,7 +73,7 @@ class UI_CodeOutput(NFlex):
                                         Funcs=[
                                             ADDRESULT2OUT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT2OUT(
-                                                    HandleId=ValueProp(Data="output"),
+                                                    HandleId=ValueProp("output"),
                                                     Result=VFNodeContentData(
                                                         Label="",
                                                         Type="String",
@@ -85,9 +84,7 @@ class UI_CodeOutput(NFlex):
                                         ]
                                     ),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="添加"
-                                        ),
+                                        "default": SpanComponent(ValueProp("添加")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),
@@ -96,7 +93,7 @@ class UI_CodeOutput(NFlex):
                     ),
                     ForLoopComponent(
                         Items=VBindProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Results",
                                 "Order",
@@ -138,7 +135,7 @@ class UI_CodeOutput(NFlex):
                                                 REMOVERESULT4OUT_FuncProp(
                                                     Arg=FuncArg_REMOVERESULT4OUT(
                                                         ResultId=VBindProp(
-                                                            Data=[VFOR_DATA, "@RID"]
+                                                            [VFOR_DATA, "@RID"]
                                                         ),
                                                     )
                                                 )

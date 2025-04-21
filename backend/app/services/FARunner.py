@@ -27,7 +27,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeFlag,
     FromInnerPath,
     VFNodeContentData,
-    RefItemValue,
+    RefVarItem,
 )
 
 if TYPE_CHECKING:
@@ -158,18 +158,18 @@ class FARunner:
         # 获取cur节点的层级 =======================================
         cur_level = getNestedLayout(request_nid)
         # 获取ref节点的层级 =======================================
-        refdata = RefItemValue.model_validate_json(refvalue)
-        ref_level = getNestedLayout(refdata.nid)
+        refdata = RefVarItem.model_validate_json(refvalue)
+        ref_level = getNestedLayout(refdata.Nid)
 
         assert len(ref_level) <= len(cur_level), "层级不匹配"
         for i in range(len(ref_level)):
             ref_level[i] = cur_level[i]
-        re_nid, _ = regexMatchNodeId(refdata.nid)
+        re_nid, _ = regexMatchNodeId(refdata.Nid)
         ref_replace_nid = concatNestedNodeId(re_nid, ref_level)
         ref_node = self.getNode(ref_replace_nid)
         ref_data: VFNodeContentData = await ref_node.getContentByPath(
             request_nid,
-            refdata.path,
+            refdata.Path,
         )
         return serialize_ref(ref_data.Data.value)
 

@@ -37,10 +37,7 @@ class SingleAttrBoolean(NFlex):
                             "style": {"width": "5em"},
                         },
                         Slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VBIND,
-                                Data=attr_path + ["Label"],
-                            )
+                            "default": SpanComponent(VBindProp(attr_path + ["Label"]))
                         },
                     ),
                     # 类型选择 =================================================
@@ -51,15 +48,15 @@ class SingleAttrBoolean(NFlex):
                             "consistent-menu-width": False,
                             "style": {"width": "5em"},
                             "options": typeOptions,
-                            "value": VModelProp(Data=attr_path + ["Type"]),
+                            "value": VModelProp(attr_path + ["Type"]),
                         },
                     ),
                     # 值输入框 =================================================
                     UI_RefVarSelect(
-                        value=VModelProp(Data=attr_path + ["Content"]),
+                        value=VModelProp(attr_path + ["Content"]),
                         size="tiny",
                         options=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -74,25 +71,23 @@ class SingleAttrBoolean(NFlex):
                             ]
                         ),
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Ref),
+                            Right=ValueProp(LLMSettingType.Ref),
                         ),
                     ),
                     NSwitch(
                         size="small",
-                        value=VModelProp(Data=attr_path + ["Content"]),
+                        value=VModelProp(attr_path + ["Content"]),
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Const),
+                            Right=ValueProp(LLMSettingType.Const),
                         ),
                     ),
                 ]
             },
         )
-
-    pass
 
 
 class SingleAttrNumber(NFlex):
@@ -121,10 +116,7 @@ class SingleAttrNumber(NFlex):
                             "style": {"width": "5em"},
                         },
                         Slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VBIND,
-                                Data=attr_path + ["Label"],
-                            )
+                            "default": SpanComponent(VBindProp(attr_path + ["Label"]))
                         },
                     ),
                     # 类型选择 =================================================
@@ -135,15 +127,15 @@ class SingleAttrNumber(NFlex):
                             "consistent-menu-width": False,
                             "style": {"width": "5em"},
                             "options": typeOptions,
-                            "value": VModelProp(Data=attr_path + ["Type"]),
+                            "value": VModelProp(attr_path + ["Type"]),
                         },
                     ),
                     # 值输入框 =================================================
                     UI_RefVarSelect(
-                        value=VModelProp(Data=attr_path + ["Content"]),
+                        value=VModelProp(attr_path + ["Content"]),
                         size="tiny",
                         options=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -158,9 +150,9 @@ class SingleAttrNumber(NFlex):
                             ]
                         ),
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Ref),
+                            Right=ValueProp(LLMSettingType.Ref),
                         ),
                     ),
                     NormalComponent(
@@ -171,19 +163,17 @@ class SingleAttrNumber(NFlex):
                             "max": max,
                             "step": step,
                             "precision": precision,
-                            "value": VModelProp(Data=attr_path + ["Content"]),
+                            "value": VModelProp(attr_path + ["Content"]),
                         },
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Const),
+                            Right=ValueProp(LLMSettingType.Const),
                         ),
                     ),
                 ]
             },
         )
-
-    pass
 
 
 class SingleAttrSelect(NFlex):
@@ -209,10 +199,7 @@ class SingleAttrSelect(NFlex):
                             "style": {"width": "5em"},
                         },
                         Slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VBIND,
-                                Data=attr_path + ["Label"],
-                            )
+                            "default": SpanComponent(VBindProp(attr_path + ["Label"]))
                         },
                     ),
                     # 类型选择 =================================================
@@ -223,15 +210,15 @@ class SingleAttrSelect(NFlex):
                             "consistent-menu-width": False,
                             "style": {"width": "5em"},
                             "options": typeOptions,
-                            "value": VModelProp(Data=attr_path + ["Type"]),
+                            "value": VModelProp(attr_path + ["Type"]),
                         },
                     ),
                     # 值输入框 =================================================
                     UI_RefVarSelect(
-                        value=VModelProp(Data=attr_path + ["Content"]),
+                        value=VModelProp(attr_path + ["Content"]),
                         size="tiny",
                         options=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -246,9 +233,9 @@ class SingleAttrSelect(NFlex):
                             ]
                         ),
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Ref),
+                            Right=ValueProp(LLMSettingType.Ref),
                         ),
                     ),
                     NormalComponent(
@@ -257,19 +244,17 @@ class SingleAttrSelect(NFlex):
                             "size": "tiny",
                             "consistent-menu-width": False,
                             "options": options,
-                            "value": VModelProp(Data=attr_path + ["Content"]),
+                            "value": VModelProp(attr_path + ["Content"]),
                         },
                         IfCondition=CompareCondition(
-                            Left=VBindProp(Data=attr_path + ["Type"]),
+                            Left=VBindProp(attr_path + ["Type"]),
                             Operator="==",
-                            Right=ValueProp(Data=LLMSettingType.Const),
+                            Right=ValueProp(LLMSettingType.Const),
                         ),
                     ),
                 ]
             },
         )
-
-    pass
 
 
 class UI_LLM_ATTRIBUTE_TAG(NFlex):
@@ -284,13 +269,18 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "Model",
                         ],
                         typeOptions=LLMTypeOptions,
                         options=VBindProp(
-                            Data=[
+                            [
                                 NODE_CONFIG_DATA,
                                 "models_select",
                             ],
@@ -301,7 +291,12 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "Stream",
                         ],
@@ -312,7 +307,12 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "MaxTokens",
                         ],
@@ -326,7 +326,12 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "Temperature",
                         ],
@@ -341,7 +346,12 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "TopP",
                         ],
@@ -356,7 +366,12 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "FrequencyPenalty",
                         ],
@@ -371,13 +386,18 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
-                            PAYLOADS_ID,
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
                             "Data",
                             "ResponseFormat",
                         ],
                         typeOptions=LLMTypeOptionsWnull,
                         options=ValueProp(
-                            Data=[
+                            [
                                 SelectOptions(label="text", value="text"),
                                 SelectOptions(label="json", value="json"),
                             ],

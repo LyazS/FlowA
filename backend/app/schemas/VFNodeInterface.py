@@ -52,9 +52,9 @@ class VFNodeAttachingPosType(StrEnum):
 CodeEditorLanguage = Literal["python", "json", "django", "text"]
 
 
-class RefItemValue(BaseModel):
-    nid: str
-    path: FromInnerPath
+class RefVarItem(BaseModel):
+    Nid: str
+    Path: FromInnerPath
     pass
 
 

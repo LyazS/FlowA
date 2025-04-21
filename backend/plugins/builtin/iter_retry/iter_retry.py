@@ -35,7 +35,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
-    RefItemValue,
+    RefVarItem,
 )
 from app.utils.tools import (
     read_yaml,

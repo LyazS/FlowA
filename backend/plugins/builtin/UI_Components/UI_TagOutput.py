@@ -26,15 +26,16 @@ class handleTag(NormalComponent):
                     },
                     Slots={
                         "default": SpanComponent(
-                            Type=ComponentType.VBIND,
-                            Data=[
-                                THIS_NODE_DATA,
-                                "Connections",
-                                VFNodeConnectionType.Outputs,
-                                "ById",
-                                "@ConnectHandles",
-                                "Label",
-                            ],
+                            VBindProp(
+                                [
+                                    THIS_NODE_DATA,
+                                    "Connections",
+                                    VFNodeConnectionType.Outputs,
+                                    "ById",
+                                    VBindProp([VFOR_DATA, "@ConnectHandles"]),
+                                    "Label",
+                                ]
+                            ),
                         )
                     },
                 ),
@@ -50,14 +51,14 @@ class outputTag(NFlex):
                 "default": [
                     ForLoopComponent(
                         Items=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
                                 "--handle",
                                 VFNodeConnectionType.Outputs,
                                 "--hid",
-                                "@ConnectHandles",
+                                VBindProp([VFOR_DATA, "@ConnectHandles"]),
                                 "--outfmt",
                                 CONNECT_ALL_DATA,
                                 "--level",
@@ -83,22 +84,29 @@ class outputTag(NFlex):
                                         depth=2,
                                         slots={
                                             "default": SpanComponent(
-                                                Type=ComponentType.VBIND,
-                                                Data=[
-                                                    VFOR_DATA,
-                                                    "@ConnectItems",
-                                                    "DataLabel",
-                                                ],
+                                                VBindProp(
+                                                    [
+                                                        THIS_NODE_DATA,
+                                                        "Results",
+                                                        "ById",
+                                                        VBindProp(
+                                                            [
+                                                                VFOR_DATA,
+                                                                "@ConnectItems",
+                                                                "Path",
+                                                                "ContentId",
+                                                            ]
+                                                        ),
+                                                        "Label",
+                                                    ]
+                                                ),
                                             ),
                                         },
                                     ),
                                     NText(
                                         depth=2,
                                         slots={
-                                            "default": SpanComponent(
-                                                Type=ComponentType.VALUE,
-                                                Data=" - ",
-                                            ),
+                                            "default": SpanComponent(ValueProp(" - ")),
                                         },
                                     ),
                                     NText(
@@ -107,12 +115,22 @@ class outputTag(NFlex):
                                         italic=True,
                                         slots={
                                             "default": SpanComponent(
-                                                Type=ComponentType.VBIND,
-                                                Data=[
-                                                    VFOR_DATA,
-                                                    "@ConnectItems",
-                                                    "DataType",
-                                                ],
+                                                VBindProp(
+                                                    [
+                                                        THIS_NODE_DATA,
+                                                        "Results",
+                                                        "ById",
+                                                        VBindProp(
+                                                            [
+                                                                VFOR_DATA,
+                                                                "@ConnectItems",
+                                                                "Path",
+                                                                "ContentId",
+                                                            ]
+                                                        ),
+                                                        "Type",
+                                                    ]
+                                                ),
                                             ),
                                         },
                                     ),
