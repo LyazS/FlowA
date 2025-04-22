@@ -106,7 +106,7 @@ const saveTitle = () => {
   }
 }
 
-const _CacheConnectionsByArgs: Record<string, any> = {}
+const _CacheConnectionsByArgs: Record<string, ComputedRef<any>> = {}
 const getConnectionsByArgs = (args: string[]) => {
   /*
   真正想要的是什么
@@ -175,225 +175,225 @@ const getConnectionsByArgs = (args: string[]) => {
   // 返回缓存
   const key = selectedNodeId.value + args.join('-')
   if (key in _CacheConnectionsByArgs) {
-    return _CacheConnectionsByArgs[key]
+    return _CacheConnectionsByArgs[key].value
   }
-  // 解析参数
-  const parsed_args: {
-    level: string | undefined
-    node: string | undefined
-    child: string | undefined
-    inhid: string | undefined
-    handle: string | undefined
-    stricthid: string | undefined
-    hid: string | undefined
-    outfmt: string | undefined
-    notop: boolean | undefined
-  } = {
-    level: undefined,
-    node: undefined,
-    child: undefined,
-    inhid: undefined,
-    handle: undefined,
-    stricthid: undefined,
-    hid: undefined,
-    outfmt: undefined,
-    notop: undefined,
-  }
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
-    if (arg.startsWith('--')) {
-      const key = arg.slice(2)
-      if (!(key in parsed_args)) continue
 
-      // 对于布尔标志，直接设置为true
-      if (key === 'notop') {
-        parsed_args[key] = true
-        continue
+  _CacheConnectionsByArgs[key] = computed(() => {
+    // 解析参数
+    const parsed_args: {
+      level: string | undefined
+      node: string | undefined
+      child: string | undefined
+      inhid: string | undefined
+      handle: string | undefined
+      stricthid: string | undefined
+      hid: string | undefined
+      outfmt: string | undefined
+      notop: boolean | undefined
+    } = {
+      level: undefined,
+      node: undefined,
+      child: undefined,
+      inhid: undefined,
+      handle: undefined,
+      stricthid: undefined,
+      hid: undefined,
+      outfmt: undefined,
+      notop: undefined,
+    }
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i]
+      if (arg.startsWith('--')) {
+        const key = arg.slice(2)
+        if (!(key in parsed_args)) continue
+
+        // 对于布尔标志，直接设置为true
+        if (key === 'notop') {
+          parsed_args[key] = true
+          continue
+        }
+
+        // 检查是否有下一个参数作为值
+        if (i + 1 >= args.length) continue
+        const nextArg = args[i + 1]
+
+        // 确保下一个参数不是另一个选项
+        if (nextArg.startsWith('--')) continue
+        ;(parsed_args as any)[key] = nextArg
+        i++ // 跳过已处理的值
       }
-
-      // 检查是否有下一个参数作为值
-      if (i + 1 >= args.length) continue
-      const nextArg = args[i + 1]
-
-      // 确保下一个参数不是另一个选项
-      if (nextArg.startsWith('--')) continue
-      ;(parsed_args as any)[key] = nextArg
-      i++ // 跳过已处理的值
     }
-  }
-  if (!parsed_args.node || !parsed_args.level || !parsed_args.outfmt) {
-    _CacheConnectionsByArgs[key] = null
-    return _CacheConnectionsByArgs[key]
-  }
-
-  // ====================================================
-  // 节点层级（Node Level）
-  // ====================================================
-  const nodeIds: string[] = []
-  const nodeType = parsed_args.node
-
-  if (nodeType === CONNECT_CUR_NODE) {
-    // 当前节点
-    nodeIds.push(nodeId.value)
-  } else if (nodeType === CONNECT_PARENT_NODE) {
-    // 父节点
-    if (curSelectedNode.value.parentNode) {
-      nodeIds.push(curSelectedNode.value.parentNode)
+    if (!parsed_args.node || !parsed_args.level || !parsed_args.outfmt) {
+      return null
     }
-  } else if (nodeType === CONNECT_CHILD_NODE) {
-    // 子节点
-    const childName = parsed_args.child
-    if (!childName) {
-      _CacheConnectionsByArgs[key] = null
-      return _CacheConnectionsByArgs[key]
-    }
-    if (curSelectedNode.value.data.isNestedNode()) {
-      if (childName === CONNECT_ALL_DATA) {
-        // 所有子节点
-        Object.values(curSelectedNode.value.data.Nesting.ANodes)
-          .filter((anode) => anode.Nid)
-          .forEach((anode) => nodeIds.push(anode.Nid!))
-      } else {
-        // 特定子节点
-        const anode = curSelectedNode.value.data.Nesting.ANodes[childName]
-        if (anode?.Nid) {
-          nodeIds.push(anode.Nid)
+
+    // ====================================================
+    // 节点层级（Node Level）
+    // ====================================================
+    const nodeIds: string[] = []
+    const nodeType = parsed_args.node
+
+    if (nodeType === CONNECT_CUR_NODE) {
+      // 当前节点
+      nodeIds.push(nodeId.value)
+    } else if (nodeType === CONNECT_PARENT_NODE) {
+      // 父节点
+      if (curSelectedNode.value.parentNode) {
+        nodeIds.push(curSelectedNode.value.parentNode)
+      }
+    } else if (nodeType === CONNECT_CHILD_NODE) {
+      // 子节点
+      const childName = parsed_args.child
+      if (!childName) {
+        return null
+      }
+      if (curSelectedNode.value.data.isNestedNode()) {
+        if (childName === CONNECT_ALL_DATA) {
+          // 所有子节点
+          Object.values(curSelectedNode.value.data.Nesting.ANodes)
+            .filter((anode) => anode.Nid)
+            .forEach((anode) => nodeIds.push(anode.Nid!))
+        } else {
+          // 特定子节点
+          const anode = curSelectedNode.value.data.Nesting.ANodes[childName]
+          if (anode?.Nid) {
+            nodeIds.push(anode.Nid)
+          }
         }
       }
-    }
-  } else if (nodeType === CONNECT_PRE_NODE) {
-    // 前置节点
-    const inHandle = parsed_args.inhid
-    if (!inHandle) {
-      _CacheConnectionsByArgs[key] = null
-      return _CacheConnectionsByArgs[key]
-    }
-    const inHandles =
-      inHandle === CONNECT_ALL_DATA
-        ? [...curSelectedNode.value.data.Connections.Inputs.Order]
-        : [inHandle]
+    } else if (nodeType === CONNECT_PRE_NODE) {
+      // 前置节点
+      const inHandle = parsed_args.inhid
+      if (!inHandle) {
+        return null
+      }
+      const inHandles =
+        inHandle === CONNECT_ALL_DATA
+          ? [...curSelectedNode.value.data.Connections.Inputs.Order]
+          : [inHandle]
 
-    // 获取所有连接到这些输入handles的源节点
-    inHandles.forEach((handle) => {
+      // 获取所有连接到这些输入handles的源节点
+      inHandles.forEach((handle) => {
+        const edges = getHandleConnections({
+          id: handle,
+          type: 'target',
+          nodeId: nodeId.value,
+        })
+        Object.values(edges).forEach((edge) => nodeIds.push(edge.source))
+      })
+    } else {
+      nodeIds.push(nodeType)
+    }
+    if (parsed_args.level === CONNECT_NODE_LEVEL) {
+      if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+        return nodeIds.map((nid) => findNode(nid))
+      } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
+        return nodeIds
+      } else {
+        return null
+      }
+    }
+    // ====================================================
+    // 句柄层级（Handle Level）
+    // ====================================================
+    let handleType = parsed_args.handle
+    if (!handleType) handleType = CONNECT_ALL_DATA
+    const handleTypes: VFNodeConnectionType[] = []
+    const handleIds: RefNodeHandleItem[] = []
+    if (handleType === CONNECT_ALL_DATA) {
+      //  遍历VFNodeConnectionType
+      for (const key in VFNodeConnectionType) {
+        handleTypes.push(VFNodeConnectionType[key as keyof typeof VFNodeConnectionType])
+      }
+    } else if (handleType in VFNodeConnectionType) {
+      handleTypes.push(VFNodeConnectionType[handleType as keyof typeof VFNodeConnectionType])
+    }
+
+    const strict_items: { nid: string; handleid: string }[] = []
+    if (parsed_args.stricthid) {
+      // 只获取与本节点有链接的handle
       const edges = getHandleConnections({
-        id: handle,
+        id: parsed_args.stricthid,
         type: 'target',
         nodeId: nodeId.value,
       })
-      Object.values(edges).forEach((edge) => nodeIds.push(edge.source))
-    })
-  } else {
-    nodeIds.push(nodeType)
-  }
-  if (parsed_args.level === CONNECT_NODE_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
-      _CacheConnectionsByArgs[key] = nodeIds.map((nid) => findNode(nid))
-    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = nodeIds
-    } else {
-      _CacheConnectionsByArgs[key] = null
-    }
-    return _CacheConnectionsByArgs[key]
-  }
-  // ====================================================
-  // 句柄层级（Handle Level）
-  // ====================================================
-  let handleType = parsed_args.handle
-  if (!handleType) handleType = CONNECT_ALL_DATA
-  const handleTypes: VFNodeConnectionType[] = []
-  const handleIds: RefNodeHandleItem[] = []
-  if (handleType === CONNECT_ALL_DATA) {
-    //  遍历VFNodeConnectionType
-    for (const key in VFNodeConnectionType) {
-      handleTypes.push(VFNodeConnectionType[key as keyof typeof VFNodeConnectionType])
-    }
-  } else if (handleType in VFNodeConnectionType) {
-    handleTypes.push(VFNodeConnectionType[handleType as keyof typeof VFNodeConnectionType])
-  }
-
-  const strict_items: { nid: string; handleid: string }[] = []
-  if (parsed_args.stricthid) {
-    // 只获取与本节点有链接的handle
-    const edges = getHandleConnections({
-      id: parsed_args.stricthid,
-      type: 'target',
-      nodeId: nodeId.value,
-    })
-    for (const edge of Object.values(edges)) {
-      strict_items.push({
-        nid: edge.source,
-        handleid: edge.sourceHandle!,
-      })
-    }
-  }
-
-  for (const nid of nodeIds) {
-    const node = findNode(nid) as NodeWithVFData
-    if (!node) continue
-    for (const ctype of handleTypes) {
-      const connections = node.data.Connections[ctype].Order
-      for (const hid of connections) {
-        if (parsed_args.stricthid) {
-          if (!strict_items.some((item) => item.nid === nid && item.handleid === hid)) continue
-        }
-        handleIds.push({
-          Node: nid,
-          HandleType: ctype,
-          Handle: hid,
+      for (const edge of Object.values(edges)) {
+        strict_items.push({
+          nid: edge.source,
+          handleid: edge.sourceHandle!,
         })
       }
     }
-  }
-  if (parsed_args.level === CONNECT_HANDLE_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA) {
-      const res: Record<string, Record<string, string[]>> = {}
-      for (const item of Object.values(handleIds)) {
-        const { Node: nid, HandleType: ctype, Handle: hid } = item
-        if (!(nid in res)) {
-          res[nid] = {}
+
+    for (const nid of nodeIds) {
+      const node = findNode(nid) as NodeWithVFData
+      if (!node) continue
+      for (const ctype of handleTypes) {
+        const connections = node.data.Connections[ctype].Order
+        for (const hid of connections) {
+          if (parsed_args.stricthid) {
+            if (!strict_items.some((item) => item.nid === nid && item.handleid === hid)) continue
+          }
+          handleIds.push({
+            Node: nid,
+            HandleType: ctype,
+            Handle: hid,
+          })
         }
-        if (!(ctype in res[nid])) {
-          res[nid][ctype] = []
-        }
-        res[nid][ctype].push(hid)
       }
-      if (parsed_args.notop && Object.keys(res).length === 1) {
-        const res_handles = res[Object.keys(res)[0]]
-        if (Object.keys(res_handles).length === 1) {
-          _CacheConnectionsByArgs[key] = res_handles[Object.keys(res_handles)[0]]
-        } else _CacheConnectionsByArgs[key] = res[Object.keys(res)[0]]
-      } else _CacheConnectionsByArgs[key] = res
-    } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = handleIds
-    } else {
-      _CacheConnectionsByArgs[key] = null
     }
-    return _CacheConnectionsByArgs[key]
-  }
-  // ====================================================
-  // 变量层级（Variable Level）
-  // ====================================================
-  let handleId = parsed_args.hid
-  if (!handleId) handleId = CONNECT_ALL_DATA
-  let varItems: RefVarItem[] = []
-  for (const item of Object.values(handleIds)) {
-    const { Node: nid, HandleType: ctype, Handle: hid } = item
-    if (handleId === CONNECT_ALL_DATA) {
-      varItems.push(...recursiveFindVariables(nid, ctype, [hid]))
-    } else if (handleId === hid) {
-      varItems.push(...recursiveFindVariables(nid, ctype, [hid]))
+    if (parsed_args.level === CONNECT_HANDLE_LEVEL) {
+      if (parsed_args.outfmt === CONNECT_ALL_DATA) {
+        const res: Record<string, Record<string, string[]>> = {}
+        for (const item of Object.values(handleIds)) {
+          const { Node: nid, HandleType: ctype, Handle: hid } = item
+          if (!(nid in res)) {
+            res[nid] = {}
+          }
+          if (!(ctype in res[nid])) {
+            res[nid][ctype] = []
+          }
+          res[nid][ctype].push(hid)
+        }
+        if (parsed_args.notop && Object.keys(res).length === 1) {
+          const res_handles = res[Object.keys(res)[0]]
+          if (Object.keys(res_handles).length === 1) {
+            return res_handles[Object.keys(res_handles)[0]]
+          } else return res[Object.keys(res)[0]]
+        } else return res
+      } else if (parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
+        return handleIds
+      } else {
+        return null
+      }
     }
-  }
-  varItems = uniqueVarItems(varItems)
-  if (parsed_args.level === CONNECT_VAR_LEVEL) {
-    if (parsed_args.outfmt === CONNECT_ALL_DATA || parsed_args.outfmt === CONNECT_DATA_TO_SELECT) {
-      _CacheConnectionsByArgs[key] = varItems
-    } else {
-      _CacheConnectionsByArgs[key] = null
+    // ====================================================
+    // 变量层级（Variable Level）
+    // ====================================================
+    let handleId = parsed_args.hid
+    if (!handleId) handleId = CONNECT_ALL_DATA
+    let varItems: RefVarItem[] = []
+    for (const item of Object.values(handleIds)) {
+      const { Node: nid, HandleType: ctype, Handle: hid } = item
+      if (handleId === CONNECT_ALL_DATA) {
+        varItems.push(...recursiveFindVariables(nid, ctype, [hid]))
+      } else if (handleId === hid) {
+        varItems.push(...recursiveFindVariables(nid, ctype, [hid]))
+      }
     }
-    return _CacheConnectionsByArgs[key]
-  }
-  return null
+    varItems = uniqueVarItems(varItems)
+    if (parsed_args.level === CONNECT_VAR_LEVEL) {
+      if (
+        parsed_args.outfmt === CONNECT_ALL_DATA ||
+        parsed_args.outfmt === CONNECT_DATA_TO_SELECT
+      ) {
+        return varItems
+      } else {
+        return null
+      }
+    }
+  })
+  return _CacheConnectionsByArgs[key].value
 }
 provide('getConnectionsByArgs', getConnectionsByArgs)
 
