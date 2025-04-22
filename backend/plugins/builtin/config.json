@@ -41,14 +41,6 @@
     },
     {
       "Type": "FANode",
-      "Name": "@/FlowABuiltin/LLM_inference",
-      "Label": "LLM推理",
-      "Description": "LLM inference",
-      "Execute": "LLM_inference/LLM_inference.py",
-      "Setting": null
-    },
-    {
-      "Type": "FANode",
       "Name": "@/FlowABuiltin/code_interpreter",
       "Label": "代码解释器",
       "Description": "code interpreter",
@@ -65,10 +57,26 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/LLM_inference",
+      "Label": "LLM推理",
+      "Description": "LLM inference",
+      "Execute": "LLM_inference/LLM_inference.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/IterRun",
       "Label": "迭代运行",
       "Description": "迭代运行，可以嵌套",
       "Execute": "iter_run/iter_run.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/IterRetry",
+      "Label": "迭代重试",
+      "Description": "迭代重试，可以嵌套",
+      "Execute": "iter_retry/iter_retry.py",
       "Setting": null
     },
     {
@@ -96,16 +104,6 @@
     },
     {
       "Type": "FANode",
-      "Name": "@/FlowABuiltin/UI_LLM_SETTINGS",
-      "Component": "LLM_inference/UI_LLM_Settings.py"
-    },
-    {
-      "Type": "FANode",
-      "Name": "@/FlowABuiltin/UI_LLM_PROMPTS",
-      "Component": "LLM_inference/UI_LLM_Prompts.py"
-    },
-    {
-      "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_CODE_EDITOR",
       "Component": "code_interpreter/UI_Code_Editor.py"
     },
@@ -121,6 +119,16 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_LLM_SETTINGS",
+      "Component": "LLM_inference/UI_LLM_Settings.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_LLM_PROMPTS",
+      "Component": "LLM_inference/UI_LLM_Prompts.py"
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_TAG_OUTPUTS",
       "Component": "UI_Components/UI_TagOutput.py"
     },
@@ -128,6 +136,31 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_ITER_RUN_INNER_VAR",
       "Component": "iter_run/UI_Iter_Run_Inner_Var.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RUN_ITER_ARRAY",
+      "Component": "iter_run/UI_Iter_Run_Iter_Array.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RUN_OUTPUT",
+      "Component": "iter_run/UI_Iter_Run_Output.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_INNER_VAR",
+      "Component": "iter_retry/UI_Iter_Retry_Inner_Var.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_SETTING",
+      "Component": "iter_retry/UI_ITER_RETRY_SETTING.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_ITER_RETRY_INOUT",
+      "Component": "iter_retry/UI_ITER_RETRY_INOUT.py"
     },
     {
       "Type": "FANode",

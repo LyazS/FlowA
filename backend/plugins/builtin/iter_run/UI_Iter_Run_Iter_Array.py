@@ -16,11 +16,16 @@ class UI_Iter_Run_Iter_Array(NFlex):
                     Header(
                         type="warning",
                         text=VBindProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Label",
                             ]
                         ),
@@ -28,7 +33,7 @@ class UI_Iter_Run_Iter_Array(NFlex):
                     UI_RefVarSelect(
                         size="medium",
                         options=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,
@@ -43,11 +48,16 @@ class UI_Iter_Run_Iter_Array(NFlex):
                             ]
                         ),
                         value=VModelProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Data",
                             ],
                         ),

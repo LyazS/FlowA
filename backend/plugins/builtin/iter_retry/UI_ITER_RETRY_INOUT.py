@@ -35,20 +35,21 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                     },
                                     Slots={
                                         "default": SpanComponent(
-                                            Type=ComponentType.VBIND,
-                                            Data=[
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                "D_IN_NODE",
-                                                "Label",
-                                            ],
+                                            VBindProp(
+                                                [
+                                                    THIS_NODE_DATA,
+                                                    "Payloads",
+                                                    "ById",
+                                                    "D_IN_NODE",
+                                                    "Label",
+                                                ]
+                                            )
                                         )
                                     },
                                 ),
                                 UI_RefVarSelect(
                                     value=VModelProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
@@ -57,7 +58,7 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                         ]
                                     ),
                                     options=VBindProp(
-                                        Data=[
+                                        [
                                             CONNECT_DATA,
                                             "--node",
                                             CONNECT_CUR_NODE,
@@ -92,20 +93,21 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                     },
                                     Slots={
                                         "default": SpanComponent(
-                                            Type=ComponentType.VBIND,
-                                            Data=[
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                "D_OUT_NODE",
-                                                "Label",
-                                            ],
+                                            VBindProp(
+                                                [
+                                                    THIS_NODE_DATA,
+                                                    "Payloads",
+                                                    "ById",
+                                                    "D_OUT_NODE",
+                                                    "Label",
+                                                ]
+                                            ),
                                         )
                                     },
                                 ),
                                 UI_RefVarSelect(
                                     value=VModelProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
@@ -114,7 +116,7 @@ class UI_ITER_RETRY_INOUT(NFlex):
                                         ]
                                     ),
                                     options=VBindProp(
-                                        Data=[
+                                        [
                                             CONNECT_DATA,
                                             "--node",
                                             CONNECT_CUR_NODE,

@@ -19,11 +19,11 @@ class VarNameInput(NInput):
             style={"width": "50%"},
             size="small",
             value=VModelProp(
-                Data=[
+                [
                     THIS_NODE_DATA,
                     "Results",
                     "ById",
-                    "@RID",
+                    VBindProp([VFOR_DATA, "@RID"]),
                     "Label",
                 ]
             ),
@@ -51,7 +51,7 @@ class UI_Iter_Run_Output(NFlex):
                                         Funcs=[
                                             ADDRESULT2OUT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT2OUT(
-                                                    HandleId=ValueProp(Data="output"),
+                                                    HandleId=ValueProp("output"),
                                                     Result=VFNodeContentData(
                                                         Label="",
                                                         Type="List",
@@ -65,9 +65,7 @@ class UI_Iter_Run_Output(NFlex):
                                         ]
                                     ),
                                     slots={
-                                        "default": SpanComponent(
-                                            Type=ComponentType.VALUE, Data="添加"
-                                        ),
+                                        "default": SpanComponent(ValueProp("添加")),
                                         "icon": NormalComponent(Type="Add"),
                                     },
                                 ),
@@ -76,7 +74,7 @@ class UI_Iter_Run_Output(NFlex):
                     ),
                     ForLoopComponent(
                         Items=VBindProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Results",
                                 "Order",
@@ -107,7 +105,7 @@ class UI_Iter_Run_Output(NFlex):
                                                     size="small",
                                                     style={"width": "50%"},
                                                     options=VBindProp(
-                                                        Data=[
+                                                        [
                                                             CONNECT_DATA,
                                                             "--node",
                                                             CONNECT_CUR_NODE,
@@ -122,11 +120,13 @@ class UI_Iter_Run_Output(NFlex):
                                                         ]
                                                     ),
                                                     value=VModelProp(
-                                                        Data=[
+                                                        [
                                                             THIS_NODE_DATA,
                                                             "Results",
                                                             "ById",
-                                                            "@RID",
+                                                            VBindProp(
+                                                                [VFOR_DATA, "@RID"]
+                                                            ),
                                                             "Config",
                                                             "Ref",
                                                         ]
@@ -146,7 +146,7 @@ class UI_Iter_Run_Output(NFlex):
                                                 REMOVERESULT4OUT_FuncProp(
                                                     Arg=FuncArg_REMOVERESULT4OUT(
                                                         ResultId=VBindProp(
-                                                            Data=[VFOR_DATA, "@RID"]
+                                                            [VFOR_DATA, "@RID"]
                                                         ),
                                                     )
                                                 )

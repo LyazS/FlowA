@@ -26,12 +26,7 @@ class retry_type(NFlex):
                             "size": "medium",
                             "style": {"width": "5em"},
                         },
-                        Slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VALUE,
-                                Data="重试类型",
-                            )
-                        },
+                        Slots={"default": SpanComponent(ValueProp("重试类型"))},
                     ),
                     NormalComponent(
                         Type="NSelect",
@@ -39,7 +34,7 @@ class retry_type(NFlex):
                             "size": "small",
                             "consistent-menu-width": False,
                             "options": ValueProp(
-                                Data=[
+                                [
                                     SelectOptions(
                                         label="立即重试", value=RetryType.Immediate
                                     ),
@@ -52,11 +47,16 @@ class retry_type(NFlex):
                                 ],
                             ),
                             "value": VModelProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
                                     "Type",
                                 ],
@@ -96,12 +96,7 @@ class retry_num(NFlex):
                             "size": "medium",
                             "style": {"width": "5em"},
                         },
-                        Slots={
-                            "default": SpanComponent(
-                                Type=ComponentType.VALUE,
-                                Data=label,
-                            )
-                        },
+                        Slots={"default": SpanComponent(ValueProp(label))},
                     ),
                     NormalComponent(
                         Type="NInputNumber",
@@ -116,7 +111,12 @@ class retry_num(NFlex):
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
                                     contentPath,
                                 ]
@@ -140,11 +140,16 @@ class UI_ITER_RETRY_SETTING(NFlex):
                     Header(
                         type="warning",
                         text=VBindProp(
-                            Data=[
+                            [
                                 THIS_NODE_DATA,
                                 "Payloads",
                                 "ById",
-                                PAYLOADS_ID,
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
                                 "Label",
                             ]
                         ),
@@ -170,32 +175,42 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                 CompareCondition(
                                     Type=ConditionType.Compare,
                                     Left=VBindProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
-                                            PAYLOADS_ID,
+                                            VBindProp(
+                                                [
+                                                    CONTEXT_FUNCTION,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
                                             "Data",
                                             "Type",
                                         ]
                                     ),
                                     Operator="==",
-                                    Right=ValueProp(Data=RetryType.Delay),
+                                    Right=ValueProp(RetryType.Delay),
                                 ),
                                 CompareCondition(
                                     Type=ConditionType.Compare,
                                     Left=VBindProp(
-                                        Data=[
+                                        [
                                             THIS_NODE_DATA,
                                             "Payloads",
                                             "ById",
-                                            PAYLOADS_ID,
+                                            VBindProp(
+                                                [
+                                                    CONTEXT_FUNCTION,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
                                             "Data",
                                             "Type",
                                         ]
                                     ),
                                     Operator="==",
-                                    Right=ValueProp(Data=RetryType.Exponential),
+                                    Right=ValueProp(RetryType.Exponential),
                                 ),
                             ],
                         ),
@@ -209,17 +224,22 @@ class UI_ITER_RETRY_SETTING(NFlex):
                         IfCondition=CompareCondition(
                             Type=ConditionType.Compare,
                             Left=VBindProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
                                     "Type",
                                 ]
                             ),
                             Operator="==",
-                            Right=ValueProp(Data=RetryType.Exponential),
+                            Right=ValueProp(RetryType.Exponential),
                         ),
                     ),
                     retry_num(
@@ -231,17 +251,22 @@ class UI_ITER_RETRY_SETTING(NFlex):
                         IfCondition=CompareCondition(
                             Type=ConditionType.Compare,
                             Left=VBindProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
-                                    PAYLOADS_ID,
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
                                     "Data",
                                     "Type",
                                 ]
                             ),
                             Operator="==",
-                            Right=ValueProp(Data=RetryType.Exponential),
+                            Right=ValueProp(RetryType.Exponential),
                         ),
                     ),
                 ],
