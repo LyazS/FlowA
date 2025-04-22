@@ -76,7 +76,7 @@ class SinglePrompt(BaseModel):
     pass
 
 
-class LLMModes(BaseModel):
+class LLMModel(BaseModel):
     name: str
     max_input_tokens: Decimal
     max_output_tokens: Decimal
@@ -117,7 +117,7 @@ async def init_node_class():
     BASE_URL = NODE_CONFIG["base_url"]
     API_KEY = NODE_CONFIG["api_key"]
     MODELS = {
-        m["name"]: LLMModes(
+        m["name"]: LLMModel(
             name=m["name"],
             max_input_tokens=Decimal(m["max_input_tokens"]),
             max_output_tokens=Decimal(m["max_output_tokens"]),
@@ -132,6 +132,7 @@ async def init_node_class():
         SelectOptions(label=m["name"], value=m["name"]) for m in NODE_CONFIG["models"]
     ]
     AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
+    await LLMInference.getNodeConfig()
     pass
 
 
@@ -166,6 +167,7 @@ class LLMInference(FATaskNode):
             else:
                 return False
             pass
+
         return True
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
@@ -181,7 +183,7 @@ class LLMInference(FATaskNode):
             )
             node_payloads = self.data.Payloads
 
-            UI_INPUT_VARS: VFNodeContentData = node_payloads.ById["UI_INPUT_VARS"]
+            UI_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in UI_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
                 if var.Type == VarType.Ref and (
@@ -190,27 +192,34 @@ class LLMInference(FATaskNode):
                     error_msgs.append(f"变量未定义{var.ValueRef}")
             D_MODEL_SETTING: VFNodeContentData = node_payloads.ById["D_MODEL_SETTING"]
             model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
-            if model_cfg.Model.Content not in MODELS:
-                error_msgs.append(f"模型{model_cfg.Model.Content}不在支持列表中")
+
             if not self.validateConfigVar(model_cfg.Model, selfVars):
-                error_msgs.append(f"模型配置变量{model_cfg.Model.Content}未定义")
+                error_msgs.append(f"模型配置变量{model_cfg.Model.ContentRef}未定义")
+            elif model_cfg.Model.Type == LLMSettingType.Const:
+                cfg_model = model_cfg.Model.Content
+                if cfg_model not in MODELS:
+                    error_msgs.append(f"模型{cfg_model}不在支持列表中")
             if not self.validateConfigVar(model_cfg.MaxTokens, selfVars):
-                error_msgs.append(f"模型配置变量{model_cfg.MaxTokens.Content}未定义")
+                error_msgs.append(f"模型配置变量{model_cfg.MaxTokens.ContentRef}未定义")
             if not self.validateConfigVar(model_cfg.Temperature, selfVars):
-                error_msgs.append(f"模型配置变量{model_cfg.Temperature.Content}未定义")
+                error_msgs.append(
+                    f"模型配置变量{model_cfg.Temperature.ContentRef}未定义"
+                )
             if not self.validateConfigVar(model_cfg.TopP, selfVars):
-                error_msgs.append(f"模型配置变量{model_cfg.TopP.Content}未定义")
+                error_msgs.append(f"模型配置变量{model_cfg.TopP.ContentRef}未定义")
             if not self.validateConfigVar(model_cfg.FrequencyPenalty, selfVars):
                 error_msgs.append(
-                    f"模型配置变量{model_cfg.FrequencyPenalty.Content}未定义"
+                    f"模型配置变量{model_cfg.FrequencyPenalty.ContentRef}未定义"
                 )
             if not self.validateConfigVar(model_cfg.ResponseFormat, selfVars):
                 error_msgs.append(
-                    f"模型配置变量{model_cfg.ResponseFormat.Content}未定义"
+                    f"模型配置变量{model_cfg.ResponseFormat.ContentRef}未定义"
                 )
 
         except Exception as e:
-            pass
+            errmsg = traceback.format_exc()
+            error_msgs.append(f"获取内容失败{str(errmsg)}")
+
         if len(error_msgs) > 0:
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
@@ -259,8 +268,11 @@ class LLMInference(FATaskNode):
                     )
                 model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
                 isStream = await self.getConfigVar(model_cfg.Stream)
+                model_name = await self.getConfigVar(model_cfg.Model)
+                if model_name not in MODELS:
+                    raise Exception(f"模型{model_name}不在支持列表中")
                 completions_params = {
-                    "model": await self.getConfigVar(model_cfg.Model),
+                    "model": model_name,
                     "stream": isStream,
                     "max_tokens": await self.getConfigVar(model_cfg.MaxTokens),
                     "temperature": await self.getConfigVar(model_cfg.Temperature),
@@ -370,9 +382,23 @@ class LLMInference(FATaskNode):
 
     @staticmethod
     async def getNodeConfig():
+        global MODELS
+        global MODELS_SELECT
         modellist = (await AsyncOAIClient.models.list()).data
         MODELS_SELECT = [SelectOptions(label=m.id, value=m.id) for m in modellist]
         MODELS_SELECT = sorted(MODELS_SELECT, key=lambda x: x.label.lower())
+        MODELS = {
+            m.id: LLMModel(
+                name=m.id,
+                max_input_tokens=Decimal(0),
+                max_output_tokens=Decimal(0),
+                prompt=Decimal(0),
+                complete=Decimal(0),
+                rate=Decimal(1.0),
+                capability=[],
+            )
+            for m in modellist
+        }
         return {
             "models": MODELS,
             "models_select": MODELS_SELECT,
