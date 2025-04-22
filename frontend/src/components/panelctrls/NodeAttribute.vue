@@ -89,7 +89,6 @@ watch(
 
 // 节点标题相关
 const isEditingTitle = ref(false)
-const titleInputRef = ref<HTMLInputElement | null>(null)
 const titleInputText = ref('')
 watch(
   () => selectedNodeId.value,
@@ -98,14 +97,6 @@ watch(
   },
   { immediate: true },
 )
-
-const startEditTilte = () => {
-  if (!isEditorMode.value) return
-  isEditingTitle.value = true
-  nextTick(() => {
-    titleInputRef.value?.focus()
-  })
-}
 
 const saveTitle = () => {
   isEditingTitle.value = false
@@ -459,27 +450,21 @@ onUnmounted(() => {})
   <n-scrollbar style="max-height: calc(100vh - 80px); border-radius: 10px">
     <n-card header-style="height: 70px;" closable @close="selectedNodeId = null">
       <template #header>
-        <n-h2
-          prefix="bar"
-          align-text
-          v-if="!isEditingTitle"
-          class="card-title"
-          @click="startEditTilte"
-        >
-          <n-text type="success" strong>{{ curSelectedNode?.data.Label }}</n-text>
-          <n-icon size="17" depth="2">
-            <CreateOutline />
+        <n-flex class="flexctitem" justify="flex-start">
+          <n-icon size="40">
+            <img src="/favicon.ico" alt="Logo" style="width: 40px; height: 40px" />
           </n-icon>
-        </n-h2>
-        <n-input
-          v-else
-          v-model:value="titleInputText"
-          :placeholder="curSelectedNode?.data.PlaceholderLabel"
-          ref="titleInputRef"
-          :bordered="false"
-          @blur="saveTitle"
-          class="title-input"
-        />
+          <n-input
+            v-model:value="titleInputText"
+            :placeholder="curSelectedNode?.data.PlaceholderLabel"
+            :bordered="true"
+            @blur="saveTitle"
+            autosize
+            style="min-width: 50%"
+            class="title-input"
+          >
+          </n-input>
+        </n-flex>
       </template>
       <n-flex vertical :key="`${nodeId}-main`">
         <n-alert v-if="showErrors.length > 0" title="参数错误" type="error">
@@ -517,5 +502,7 @@ onUnmounted(() => {})
 
 .title-input {
   font-weight: 500;
+  background-color: transparent;
+  font-size: 24px;
 }
 </style>

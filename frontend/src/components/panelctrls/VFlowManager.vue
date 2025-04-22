@@ -600,8 +600,8 @@ onMounted(async () => {
     <n-card closable @close="isShowVFlowMgr = false" :style="{ width: '80%', maxWidth: '1000px' }">
       <template #header>
         <n-flex class="flexctitem" justify="flex-start">
-          <n-icon size="24">
-            <img src="/favicon.ico" alt="Logo" style="width: 24px; height: 24px" />
+          <n-icon size="40">
+            <img src="/favicon.ico" alt="Logo" style="width: 40px; height: 40px" />
           </n-icon>
           <n-text type="info" style="font-family: 'Georgia', cursive; font-size: 1.5em">
             FlowA
@@ -760,9 +760,4 @@ onMounted(async () => {
   </n-modal>
 </template>
 
-<style scoped>
-.flexctitem {
-  align-content: center;
-  align-items: center;
-}
-</style>
+<style scoped></style>

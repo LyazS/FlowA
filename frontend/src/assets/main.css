@@ -90,3 +90,8 @@ body,
   box-shadow: 0 0 20px rgb(138, 203, 236);
   transition: box-shadow 0.2s ease;
 }
+
+.flexctitem {
+  align-content: center;
+  align-items: center;
+}
