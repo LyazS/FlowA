@@ -141,8 +141,10 @@ const getConnectionsByArgs = (args: string[]) => {
   句柄层级（Handle Level）
   ====================================================
   --handle 非必填
-      VFNodeConnectionType：表示上述节点的handels类型
-      CONNECT_ALL_DATA：表示上述节点的所有handels类型
+    VFNodeConnectionType：表示上述节点的handels类型
+    CONNECT_ALL_DATA：表示上述节点的所有handels类型
+  --stricthid 只获取与本节点有链接的handle
+    string 本节点的输入handle（例如，在node是CONNECT_PRE_NODE的情况下，strict的值应该是inhid）
   ====================================================
   变量层级（Variable Level）
   ====================================================
@@ -182,6 +184,7 @@ const getConnectionsByArgs = (args: string[]) => {
     child: string | undefined
     inhid: string | undefined
     handle: string | undefined
+    stricthid: string | undefined
     hid: string | undefined
     outfmt: string | undefined
     notop: boolean | undefined
@@ -191,6 +194,7 @@ const getConnectionsByArgs = (args: string[]) => {
     child: undefined,
     inhid: undefined,
     handle: undefined,
+    stricthid: undefined,
     hid: undefined,
     outfmt: undefined,
     notop: undefined,
@@ -306,12 +310,32 @@ const getConnectionsByArgs = (args: string[]) => {
   } else if (handleType in VFNodeConnectionType) {
     handleTypes.push(VFNodeConnectionType[handleType as keyof typeof VFNodeConnectionType])
   }
+
+  const strict_items: { nid: string; handleid: string }[] = []
+  if (parsed_args.stricthid) {
+    // 只获取与本节点有链接的handle
+    const edges = getHandleConnections({
+      id: parsed_args.stricthid,
+      type: 'target',
+      nodeId: nodeId.value,
+    })
+    for (const edge of Object.values(edges)) {
+      strict_items.push({
+        nid: edge.source,
+        handleid: edge.sourceHandle!,
+      })
+    }
+  }
+
   for (const nid of nodeIds) {
     const node = findNode(nid) as NodeWithVFData
     if (!node) continue
     for (const ctype of handleTypes) {
       const connections = node.data.Connections[ctype].Order
       for (const hid of connections) {
+        if (parsed_args.stricthid) {
+          if (!strict_items.some((item) => item.nid === nid && item.handleid === hid)) continue
+        }
         handleIds.push({
           Node: nid,
           HandleType: ctype,

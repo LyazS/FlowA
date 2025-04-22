@@ -59,6 +59,8 @@ class UI_Branch_Select(NFlex):
                                 "input",
                                 "--handle",
                                 VFNodeConnectionType.Outputs,
+                                "--stricthid",
+                                "input",
                                 "--outfmt",
                                 CONNECT_DATA_TO_SELECT,
                                 "--level",
@@ -141,7 +143,11 @@ class UI_Single_Branch(NFlex):
             vertical=False,
             wrap=False,
             justify="flex-start",
-            style={"align-content": "center", "align-items": "center", "margin": "10px"},
+            style={
+                "align-content": "center",
+                "align-items": "center",
+                "margin": "10px",
+            },
             slots={
                 "default": [
                     UI_Branch_Select(),
