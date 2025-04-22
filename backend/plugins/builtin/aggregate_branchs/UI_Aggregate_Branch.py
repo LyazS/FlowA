@@ -89,9 +89,14 @@ class UI_Branch_Select(NFlex):
                             [
                                 CONNECT_DATA,
                                 "--node",
-                                CONNECT_PRE_NODE,
-                                "--inhid",
-                                "input",
+                                VBindProp(
+                                    [
+                                        VFOR_DATA,
+                                        "@BranchItem",
+                                        "NodeHandle",
+                                        "Node",
+                                    ]
+                                ),
                                 "--handle",
                                 VBindProp(
                                     [
