@@ -363,7 +363,7 @@ const parseResult = (result: any, getValueFunc: Function) => {
         .object({
           Type: z.enum([PropVarType.Value, PropVarType.VBind]),
           Data: z.any(),
-          Replace: z.string().optional(),
+          Replace: z.string().nullable().optional(),
         })
         .strict()
       if (ReadOnlyPropVarSchema.safeParse(value).success) {

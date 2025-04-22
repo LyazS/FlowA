@@ -4,7 +4,7 @@ import asyncio
 import traceback
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
-from app.schemas.VFlowRunData import FARunStatus, RefVarItem
+from app.schemas.VFlowRunData import FARunStatus
 from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *

@@ -13,7 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
-from app.schemas.VFlowRunData import FARunStatus, NodeHandleItem
+from app.schemas.VFlowRunData import FARunStatus
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -40,7 +40,7 @@ from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
 class Single_AggregateBranch(BaseModel):
-    NodeHandle: Optional[NodeHandleItem] = None
+    NodeHandle: Optional[RefNodeHandleItem] = None
     RefData: Optional[Dict] = None
     OrderKey: ReadOnlyPropVar | str
     pass

@@ -3,7 +3,6 @@ from loguru import logger
 from pydantic import BaseModel
 from app.schemas.farequest import VarItem, ValidationError
 from app.schemas.VFlowData import VFlowData
-from app.schemas.VFlowRunData import RefVarItem
 from app.schemas.VFNodeInterface import (
     VFNodeConnectionType,
     VFNodeFlag,
@@ -13,6 +12,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
 )
 from app.uisdk.VFUIDefine import *
+from app.uisdk import RefVarItem
 from app.nodes import FATaskNode, FANODE_REGISTRY
 
 

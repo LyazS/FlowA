@@ -38,16 +38,3 @@ class VFNodeCacheKey(BaseModel):
     Key: Optional[str] = None
     After: VFNodeCacheKeyAfter = VFNodeCacheKeyAfter.Save
     pass
-
-
-class RefVarItem(BaseModel):
-    Nid: str
-    Path: FromInnerPath
-    pass
-
-
-class NodeHandleItem(BaseModel):
-    Node: str
-    HandleType: VFNodeConnectionType
-    Handle: str
-    pass

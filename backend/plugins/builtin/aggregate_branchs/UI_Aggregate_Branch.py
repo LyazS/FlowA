@@ -14,31 +14,164 @@ from ..UI_Components.NButton import NButton
 from ..UI_Components.UI_InputVars import VarType
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
 from .aggregate_branchs import Single_AggregateBranch
+from ..UI_Components.RefNodeHandleSelect import UI_RefNodeHandleSelect
 
 
-class UI_Branch_Card(NFlex):
+class UI_Branch_Select(NFlex):
     def __init__(self):
         super().__init__(
             vertical=False,
             wrap=False,
             justify="flex-start",
-            style={"align-content": "center", "align-items": "center"},
+            style={"align-content": "center", "align-items": "center", "width": "95%"},
             slots={
                 "default": [
                     NormalComponent(
                         Type="NIcon",
-                        Props={},
+                        Props={"width": "10%"},
                         Slots={"default": NormalComponent(Type="EllipsisVertical")},
                     ),
-                    SpanComponent(ValueProp("分支变量")),
-                    SpanComponent(
-                        VBindProp(
+                    UI_RefNodeHandleSelect(
+                        placeholder="请选择节点",
+                        style={"width": "45%"},
+                        value=VModelProp(
                             [
-                                VFOR_DATA,
-                                "@BranchItem",
-                                "Node",
+                                THIS_NODE_DATA,
+                                "Payloads",
+                                "ById",
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
+                                "Data",
+                                VBindProp([VFOR_DATA, "@BranchIndex"]),
+                                "NodeHandle",
                             ]
-                        )
+                        ),
+                        options=VBindProp(
+                            [
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_PRE_NODE,
+                                "--inhid",
+                                "input",
+                                "--handle",
+                                VFNodeConnectionType.Outputs,
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_HANDLE_LEVEL,
+                            ]
+                        ),
+                    ),
+                    UI_RefVarSelect(
+                        placeholder="请选择变量",
+                        style={"width": "45%"},
+                        value=VModelProp(
+                            [
+                                THIS_NODE_DATA,
+                                "Payloads",
+                                "ById",
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
+                                "Data",
+                                VBindProp([VFOR_DATA, "@BranchIndex"]),
+                                "RefData",
+                            ]
+                        ),
+                        options=VBindProp(
+                            [
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_PRE_NODE,
+                                "--inhid",
+                                "input",
+                                "--handle",
+                                VBindProp(
+                                    [
+                                        VFOR_DATA,
+                                        "@BranchItem",
+                                        "NodeHandle",
+                                        "HandleType",
+                                    ]
+                                ),
+                                "--hid",
+                                VBindProp(
+                                    [VFOR_DATA, "@BranchItem", "NodeHandle", "Handle"]
+                                ),
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
+                            ]
+                        ),
+                        IfCondition=CompareCondition(
+                            Left=VBindProp(
+                                [
+                                    VFOR_DATA,
+                                    "@BranchItem",
+                                    "NodeHandle",
+                                    "Handle",
+                                ]
+                            ),
+                            Operator="!=",
+                            Right=ValueProp(None),
+                        ),
+                    ),
+                ]
+            },
+        )
+
+
+class UI_Single_Branch(NFlex):
+    def __init__(self):
+        super().__init__(
+            otherProps={"key": VBindProp([VFOR_DATA, "@BranchItem", "OrderKey"])},
+            vertical=False,
+            wrap=False,
+            justify="flex-start",
+            style={"align-content": "center", "align-items": "center", "margin": "10px"},
+            slots={
+                "default": [
+                    UI_Branch_Select(),
+                    NButton(
+                        style={"width": "5%"},
+                        type="error",
+                        size="small",
+                        circle=True,
+                        level="tertiary",
+                        onClick=FunctionProp(
+                            Funcs=[
+                                REMOVEITEM_FuncProp(
+                                    Arg=FuncArg_REMOVEITEM(
+                                        DstPath=VBindProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Payloads",
+                                                "ById",
+                                                VBindProp(
+                                                    [
+                                                        CONTEXT_FUNCTION,
+                                                        PAYLOADS_ID,
+                                                    ]
+                                                ),
+                                                "Data",
+                                            ]
+                                        ),
+                                        ItemKey=VBindProp([VFOR_DATA, "@BranchIndex"]),
+                                    ),
+                                )
+                            ]
+                        ),
+                        slots={
+                            "icon": NormalComponent(Type="Close"),
+                        },
                     ),
                 ]
             },
@@ -85,7 +218,7 @@ class UI_Drag_Branch(NormalComponent):
                     ),
                     ItemLabel="@BranchItem",
                     IndexLabel="@BranchIndex",
-                    Template=UI_Branch_Card(),
+                    Template=UI_Single_Branch(),
                 )
             },
         )
@@ -124,7 +257,42 @@ class UI_Aggregate_Branch(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(Funcs=[]),
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            SETCONTEXT_FuncProp(
+                                                Arg=FuncArg_SETCONTEXT(
+                                                    Key=ValueProp("orderkey"),
+                                                    Value=VBindProp([GENERATE_UUID]),
+                                                )
+                                            ),
+                                            APPENDITEM_FuncProp(
+                                                Arg=FuncArg_APPENDITEM(
+                                                    DstPath=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    CONTEXT_FUNCTION,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                        ]
+                                                    ),
+                                                    ItemValue=Single_AggregateBranch(
+                                                        OrderKey=VBindProp(
+                                                            [
+                                                                CONTEXT_ARG,
+                                                                "orderkey",
+                                                            ]
+                                                        )
+                                                    ),
+                                                )
+                                            ),
+                                        ]
+                                    ),
                                     slots={
                                         "default": SpanComponent(ValueProp("新增")),
                                         "icon": NormalComponent(Type="Add"),

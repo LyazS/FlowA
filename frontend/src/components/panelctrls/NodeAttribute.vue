@@ -30,7 +30,7 @@ import {
 } from 'naive-ui'
 import { Panel, useVueFlow } from '@vue-flow/core'
 import { CreateOutline } from '@vicons/ionicons5'
-import { useNodeUtils, type RefVarItem } from '@/hooks/useNodeUtils'
+import { useNodeUtils, type RefVarItem, type RefNodeHandleItem } from '@/hooks/useNodeUtils'
 import { useVFlowInitial } from '@/hooks/useVFlowInitial'
 import { useVFlowSaver } from '@/services/useVFlowSaver'
 import { selectedNodeId, isEditorMode } from '@/hooks/useVFlowAttribute'
@@ -306,7 +306,7 @@ const getConnectionsByArgs = (args: string[]) => {
   let handleType = parsed_args.handle
   if (!handleType) handleType = CONNECT_ALL_DATA
   const handleTypes: VFNodeConnectionType[] = []
-  const handleIds: [string, VFNodeConnectionType, string][] = []
+  const handleIds: RefNodeHandleItem[] = []
   if (handleType === CONNECT_ALL_DATA) {
     //  遍历VFNodeConnectionType
     for (const key in VFNodeConnectionType) {
@@ -321,14 +321,19 @@ const getConnectionsByArgs = (args: string[]) => {
     for (const ctype of handleTypes) {
       const connections = node.data.Connections[ctype].Order
       for (const hid of connections) {
-        handleIds.push([nid, ctype, hid])
+        handleIds.push({
+          Node: nid,
+          HandleType: ctype,
+          Handle: hid,
+        })
       }
     }
   }
   if (parsed_args.level === CONNECT_HANDLE_LEVEL) {
     if (parsed_args.outfmt === CONNECT_ALL_DATA) {
       const res: Record<string, Record<string, string[]>> = {}
-      for (const [nid, ctype, hid] of handleIds) {
+      for (const item of Object.values(handleIds)) {
+        const { Node: nid, HandleType: ctype, Handle: hid } = item
         if (!(nid in res)) {
           res[nid] = {}
         }
@@ -356,8 +361,8 @@ const getConnectionsByArgs = (args: string[]) => {
   let handleId = parsed_args.hid
   if (!handleId) handleId = CONNECT_ALL_DATA
   let varItems: RefVarItem[] = []
-  for (const [nid, ctype, hid] of handleIds) {
-    console.log(nid, ctype, hid)
+  for (const item of Object.values(handleIds)) {
+    const { Node: nid, HandleType: ctype, Handle: hid } = item
     if (handleId === CONNECT_ALL_DATA) {
       varItems.push(...recursiveFindVariables(nid, ctype, [hid]))
     } else if (handleId === hid) {

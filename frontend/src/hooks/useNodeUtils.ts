@@ -13,6 +13,11 @@ export interface RefVarItem {
   Nid: string
   Path: FromInnerPath
 }
+export interface RefNodeHandleItem {
+  Node: string
+  HandleType: VFNodeConnectionType
+  Handle: string
+}
 
 interface NodeUtilsInstance {
   findVarFromIO: (nid: string, findconnect: VFNodeConnectionType, hid: string) => RefVarItem[]

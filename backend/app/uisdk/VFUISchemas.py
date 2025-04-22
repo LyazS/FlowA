@@ -5,6 +5,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionType,
     VFNodeHandleData,
     VFNodeContentData,
+    FromInnerPath,
 )
 from app.schemas.VFNodeClass import InsertPos
 
@@ -440,4 +441,16 @@ class VarType(StrEnum):
     Boolean = "Boolean"
     File = "File"
     Any = "Any"
+    pass
+
+class RefVarItem(BaseModel):
+    Nid: str
+    Path: FromInnerPath
+    pass
+
+
+class RefNodeHandleItem(BaseModel):
+    Node: str
+    HandleType: VFNodeConnectionType
+    Handle: str
     pass

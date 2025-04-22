@@ -161,8 +161,10 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
 }
 
 import RefVarSelect from '@/components/panelctrls/editables/RefVarSelect.vue'
+import RefNodeHandleSelect from '@/components/panelctrls/editables/RefNodeHandleSelect.vue'
 export const DYNAMIC_FA_COMPONENTS_MAP: Record<string, Component> = {
   RefVarSelect: RefVarSelect,
+  RefNodeHandleSelect: RefNodeHandleSelect,
 }
 
 import { Add, Close, CreateOutline, EllipsisVertical } from '@vicons/ionicons5'
