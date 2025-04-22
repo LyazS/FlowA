@@ -3,7 +3,7 @@ from loguru import logger
 from pydantic import BaseModel
 from enum import StrEnum
 from app.uisdk import *
-from app.schemas.VFNodeInterface import VFNodeConnectionType
+from app.schemas.VFNodeInterface import VFNodeConnectionType, VarType, RefVarItem
 from .Header import Header
 from .RefVarSelect import UI_RefVarSelect
 from .NInput import NInput
@@ -15,7 +15,7 @@ from .NFlex import NFlex
 class InputVarModel(BaseModel):
     Key: str = ""
     Type: VarType = VarType.String
-    ValueRef: Optional[Dict] = None
+    ValueRef: Optional[RefVarItem] = None
     ValueStr: str = ""
     ValueNum: int | float = 0
     ValueBool: bool = False
@@ -35,7 +35,7 @@ class InputVarModel(BaseModel):
             return var.ValueBool
         elif var.Type == VarType.Ref:
             if getRef:
-                return await getRef(cur_nid, var.ValueStr)
+                return await getRef(cur_nid, var.ValueRef)
             else:
                 logger.error("getRef function is not provided")
                 return None

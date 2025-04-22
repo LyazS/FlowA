@@ -215,7 +215,7 @@ class SingleAttrSelect(NFlex):
                     ),
                     # 值输入框 =================================================
                     UI_RefVarSelect(
-                        value=VModelProp(attr_path + ["Content"]),
+                        value=VModelProp(attr_path + ["ContentRef"]),
                         size="tiny",
                         options=VBindProp(
                             [

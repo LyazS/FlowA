@@ -57,7 +57,7 @@ class UI_Iter_Run_Output(NFlex):
                                                         Type="List",
                                                         Data=[],
                                                         Config=VFNodeContentDataConfig(
-                                                            Ref=""
+                                                            Ref=None
                                                         ),
                                                     ),
                                                 )

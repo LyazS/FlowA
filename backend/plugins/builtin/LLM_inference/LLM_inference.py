@@ -24,6 +24,8 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
+    VarType,
+    RefVarItem,
 )
 from app.schemas.farequest import (
     ValidationError,
@@ -34,7 +36,7 @@ from app.utils.tools import read_yaml, reduceGet, replace_vars
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
-from ..UI_Components.UI_InputVars import InputVarModel, VarType
+from ..UI_Components.UI_InputVars import InputVarModel
 
 
 class LLMSettingType(StrEnum):
@@ -47,6 +49,7 @@ class LLMSetting(BaseModel):
     Label: str
     Type: LLMSettingType
     Content: Any
+    ContentRef: Optional[RefVarItem] = None
 
 
 class LLMSettings(BaseModel):
@@ -155,8 +158,14 @@ class LLMInference(FATaskNode):
 
     def validateConfigVar(self, s_config: LLMSetting, selfVars):
         if s_config.Type == LLMSettingType.Ref:
-            if s_config.Content not in selfVars:
+            if (
+                not s_config.ContentRef
+                or s_config.ContentRef.model_dump_json() in selfVars
+            ):
+                return True
+            else:
                 return False
+            pass
         return True
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
@@ -175,8 +184,10 @@ class LLMInference(FATaskNode):
             UI_INPUT_VARS: VFNodeContentData = node_payloads.ById["UI_INPUT_VARS"]
             for var_dict in UI_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
-                    error_msgs.append(f"变量未定义{var.ValueStr}")
+                if var.Type == VarType.Ref and (
+                    not var.ValueRef or var.ValueRef.model_dump_json() not in selfVars
+                ):
+                    error_msgs.append(f"变量未定义{var.ValueRef}")
             D_MODEL_SETTING: VFNodeContentData = node_payloads.ById["D_MODEL_SETTING"]
             model_cfg = LLMSettings.model_validate(D_MODEL_SETTING.Data.value)
             if model_cfg.Model.Content not in MODELS:
@@ -210,7 +221,7 @@ class LLMInference(FATaskNode):
                 InputVarModel(
                     Key="",
                     Type=VarType.Ref,
-                    ValueStr=s_config.Content,
+                    ValueRef=s_config.ContentRef,
                 ),
                 self.id,
                 self.runner().getRefData,

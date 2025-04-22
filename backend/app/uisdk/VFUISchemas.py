@@ -431,26 +431,3 @@ class SelectOptions(BaseModel):
     label: str
     value: str
     pass
-
-
-class VarType(StrEnum):
-    Ref = "Ref"
-    String = "String"
-    Integer = "Integer"
-    Number = "Number"
-    Boolean = "Boolean"
-    File = "File"
-    Any = "Any"
-    pass
-
-class RefVarItem(BaseModel):
-    Nid: str
-    Path: FromInnerPath
-    pass
-
-
-class RefNodeHandleItem(BaseModel):
-    Node: str
-    HandleType: VFNodeConnectionType
-    Handle: str
-    pass

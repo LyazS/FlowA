@@ -27,8 +27,8 @@ from app.schemas.VFNodeInterface import (
     VFNodeFlag,
     FromInnerPath,
     VFNodeContentData,
+    RefVarItem,
 )
-from app.uisdk import RefVarItem
 
 if TYPE_CHECKING:
     from app.nodes import FABaseNode
@@ -150,15 +150,16 @@ class FARunner:
     ):
         await self.cachemgr.set(request_nid, cache_key, value, isCommit)
 
-    async def getRefData(self, request_nid: str, refvalue: str):
+    async def getRefData(self, request_nid: str, refdata: RefVarItem):
         """
         根据curnid获取相对应层级的refdata数据
         针对Ref数据会自动解包，返回原始数据
         """
+        if refdata is None:
+            return None
         # 获取cur节点的层级 =======================================
         cur_level = getNestedLayout(request_nid)
         # 获取ref节点的层级 =======================================
-        refdata = RefVarItem.model_validate_json(refvalue)
         ref_level = getNestedLayout(refdata.Nid)
 
         assert len(ref_level) <= len(cur_level), "层级不匹配"

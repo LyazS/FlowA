@@ -106,13 +106,12 @@ class Jinja2Template(FABaseNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.Type == VarType.Ref:
-                    refdata = RefVarItem.model_validate_json(var.ValueStr)
-                    thenode = runner.getNode(refdata.Nid)
+                if var.Type == VarType.Ref and var.ValueRef:
+                    thenode = runner.getNode(var.ValueRef.Nid)
                     (
                         await thenode.getContentByPath(
                             self.id,
-                            refdata.Path,
+                            var.ValueRef.Path,
                         )
                     ).Data.add_dependency(
                         lambda triggerdata, key=var.Key, wid=self.wid, nid=self.id, oriid=self.oriid: (
@@ -186,8 +185,10 @@ class Jinja2Template(FABaseNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
-                    error_msgs.append(f"变量未定义{var.ValueStr}")
+                if var.Type == VarType.Ref and (
+                    not var.ValueRef or var.ValueRef.model_dump_json() not in selfVars
+                ):
+                    error_msgs.append(f"变量未定义{var.ValueRef}")
         except Exception as e:
             errmsg = traceback.format_exc()
             error_msgs.append(f"获取内容失败{str(errmsg)}")

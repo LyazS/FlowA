@@ -42,6 +42,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
+    RefVarItem,
 )
 from app.utils.tools import (
     read_yaml,
@@ -82,7 +83,11 @@ class IterRun(FATaskNode):
             )
             node_payloads = self.data.Payloads
             D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
-            if D_ITER_ARRAY.Data.value not in selfVars:
+            if (
+                D_ITER_ARRAY.Data.value
+                or not isinstance(D_ITER_ARRAY.Data.value, RefVarItem)
+                or D_ITER_ARRAY.Data.value.model_dump_json() not in selfVars
+            ):
                 error_msgs.append(
                     f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}"
                 )
@@ -488,8 +493,8 @@ class IterRun(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="迭代数组",
-                Type="String",
-                Data="",
+                Type="Ref",
+                Data=None,
                 UiType="@/FlowABuiltin/UI_ITER_RUN_ITER_ARRAY",
             ),
             payload_id="D_ITER_ARRAY",

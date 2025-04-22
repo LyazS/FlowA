@@ -10,9 +10,9 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
+    RefVarItem,
 )
 from app.uisdk.VFUIDefine import *
-from app.uisdk import RefVarItem
 from app.nodes import FATaskNode, FANODE_REGISTRY
 
 
@@ -180,10 +180,14 @@ class FAValidator:
                 else:
                     tmp_vars = self.recursive_find_variables(nid, ctype)
 
-                return [
-                    RefVarItem(Nid=item.NodeId, Path=item.DataPath).model_dump_json()
-                    for item in tmp_vars
-                ]
+                return set(
+                    [
+                        RefVarItem(
+                            Nid=item.NodeId, Path=item.DataPath
+                        ).model_dump_json()
+                        for item in tmp_vars
+                    ]
+                )
 
         logger.error(f"Nid: {nid} [getConnectionByPath] with Invalid path: {path}")
         return None

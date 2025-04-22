@@ -10,6 +10,30 @@ class FromInnerPath(BaseModel):
     pass
 
 
+class VarType(StrEnum):
+    Ref = "Ref"
+    String = "String"
+    Integer = "Integer"
+    Number = "Number"
+    Boolean = "Boolean"
+    File = "File"
+    Any = "Any"
+    pass
+
+
+class RefVarItem(BaseModel):
+    Nid: str
+    Path: FromInnerPath
+    pass
+
+
+class RefNodeHandleItem(BaseModel):
+    Node: str
+    HandleType: 'VFNodeConnectionType'
+    Handle: str
+    pass
+
+
 class VFNodeConnectionDataType(StrEnum):
     FromOuter = "FromOuter"
     FromAttached = "FromAttached"
@@ -54,7 +78,7 @@ CodeEditorLanguage = Literal["python", "json", "django", "text"]
 
 class VFNodeContentDataConfig(BaseModel):
     Language: Optional[CodeEditorLanguage] = None
-    Ref: Optional[str] = None
+    Ref: Optional[RefVarItem] = None
 
 
 class VFNodeContentData(BaseModel):

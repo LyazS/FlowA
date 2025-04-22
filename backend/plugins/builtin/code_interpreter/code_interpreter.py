@@ -161,8 +161,10 @@ class CodeInterpreter(FATaskNode):
             D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
             for var_dict in D_INPUT_VARS.Data.value:
                 var = InputVarModel.model_validate(var_dict)
-                if var.Type == VarType.Ref and var.ValueStr not in selfVars:
-                    error_msgs.append(f"没有该变量选项{var.ValueStr}")
+                if var.Type == VarType.Ref and (
+                    not var.ValueRef or var.ValueRef.model_dump_json() not in selfVars
+                ):
+                    error_msgs.append(f"没有该变量选项{var.ValueRef}")
                 else:
                     CodeInputArgs.add(var.Key)
             for pid in node_results.Order:
