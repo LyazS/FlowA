@@ -97,7 +97,7 @@ class CondBranch(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
-            node_results = self.data.Results
+            node_payloads = self.data.Payloads
 
             selfVars = await validator.getConnectionByPath(
                 self.id,
@@ -107,8 +107,10 @@ class CondBranch(FATaskNode):
                     "self",
                 ],
             )
-            for rid in node_results.Order:
-                item: VFNodeContentData = node_results.ById[rid]
+            for pid in node_payloads.Order:
+                if pid == "P_ONLY_SHOW":
+                    continue
+                item: VFNodeContentData = node_payloads.ById[pid]
                 scd = None
                 try:
                     scd = Single_ConditionDict.model_validate(item.Data.value)
@@ -140,7 +142,7 @@ class CondBranch(FATaskNode):
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
 
-    def compare(self, refdata, operator:str, compdata):
+    def compare(self, refdata, operator: str, compdata):
         # 基本比较操作符，适用于大多数可比较类型
         if operator == "eq":
             return refdata == compdata
@@ -219,9 +221,11 @@ class CondBranch(FATaskNode):
 
     async def run(self) -> List[FANodeUpdateData]:
         isAnyConditionMet = False
-        node_results = self.data.Results
-        for rid in node_results.Order:
-            item: VFNodeContentData = node_results.ById[rid]
+        node_payloads = self.data.Payloads
+        for pid in node_payloads.Order:
+            if pid == "P_ONLY_SHOW":
+                continue
+            item: VFNodeContentData = node_payloads.ById[pid]
             idata = Single_ConditionDict.model_validate(item.Data.value)
             iOutputKey = idata.OutputKey
             conditionFunc = all if idata.CondIsAnd else any
@@ -282,7 +286,18 @@ class CondBranch(FATaskNode):
                 HandleId="input-var",
             ),
         )
-        thisnode.add_result(
+
+        thisnode.add_payload(
+            VFNodeContentData(
+                Label="-",
+                Type="Any",
+                Data=None,
+                UiType="@/FlowABuiltin/UI_COND_BRANCH",
+            ),
+            payload_id="P_ONLY_SHOW",
+        )
+
+        thisnode.add_payload(
             VFNodeContentData(
                 Label="CASE 1",
                 Type="Dict",
@@ -292,7 +307,7 @@ class CondBranch(FATaskNode):
                     Conditions=[Single_Condition()],
                 ),
             ),
-            result_id="output-init",
+            payload_id="output-init",
         )
 
         thisnode.add_handle(VFNodeConnectionType.Outputs, "output-else", "ELSE")
@@ -305,7 +320,7 @@ class CondBranch(FATaskNode):
             ),
         )
 
-        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_COND_BRANCH")
+        # thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_COND_BRANCH")
         return thisnode
 
 

@@ -47,7 +47,7 @@ class branch_header(NFlex):
                             "value": VModelProp(
                                 [
                                     THIS_NODE_DATA,
-                                    "Results",
+                                    "Payloads",
                                     "ById",
                                     VBindProp([VFOR_DATA, "@OutHandleName"]),
                                     "Data",
@@ -124,7 +124,7 @@ class VarTypeSelect(NormalComponent):
                 "value": VModelProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -145,7 +145,7 @@ class VarStringInput(NInput):
             value=VModelProp(
                 [
                     THIS_NODE_DATA,
-                    "Results",
+                    "Payloads",
                     "ById",
                     VBindProp([VFOR_DATA, "@OutHandleName"]),
                     "Data",
@@ -158,7 +158,7 @@ class VarStringInput(NInput):
                 Left=VBindProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -183,7 +183,7 @@ class VarIntegerInput(NormalComponent):
                 "value": VModelProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -198,7 +198,7 @@ class VarIntegerInput(NormalComponent):
                 Left=VBindProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -223,7 +223,7 @@ class VarNumberInput(NormalComponent):
                 "value": VModelProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -237,7 +237,7 @@ class VarNumberInput(NormalComponent):
                 Left=VBindProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -264,7 +264,7 @@ class VarBooleanInput(NFlex):
                     value=VModelProp(
                         [
                             THIS_NODE_DATA,
-                            "Results",
+                            "Payloads",
                             "ById",
                             VBindProp([VFOR_DATA, "@OutHandleName"]),
                             "Data",
@@ -279,7 +279,7 @@ class VarBooleanInput(NFlex):
                 Left=VBindProp(
                     [
                         THIS_NODE_DATA,
-                        "Results",
+                        "Payloads",
                         "ById",
                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                         "Data",
@@ -318,7 +318,7 @@ class UI_Cond_Card_Content(NFlex):
                                     value=VModelProp(
                                         [
                                             THIS_NODE_DATA,
-                                            "Results",
+                                            "Payloads",
                                             "ById",
                                             VBindProp([VFOR_DATA, "@OutHandleName"]),
                                             "Data",
@@ -360,7 +360,7 @@ class UI_Cond_Card_Content(NFlex):
                                         "value": VModelProp(
                                             [
                                                 THIS_NODE_DATA,
-                                                "Results",
+                                                "Payloads",
                                                 "ById",
                                                 VBindProp(
                                                     [VFOR_DATA, "@OutHandleName"]
@@ -412,7 +412,7 @@ class UI_Cond_Card_Content(NFlex):
                                     value=VModelProp(
                                         [
                                             THIS_NODE_DATA,
-                                            "Results",
+                                            "Payloads",
                                             "ById",
                                             VBindProp([VFOR_DATA, "@OutHandleName"]),
                                             "Data",
@@ -425,7 +425,7 @@ class UI_Cond_Card_Content(NFlex):
                                         Left=VBindProp(
                                             [
                                                 THIS_NODE_DATA,
-                                                "Results",
+                                                "Payloads",
                                                 "ById",
                                                 VBindProp(
                                                     [VFOR_DATA, "@OutHandleName"]
@@ -482,7 +482,7 @@ class UI_Cond_Card(NFlex):
                                         DstPath=VBindProp(
                                             [
                                                 THIS_NODE_DATA,
-                                                "Results",
+                                                "Payloads",
                                                 "ById",
                                                 VBindProp(
                                                     [VFOR_DATA, "@OutHandleName"]
@@ -523,9 +523,9 @@ class UI_Branch_Card(NormalComponent):
                     text=True,
                     onClick=FunctionProp(
                         Funcs=[
-                            REMOVERESULT_FuncProp(
-                                Arg=FuncArg_REMOVERESULT(
-                                    ResultId=VBindProp([VFOR_DATA, "@OutHandleName"]),
+                            REMOVEPAYLOAD_FuncProp(
+                                Arg=FuncArg_REMOVEPAYLOAD(
+                                    PayloadId=VBindProp([VFOR_DATA, "@OutHandleName"]),
                                 )
                             ),
                             REMOVEHANDLE_FuncProp(
@@ -549,7 +549,7 @@ class UI_Branch_Card(NormalComponent):
                                 Items=VBindProp(
                                     [
                                         THIS_NODE_DATA,
-                                        "Results",
+                                        "Payloads",
                                         "ById",
                                         VBindProp([VFOR_DATA, "@OutHandleName"]),
                                         "Data",
@@ -571,7 +571,7 @@ class UI_Branch_Card(NormalComponent):
                                                 DstPath=VBindProp(
                                                     [
                                                         THIS_NODE_DATA,
-                                                        "Results",
+                                                        "Payloads",
                                                         "ById",
                                                         VBindProp(
                                                             [
@@ -668,8 +668,11 @@ class UI_Cond_Branch(NFlex):
                                         Funcs=[
                                             SETCONTEXT_FuncProp(
                                                 Arg=FuncArg_SETCONTEXT(
-                                                    Key=ValueProp("bid"),
-                                                    Value=VBindProp([GENERATE_UUID]),
+                                                    Key=ValueProp("branchid"),
+                                                    Value=VBindProp(
+                                                        [GENERATE_UUID],
+                                                        Replace="output-{{Data}}",  # handle必须以output|input开头
+                                                    ),
                                                 )
                                             ),
                                             ADDHANDLE_FuncProp(
@@ -678,9 +681,8 @@ class UI_Cond_Branch(NFlex):
                                                     HandleId=VBindProp(
                                                         [
                                                             CONTEXT_ARG,
-                                                            "bid",
+                                                            "branchid",
                                                         ],
-                                                        Replace="output-{{Data}}",  # handle必须以output|input开头
                                                     ),
                                                     HandleLabel=ValueProp("CASE X"),
                                                     Position=InsertPos.Start,
@@ -692,9 +694,8 @@ class UI_Cond_Branch(NFlex):
                                                     HandleId=VBindProp(
                                                         [
                                                             CONTEXT_ARG,
-                                                            "bid",
+                                                            "branchid",
                                                         ],
-                                                        Replace="output-{{Data}}",
                                                     ),
                                                     Data=VFNodeHandleData(
                                                         Type=VFNodeConnectionDataType.FromOuter,
@@ -702,25 +703,23 @@ class UI_Cond_Branch(NFlex):
                                                     ),
                                                 )
                                             ),
-                                            ADDRESULT_FuncProp(
-                                                Arg=FuncArg_ADDRESULT(
-                                                    ResultId=VBindProp(
+                                            ADDPAYLOAD_FuncProp(
+                                                Arg=FuncArg_ADDPAYLOAD(
+                                                    PayloadId=VBindProp(
                                                         [
                                                             CONTEXT_ARG,
-                                                            "bid",
+                                                            "branchid",
                                                         ],
-                                                        Replace="output-{{Data}}",
                                                     ),
-                                                    Result=VFNodeContentData(
+                                                    Payload=VFNodeContentData(
                                                         Label="-",
                                                         Type="Dict",
                                                         Data=Single_ConditionDict(
                                                             OutputKey=VBindProp(
                                                                 [
                                                                     CONTEXT_ARG,
-                                                                    "bid",
+                                                                    "branchid",
                                                                 ],
-                                                                Replace="output-{{Data}}",
                                                             ),
                                                             CondIsAnd=True,
                                                             Conditions=[

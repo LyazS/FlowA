@@ -93,6 +93,8 @@ class FunctionPropType(StrEnum):
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
     APPENDITEM = "@APPENDITEM@"
+    ADDPAYLOAD = "@ADDPAYLOAD@"
+    REMOVEPAYLOAD = "@REMOVEPAYLOAD@"
     ADDRESULT = "@ADDRESULT@"
     REMOVERESULT = "@REMOVERESULT@"
     ADDRESULT2OUT = "@ADDRESULT2OUT@"
@@ -128,6 +130,18 @@ class FuncArg_REMOVEITEM(BaseModel):
 class FuncArg_APPENDITEM(BaseModel):
     DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemValue: Any = Field(..., description="item的value数据")
+    pass
+
+
+class FuncArg_ADDPAYLOAD(BaseModel):
+    Payload: VFNodeContentData = Field(..., description="载荷数据")
+    PayloadId: Optional["ReadOnlyPropVar"] = Field(None, description="载荷id")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
+    pass
+
+
+class FuncArg_REMOVEPAYLOAD(BaseModel):
+    PayloadId: "ReadOnlyPropVar" = Field(..., description="载荷id")
     pass
 
 
@@ -220,6 +234,16 @@ class APPENDITEM_FuncProp(_FuncPropBase):
     Arg: FuncArg_APPENDITEM
 
 
+class ADDPAYLOAD_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.ADDPAYLOAD] = FunctionPropType.ADDPAYLOAD
+    Arg: FuncArg_ADDPAYLOAD
+
+
+class REMOVEPAYLOAD_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.REMOVEPAYLOAD] = FunctionPropType.REMOVEPAYLOAD
+    Arg: FuncArg_REMOVEPAYLOAD
+
+
 class ADDRESULT_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.ADDRESULT] = FunctionPropType.ADDRESULT
     Arg: FuncArg_ADDRESULT
@@ -277,6 +301,8 @@ SingleFunctionProp = Union[
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
     APPENDITEM_FuncProp,
+    ADDPAYLOAD_FuncProp,
+    REMOVEPAYLOAD_FuncProp,
     ADDRESULT_FuncProp,
     REMOVERESULT_FuncProp,
     ADDRESULT2OUT_FuncProp,

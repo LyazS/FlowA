@@ -41,6 +41,8 @@ export enum FunctionPropType {
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
   APPENDITEM = '@APPENDITEM@',
+  ADDPAYLOAD = '@ADDPAYLOAD@',
+  REMOVEPAYLOAD = '@REMOVEPAYLOAD@',
   ADDRESULT = '@ADDRESULT@',
   REMOVERESULT = '@REMOVERESULT@',
   ADDRESULT2OUT = '@ADDRESULT2OUT@',
@@ -101,6 +103,16 @@ export interface FuncArg_REMOVEITEM {
 export interface FuncArg_APPENDITEM {
   DstPath: VBindProp
   ItemValue: any
+}
+
+export interface FuncArg_ADDPAYLOAD {
+  Payload: VFNodeContentData
+  PayloadId?: ReadOnlyPropVar
+  Position: InsertPos
+}
+
+export interface FuncArg_REMOVEPAYLOAD {
+  PayloadId: ReadOnlyPropVar
 }
 
 export interface FuncArg_ADDRESULT {
@@ -182,6 +194,16 @@ export interface APPENDITEM_FuncProp extends _FuncPropBase {
   Arg: FuncArg_APPENDITEM
 }
 
+export interface ADDPAYLOAD_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.ADDPAYLOAD
+  Arg: FuncArg_ADDPAYLOAD
+}
+
+export interface REMOVEPAYLOAD_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.REMOVEPAYLOAD
+  Arg: FuncArg_REMOVEPAYLOAD
+}
+
 export interface ADDRESULT_FuncProp extends _FuncPropBase {
   Func: FunctionPropType.ADDRESULT
   Arg: FuncArg_ADDRESULT
@@ -237,6 +259,8 @@ export type SingleFunctionProp =
   | ADDITEM_FuncProp
   | REMOVEITEM_FuncProp
   | APPENDITEM_FuncProp
+  | ADDPAYLOAD_FuncProp
+  | REMOVEPAYLOAD_FuncProp
   | ADDRESULT_FuncProp
   | REMOVERESULT_FuncProp
   | ADDRESULT2OUT_FuncProp

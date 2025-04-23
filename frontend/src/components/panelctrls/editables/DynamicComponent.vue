@@ -244,6 +244,30 @@ const appendItemByPath = (resolvePath: (string | number)[], value: any) => {
   console.error(`Unsupported append path: ${resolvePath}`)
 }
 
+// 添加Payload
+const addItem2Payload = (
+  content: Omit<VFNodeContentData, 'Hid' | 'Did'>,
+  pid?: string,
+  pos?: InsertPos,
+) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.addPayload(content, pid, pos)
+    return
+  }
+  console.error(`addItem2Payload error`)
+}
+
+// 删除Payload
+const removeItem4Payload = (pid: string) => {
+  const nodedata = props.dataContext[THIS_NODE_DATA] as VFNode
+  if (nodedata) {
+    nodedata.rmPayload(pid)
+    return
+  }
+  console.error(`Unsupported remove path: ${pid}`)
+}
+
 // 添加Result
 const addItem2Result = (
   content: Omit<VFNodeContentData, 'Hid' | 'Did'>,
@@ -466,6 +490,18 @@ const processedProps = computed(() => {
                 cloneDeep(parseResult(ItemValue, getFunc)),
               ),
             )
+          } else if (prop_Function.Func == FunctionPropType.ADDPAYLOAD) {
+            const { Payload, PayloadId, Position } = prop_Function.Arg
+            functions.push((getFunc, _) =>
+              addItem2Payload(
+                cloneDeep(parseResult(Payload, getFunc)),
+                getFunc(PayloadId),
+                Position,
+              ),
+            )
+          } else if (prop_Function.Func == FunctionPropType.REMOVEPAYLOAD) {
+            const { PayloadId } = prop_Function.Arg
+            functions.push((getFunc, _) => removeItem4Payload(getFunc(PayloadId)))
           } else if (prop_Function.Func == FunctionPropType.ADDRESULT) {
             const { Result, ResultId, Position } = prop_Function.Arg
             functions.push((getFunc, _) =>
