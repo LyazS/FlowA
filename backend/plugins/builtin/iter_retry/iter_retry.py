@@ -35,6 +35,8 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     VFNodeHandleDataANode,
     FromInnerPath,
+    RefVarItem,
+    RefNodeHandleItem,
 )
 from app.utils.tools import (
     read_yaml,
@@ -89,8 +91,18 @@ class IterRetry(FATaskNode):
             )
             node_payloads = self.data.Payloads
             D_IN_NODE: VFNodeContentData = node_payloads.ById["D_IN_NODE"]
-            if D_IN_NODE.Data.value not in selfVars:
-                error_msgs.append(f"【初始变量】没有该变量选项{D_IN_NODE.Data.value}")
+            if not D_IN_NODE.Data.value:
+                error_msgs.append(f"缺少【初始变量】")
+            else:
+                try:
+                    iarr = RefVarItem.model_validate(D_IN_NODE.Data.value)
+                    if iarr.model_dump_json() not in selfVars:
+                        error_msgs.append(
+                            f"【初始变量】没有该变量选项{D_IN_NODE.Data.value}"
+                        )
+                except:
+                    error_msgs.append(f"【初始变量】变量错误")
+                pass
 
             aoutputVars = await validator.getConnectionByPath(
                 self.id,
@@ -101,9 +113,19 @@ class IterRetry(FATaskNode):
                 ],
             )
             D_OUT_NODE: VFNodeContentData = node_payloads.ById["D_OUT_NODE"]
-            if D_OUT_NODE.Data.value not in aoutputVars:
-                error_msgs.append(f"【迭代变量】没有该变量选项{D_OUT_NODE.Data.value}")
-            pass
+
+            if not D_OUT_NODE.Data.value:
+                error_msgs.append(f"缺少【迭代变量】")
+            else:
+                try:
+                    outnode = RefVarItem.model_validate(D_OUT_NODE.Data.value)
+                    if outnode.model_dump_json() not in aoutputVars:
+                        error_msgs.append(
+                            f"【迭代变量】没有该变量选项{D_OUT_NODE.Data.value}"
+                        )
+                except:
+                    error_msgs.append(f"【迭代变量】变量错误")
+                pass
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -129,7 +151,9 @@ class IterRetry(FATaskNode):
         ]
         retry_config = RetrySettingModel.model_validate(D_ITER_RETRY_SETTING.Data.value)
 
-        self.retry_item = await self.runner().getRefData(self.id, D_IN_NODE.Data.value)
+        self.retry_item = await self.runner().getRefData(
+            self.id, RefVarItem.model_validate(D_IN_NODE.Data.value)
+        )
         self.retry_index = 0
 
         # 构建子图 ================================================
@@ -267,7 +291,7 @@ class IterRetry(FATaskNode):
                 return []
             if output_anode.runStatus == FARunStatus.Success:
                 self.retry_item = await self.runner().getRefData(
-                    self.id, D_OUT_NODE.Data.value
+                    self.id, RefVarItem.model_validate(D_OUT_NODE.Data.value)
                 )
 
             logger.error(f"不满足条件，继续重试{retry_idx+1}/{retry_config.Num}")
