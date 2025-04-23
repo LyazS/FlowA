@@ -94,6 +94,14 @@
       "Description": "分支聚合",
       "Execute": "aggregate_branchs/aggregate_branchs.py",
       "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/HttpRequest",
+      "Label": "网络请求",
+      "Description": "网络请求",
+      "Execute": "http_request/http_request.py",
+      "Setting": null
     }
   ],
   "UIPlugins": [
@@ -171,6 +179,21 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_AGGREGATE_BRANCH",
       "Component": "aggregate_branchs/UI_Aggregate_Branch.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_URL",
+      "Component": "http_request/UI_Http_Url.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_HEADER",
+      "Component": "http_request/UI_Http_Header.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_BODY",
+      "Component": "http_request/UI_Http_Body.py"
     }
   ]
 }
