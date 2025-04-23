@@ -83,14 +83,18 @@ class IterRun(FATaskNode):
             )
             node_payloads = self.data.Payloads
             D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
-            if (
-                D_ITER_ARRAY.Data.value
-                or not isinstance(D_ITER_ARRAY.Data.value, RefVarItem)
-                or D_ITER_ARRAY.Data.value.model_dump_json() not in selfVars
-            ):
-                error_msgs.append(
-                    f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}"
-                )
+            if not D_ITER_ARRAY.Data.value:
+                error_msgs.append(f"缺少【迭代数组】变量")
+            else:
+                try:
+                    iarr = RefVarItem.model_validate(D_ITER_ARRAY.Data.value)
+                    if iarr.model_dump_json() not in selfVars:
+                        error_msgs.append(
+                            f"【迭代数组】没有该变量选项{D_ITER_ARRAY.Data.value}"
+                        )
+                except:
+                    error_msgs.append(f"【迭代数组】变量错误")
+                pass
 
             aoutputVars = await validator.getConnectionByPath(
                 self.id,
@@ -103,15 +107,9 @@ class IterRun(FATaskNode):
             node_results = self.data.Results
             for rid in node_results.Order:
                 ref_data = node_results.ById[rid].Config.Ref
-                if (
-                    ref_data is None
-                    or not isinstance(ref_data, str)
-                    or len(ref_data) <= 0
-                ):
+                if ref_data is None or ref_data.model_dump_json() not in aoutputVars:
                     error_msgs.append(f"结果{rid}没有配置输出选项")
-                else:
-                    if ref_data not in aoutputVars:
-                        error_msgs.append(f"没有该输出选项{ref_data}")
+
                 pass
 
         except Exception as e:
@@ -133,7 +131,7 @@ class IterRun(FATaskNode):
         D_ITER_ARRAY: VFNodeContentData = node_payloads.ById["D_ITER_ARRAY"]
         D_ITER_INDEX: VFNodeContentData = node_payloads.ById["D_ITER_INDEX"]
         self.iter_array = await self.runner().getRefData(
-            self.id, D_ITER_ARRAY.Data.value
+            self.id, RefVarItem.model_validate(D_ITER_ARRAY.Data.value)
         )
         self.iter_array_len = len(self.iter_array)
 
@@ -213,7 +211,7 @@ class IterRun(FATaskNode):
             node_results_dict = {}
             for rid in node_results.Order:
                 item: VFNodeContentData = node_results.ById[rid]
-                item_ref = RefVarItem.model_validate_json(item.Config.Ref)
+                item_ref = item.Config.Ref
                 nid_layout = getNestedLayout(item_ref.Nid)
                 assert len(nest_layout) == len(nid_layout) - 1, "迭代节点嵌套层数不匹配"
                 re_nid, _ = regexMatchNodeId(item_ref.Nid)
