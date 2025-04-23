@@ -13,7 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
-from app.schemas.VFlowRunData import FARunStatus
+from app.schemas.VFlowRunData import FARunStatus, FANodeWaitType
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -32,6 +32,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeContentDataConfig,
     FromInnerPath,
     RefNodeHandleItem,
+    RefVarItem,
 )
 from app.utils.tools import read_yaml, reduceGet, getUuid
 from app.utils.db4node import loadNodeConfig, setNodeConfig
@@ -42,7 +43,7 @@ from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 class Single_AggregateBranch(BaseModel):
     NodeHandle: Optional[RefNodeHandleItem] = None
-    RefData: Optional[Dict] = None
+    RefData: Optional[RefVarItem] = None
     OrderKey: ReadOnlyPropVar | str
     pass
 
@@ -50,22 +51,74 @@ class Single_AggregateBranch(BaseModel):
 class AggregateBranch(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
+        self.waitType = FANodeWaitType.OR
         pass
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
             node_payloads = self.data.Payloads
-            node_results = self.data.Results
-
-            selfVars = await validator.getConnectionByPath(
+            prehandles: List[RefNodeHandleItem] = await validator.getConnectionsByArgs(
                 self.id,
                 [
+                    CONNECT_DATA,
+                    "--node",
+                    CONNECT_PRE_NODE,
+                    "--inhid",
+                    "input",
+                    "--handle",
+                    VFNodeConnectionType.Outputs,
+                    "--stricthid",
+                    "input",
+                    "--outfmt",
                     CONNECT_DATA_TO_SELECT,
-                    VFNodeConnectionType.Self,
-                    "self",
+                    "--level",
+                    CONNECT_HANDLE_LEVEL,
                 ],
             )
+            prehandles_set = set([ph.model_dump_json() for ph in prehandles])
+            D_AGGREGATE_BRANCH: VFNodeContentData = node_payloads.ById[
+                "D_AGGREGATE_BRANCH"
+            ]
+            aggBranchs: List[Single_AggregateBranch] = [
+                Single_AggregateBranch.model_validate(data)
+                for data in D_AGGREGATE_BRANCH.Data.value
+            ]
+            for branch in aggBranchs:
+                if branch.NodeHandle is None:
+                    error_msgs.append(f"缺少节点句柄")
+                    continue
+                else:
+                    if branch.NodeHandle.model_dump_json() not in prehandles_set:
+                        error_msgs.append(f"未定义前置节点句柄{branch.NodeHandle}")
+                    pass
+                if branch.RefData is None:
+                    error_msgs.append(f"缺少变量")
+                    continue
+                else:
+                    prevars: List[RefVarItem] = await validator.getConnectionsByArgs(
+                        self.id,
+                        [
+                            CONNECT_DATA,
+                            "--node",
+                            branch.NodeHandle.Node,
+                            "--inhid",
+                            "input",
+                            "--handle",
+                            branch.NodeHandle.HandleType,
+                            "--hid",
+                            branch.NodeHandle.Handle,
+                            "--outfmt",
+                            CONNECT_DATA_TO_SELECT,
+                            "--level",
+                            CONNECT_VAR_LEVEL,
+                        ],
+                    )
+                    prevars_set = set([pv.model_dump_json() for pv in prevars])
+                    if branch.RefData.model_dump_json() not in prevars_set:
+                        error_msgs.append(f"未定义变量{branch.RefData}")
+                    pass
+                pass
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -76,6 +129,31 @@ class AggregateBranch(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
+        try:
+            node_payloads = self.data.Payloads
+
+            D_AGGREGATE_BRANCH: VFNodeContentData = node_payloads.ById[
+                "D_AGGREGATE_BRANCH"
+            ]
+            aggBranchs: List[Single_AggregateBranch] = [
+                Single_AggregateBranch.model_validate(data)
+                for data in D_AGGREGATE_BRANCH.Data.value
+            ]
+            for branch in aggBranchs:
+                thenode: FATaskNode = self.runner().getNode(branch.NodeHandle.Node)
+                owstatus = thenode.outputStatus[branch.NodeHandle.Handle]
+                if owstatus == FARunStatus.Success:
+                    refdata = await self.runner().getRefData(self.id, branch.RefData)
+                    self.data.Results.ById["D_OUTPUT"].Data.value = refdata
+                    break
+                pass
+            self.setAllOutputStatus(FARunStatus.Success)
+            return []
+
+        except Exception as e:
+            errmsg = traceback.format_exc()
+            raise Exception(f"聚合节点运行失败: {errmsg}")
+
         pass
 
     @staticmethod
