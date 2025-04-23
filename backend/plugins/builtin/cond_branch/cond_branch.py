@@ -31,6 +31,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
     FromInnerPath,
+    RefVarItem,
 )
 from app.utils.tools import read_yaml, reduceGet
 from app.utils.db4node import loadNodeConfig, setNodeConfig
@@ -71,10 +72,10 @@ ContainsTypeSelections = [
 
 
 class Single_Condition(BaseModel):
-    Refdata: Optional[dict] = None
+    Refdata: Optional[RefVarItem] = None
     Operator: str = "eq"
     CompareType: VarType = VarType.Ref
-    ValueRef: Optional[dict] = None
+    ValueRef: Optional[RefVarItem] = None
     ValueStr: str = ""
     ValueNum: int | float = 0
     ValueBool: bool = False
@@ -96,7 +97,6 @@ class CondBranch(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
-            node_payloads = self.data.Payloads
             node_results = self.data.Results
 
             selfVars = await validator.getConnectionByPath(
@@ -107,6 +107,30 @@ class CondBranch(FATaskNode):
                     "self",
                 ],
             )
+            for rid in node_results.Order:
+                item: VFNodeContentData = node_results.ById[rid]
+                scd = None
+                try:
+                    scd = Single_ConditionDict.model_validate(item.Data.value)
+                except:
+                    error_msgs.append(f"条件配置错误{item.Data.value}")
+                    continue
+                brandname = item.Label
+                for condition in scd.Conditions:
+                    if (
+                        not condition.Refdata
+                        or condition.Refdata.model_dump_json() not in selfVars
+                    ):
+                        error_msgs.append(
+                            f"分支{brandname} 对比变量未定义{condition.Refdata}"
+                        )
+                    if condition.CompareType == VarType.Ref and (
+                        not condition.ValueRef
+                        or condition.ValueRef.model_dump_json() not in selfVars
+                    ):
+                        error_msgs.append(
+                            f"分支{brandname} 被对比变量未定义{condition.ValueRef}"
+                        )
 
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -116,7 +140,120 @@ class CondBranch(FATaskNode):
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
 
+    def compare(self, refdata, operator:str, compdata):
+        # 基本比较操作符，适用于大多数可比较类型
+        if operator == "eq":
+            return refdata == compdata
+        elif operator == "neq":
+            return refdata != compdata
+
+        # 数值比较操作符，需要确保两边都是可比较的数值类型
+        elif operator in ["gt", "gte", "lt", "lte"]:
+            try:
+                if operator == "gt":
+                    return refdata > compdata
+                elif operator == "gte":
+                    return refdata >= compdata
+                elif operator == "lt":
+                    return refdata < compdata
+                elif operator == "lte":
+                    return refdata <= compdata
+            except TypeError:
+                # 类型不兼容，无法比较
+                return False
+
+        # 字符串特定操作符
+        elif operator in ["startwith", "endwith"]:
+            if not isinstance(refdata, str):
+                return False
+            if not isinstance(compdata, str):
+                try:
+                    compdata = str(compdata)
+                except:
+                    return False
+
+            if operator == "startwith":
+                return refdata.startswith(compdata)
+            elif operator == "endwith":
+                return refdata.endswith(compdata)
+
+        # 包含关系操作符
+        elif operator in ["contains", "notcontains"]:
+            try:
+                if operator == "contains":
+                    return compdata in refdata
+                elif operator == "notcontains":
+                    return compdata not in refdata
+            except TypeError:
+                # 类型不兼容，无法检查包含关系
+                return False
+
+        # 空值检查操作符
+        elif operator == "isnull":
+            return refdata is None
+        elif operator == "notnull":
+            return refdata is not None
+
+        # 长度相关操作符，需要确保refdata是可计算长度的类型
+        elif operator.startswith("len_"):
+            try:
+                refdata_len = len(refdata)
+                if operator == "len_eq":
+                    return refdata_len == compdata
+                elif operator == "len_ne":
+                    return refdata_len != compdata
+                elif operator == "len_gt":
+                    return refdata_len > compdata
+                elif operator == "len_gte":
+                    return refdata_len >= compdata
+                elif operator == "len_lt":
+                    return refdata_len < compdata
+                elif operator == "len_lte":
+                    return refdata_len <= compdata
+            except (TypeError, AttributeError):
+                # refdata不支持len()操作或比较类型不兼容
+                return False
+
+        # 未知操作符或不支持的类型组合
+        return False
+
     async def run(self) -> List[FANodeUpdateData]:
+        isAnyConditionMet = False
+        node_results = self.data.Results
+        for rid in node_results.Order:
+            item: VFNodeContentData = node_results.ById[rid]
+            idata = Single_ConditionDict.model_validate(item.Data.value)
+            iOutputKey = idata.OutputKey
+            conditionFunc = all if idata.CondIsAnd else any
+            iconditions = idata.Conditions
+            isConditionMet = []
+            for condition in iconditions:
+                refdata = await self.runner().getRefData(self.id, condition.Refdata)
+                compdata = None
+                if condition.CompareType == VarType.Ref:
+                    compdata = await self.runner().getRefData(
+                        self.id, condition.ValueRef
+                    )
+                elif condition.CompareType == VarType.String:
+                    compdata = condition.ValueStr
+                elif (
+                    condition.CompareType == VarType.Number
+                    or condition.CompareType == VarType.Integer
+                ):
+                    compdata = condition.ValueNum
+                elif condition.CompareType == VarType.Boolean:
+                    compdata = condition.ValueBool
+                isConditionMet.append(
+                    self.compare(refdata, condition.Operator, compdata)
+                )
+            if conditionFunc(isConditionMet):
+                isAnyConditionMet = True
+                self.setAllOutputStatus(FARunStatus.Canceled)
+                self.setOutputStatus(iOutputKey, FARunStatus.Success)
+                break
+        if not isAnyConditionMet:
+            self.setAllOutputStatus(FARunStatus.Canceled)
+            self.setOutputStatus("output-else", FARunStatus.Success)
         pass
 
     @staticmethod
@@ -145,7 +282,7 @@ class CondBranch(FATaskNode):
                 HandleId="input-var",
             ),
         )
-        thisnode.add_result_into_outputs(
+        thisnode.add_result(
             VFNodeContentData(
                 Label="CASE 1",
                 Type="Dict",
@@ -155,7 +292,6 @@ class CondBranch(FATaskNode):
                     Conditions=[Single_Condition()],
                 ),
             ),
-            handle_id="output-init",
             result_id="output-init",
         )
 
