@@ -509,9 +509,9 @@ onUnmounted(() => {})
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <pre>{{ nodeId }}</pre>
+        <!-- <pre>{{ nodeId }}</pre> -->
         <!-- <pre>{{ inputNodes }}</pre> -->
-        <pre>{{ nodedatatext }}</pre>
+        <!-- <pre>{{ nodedatatext }}</pre> -->
       </n-flex>
     </n-card>
   </n-scrollbar>
