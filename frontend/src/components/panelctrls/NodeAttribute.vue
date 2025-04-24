@@ -509,7 +509,7 @@ onUnmounted(() => {})
         </n-flex>
         <component v-if="outputsComponents" :is="outputsComponents" :key="`${nodeId}-outputs`" />
         <n-divider />
-        <!-- <pre>{{ nodeId }}</pre> -->
+        <pre>节点id: {{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
         <!-- <pre>{{ nodedatatext }}</pre> -->
       </n-flex>
