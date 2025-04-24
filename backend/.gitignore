@@ -1,0 +1,7 @@
+__pycache__
+historys
+workflows
+*.db
+.venv
+.VSCodeCounter
+.vscode

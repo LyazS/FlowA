@@ -1,0 +1,486 @@
+from typing import Callable, Any, Dict, Optional
+from loguru import logger
+from pydantic import BaseModel
+from enum import StrEnum
+from app.uisdk import *
+from app.schemas.VFNodeInterface import VFNodeConnectionType, VarType, RefVarItem
+from .Header import Header
+from .RefVarSelect import UI_RefVarSelect
+from .NInput import NInput
+from .NSwitch import NSwitch
+from .NButton import NButton
+from .NFlex import NFlex
+
+
+class InputVarModel(BaseModel):
+    Key: str = ""
+    Type: VarType = VarType.String
+    ValueRef: Optional[RefVarItem] = None
+    ValueStr: str = ""
+    ValueNum: int | float = 0
+    ValueBool: bool = False
+    pass
+
+    @classmethod
+    async def get_value(
+        cls, var: "InputVarModel", cur_nid: str, getRef: Callable[[str], Any] = None
+    ):
+        if var.Type == VarType.String:
+            return var.ValueStr
+        elif var.Type == VarType.Integer:
+            return var.ValueNum
+        elif var.Type == VarType.Number:
+            return var.ValueNum
+        elif var.Type == VarType.Boolean:
+            return var.ValueBool
+        elif var.Type == VarType.Ref:
+            if getRef:
+                return await getRef(cur_nid, var.ValueRef)
+            else:
+                logger.error("getRef function is not provided")
+                return None
+        return None
+
+
+class VarNameInput(NInput):
+    def __init__(self):
+        super().__init__(
+            style={"width": "30%"},
+            size="small",
+            value=VModelProp(
+                [
+                    THIS_NODE_DATA,
+                    "Payloads",
+                    "ById",
+                    VBindProp(
+                        [
+                            CONTEXT_FUNCTION,
+                            PAYLOADS_ID,
+                        ]
+                    ),
+                    "Data",
+                    VBindProp([VFOR_DATA, "@Index"]),
+                    "Key",
+                ]
+            ),
+        )
+
+
+class VarTypeSelect(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NSelect",
+            Props={
+                "style": {"width": "20%"},
+                "size": "small",
+                "consistent-menu-width": False,
+                "options": [
+                    {"label": "引用", "value": "Ref"},
+                    {"label": "字符串", "value": "String"},
+                    {"label": "整数", "value": "Integer"},
+                    {"label": "数字", "value": "Number"},
+                    {"label": "布尔", "value": "Boolean"},
+                ],
+                "value": VModelProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "Type",
+                    ]
+                ),
+            },
+        )
+
+
+class VarStringInput(NInput):
+    def __init__(self):
+        super().__init__(
+            size="small",
+            style={"width": "50%"},
+            value=VModelProp(
+                [
+                    THIS_NODE_DATA,
+                    "Payloads",
+                    "ById",
+                    VBindProp(
+                        [
+                            CONTEXT_FUNCTION,
+                            PAYLOADS_ID,
+                        ]
+                    ),
+                    "Data",
+                    VBindProp([VFOR_DATA, "@Index"]),
+                    "ValueStr",
+                ],
+            ),
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "Type",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp("String"),
+            ),
+        )
+
+
+class VarIntegerInput(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NInputNumber",
+            Props={
+                "size": "small",
+                "style": {"width": "50%"},
+                "value": VModelProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "ValueNum",
+                    ],
+                ),
+                "precision": 0,
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "Type",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp("Integer"),
+            ),
+        )
+
+
+class VarNumberInput(NormalComponent):
+    def __init__(self):
+        super().__init__(
+            Type="NInputNumber",
+            Props={
+                "size": "small",
+                "style": {"width": "50%"},
+                "value": VModelProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "ValueNum",
+                    ],
+                ),
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "Type",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp("Number"),
+            ),
+        )
+
+
+class VarBooleanInput(NFlex):
+    def __init__(self):
+        super().__init__(
+            justify="start",
+            style={"width": "50%"},
+            slots={
+                "default": NSwitch(
+                    size="medium",
+                    style={"width": "50%"},
+                    value=VModelProp(
+                        [
+                            THIS_NODE_DATA,
+                            "Payloads",
+                            "ById",
+                            VBindProp(
+                                [
+                                    CONTEXT_FUNCTION,
+                                    PAYLOADS_ID,
+                                ]
+                            ),
+                            "Data",
+                            VBindProp([VFOR_DATA, "@Index"]),
+                            "ValueBool",
+                        ],
+                    ),
+                )
+            },
+            IfCondition=CompareCondition(
+                Left=VBindProp(
+                    [
+                        THIS_NODE_DATA,
+                        "Payloads",
+                        "ById",
+                        VBindProp(
+                            [
+                                CONTEXT_FUNCTION,
+                                PAYLOADS_ID,
+                            ]
+                        ),
+                        "Data",
+                        VBindProp([VFOR_DATA, "@Index"]),
+                        "Type",
+                    ]
+                ),
+                Operator="==",
+                Right=ValueProp("Boolean"),
+            ),
+        )
+
+    pass
+
+
+class UI_SingleInputVars(NFlex):
+    def __init__(self):
+        super().__init__(
+            vertical=False,
+            wrap=False,
+            style={"align-content": "center", "align-items": "center", "width": "95%"},
+            slots={
+                "default": [
+                    VarNameInput(),
+                    VarTypeSelect(),
+                    VarStringInput(),
+                    VarIntegerInput(),
+                    VarNumberInput(),
+                    VarBooleanInput(),
+                    UI_RefVarSelect(
+                        size="small",
+                        style={"width": "50%"},
+                        options=VBindProp(
+                            [
+                                CONNECT_DATA,
+                                "--node",
+                                CONNECT_CUR_NODE,
+                                "--handle",
+                                VFNodeConnectionType.Self,
+                                "--hid",
+                                "self",
+                                "--outfmt",
+                                CONNECT_DATA_TO_SELECT,
+                                "--level",
+                                CONNECT_VAR_LEVEL,
+                            ]
+                        ),
+                        value=VModelProp(
+                            [
+                                THIS_NODE_DATA,
+                                "Payloads",
+                                "ById",
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
+                                "Data",
+                                VBindProp([VFOR_DATA, "@Index"]),
+                                "ValueRef",
+                            ],
+                        ),
+                        IfCondition=CompareCondition(
+                            Left=VBindProp(
+                                [
+                                    THIS_NODE_DATA,
+                                    "Payloads",
+                                    "ById",
+                                    VBindProp(
+                                        [
+                                            CONTEXT_FUNCTION,
+                                            PAYLOADS_ID,
+                                        ]
+                                    ),
+                                    "Data",
+                                    VBindProp([VFOR_DATA, "@Index"]),
+                                    "Type",
+                                ]
+                            ),
+                            Operator="==",
+                            Right=ValueProp("Ref"),
+                        ),
+                    ),
+                ]
+            },
+        )
+
+
+class UI_InputVars(NFlex):
+    def __init__(self):
+        super().__init__(
+            vertical=True,
+            slots={
+                "default": [
+                    NFlex(
+                        vertical=False,
+                        wrap=False,
+                        justify="space-between",
+                        style={"align-content": "center", "align-items": "center"},
+                        slots={
+                            "default": [
+                                Header(type="success", text="输入变量"),
+                                NButton(
+                                    type="success",
+                                    text=True,
+                                    onClick=FunctionProp(
+                                        Funcs=[
+                                            APPENDITEM_FuncProp(
+                                                Arg=FuncArg_APPENDITEM(
+                                                    DstPath=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    CONTEXT_FUNCTION,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                        ]
+                                                    ),
+                                                    ItemValue=InputVarModel(),
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                    slots={
+                                        "default": SpanComponent(ValueProp("添加")),
+                                        "icon": NormalComponent(Type="Add"),
+                                    },
+                                ),
+                            ]
+                        },
+                    ),
+                    ForLoopComponent(
+                        Items=VBindProp(
+                            [
+                                THIS_NODE_DATA,
+                                "Payloads",
+                                "ById",
+                                VBindProp(
+                                    [
+                                        CONTEXT_FUNCTION,
+                                        PAYLOADS_ID,
+                                    ]
+                                ),
+                                "Data",
+                            ]
+                        ),
+                        ItemLabel="@Item",
+                        IndexLabel="@Index",
+                        Template=NFlex(
+                            vertical=False,
+                            wrap=False,
+                            justify="space-between",
+                            style={"align-content": "center", "align-items": "center"},
+                            slots={
+                                "default": [
+                                    UI_SingleInputVars(),
+                                    NButton(
+                                        style={"width": "5%"},
+                                        type="error",
+                                        size="small",
+                                        circle=True,
+                                        level="tertiary",
+                                        onClick=FunctionProp(
+                                            Funcs=[
+                                                REMOVEITEM_FuncProp(
+                                                    Arg=FuncArg_REMOVEITEM(
+                                                        DstPath=VBindProp(
+                                                            [
+                                                                THIS_NODE_DATA,
+                                                                "Payloads",
+                                                                "ById",
+                                                                VBindProp(
+                                                                    [
+                                                                        CONTEXT_FUNCTION,
+                                                                        PAYLOADS_ID,
+                                                                    ]
+                                                                ),
+                                                                "Data",
+                                                            ]
+                                                        ),
+                                                        ItemKey=VBindProp(
+                                                            [VFOR_DATA, "@Index"]
+                                                        ),
+                                                    ),
+                                                )
+                                            ]
+                                        ),
+                                        slots={
+                                            "icon": NormalComponent(Type="Close"),
+                                        },
+                                    ),
+                                ]
+                            },
+                        ),
+                    ),
+                ]
+            },
+        )
+
+
+EXPORT_UI = UI_InputVars
