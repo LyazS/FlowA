@@ -73,7 +73,8 @@ interface VFlowRequestInstance {
     description: string,
   ) => Promise<FAWorkflowOperationResponse>
 
-  runflow: (runtype: 'full' | 'Incremental') => Promise<FAWorkflowOperationResponse>
+  runflow: () => Promise<FAWorkflowOperationResponse>
+  clearflowcache: () => Promise<FAWorkflowOperationResponse>
   stopflow: () => Promise<FAWorkflowOperationResponse>
   clearWFStatus: () => Promise<void>
   checkWFStatusAndSwitch: () => Promise<void>
@@ -806,7 +807,7 @@ export const useVFlowRequest = () => {
     }
   }
 
-  const runflow = async (runtype: 'full' | 'Incremental'): Promise<FAWorkflowOperationResponse> => {
+  const runflow = async (): Promise<FAWorkflowOperationResponse> => {
     // 参数校验
     if (!WorkflowID.value) {
       console.warn('[Run] 无效的工作流ID', WorkflowID.value)
@@ -823,7 +824,7 @@ export const useVFlowRequest = () => {
         node.data.resetState()
       }
       const requestPayload = {
-        type: runtype,
+        type: 'Incremental',
         wid: WorkflowID.value,
         vflow: toObject(),
       }
@@ -875,6 +876,36 @@ export const useVFlowRequest = () => {
       })
 
       return { type: 'error', message: '运行请求失败，请检查网络连接' }
+    }
+  }
+
+  const clearflowcache = async (): Promise<FAWorkflowOperationResponse> => {
+    // 参数有效性校验
+    const currentWid = WorkflowID.value
+    if (!currentWid) {
+      console.warn('[Workflow] 清理缓存操作 - 无效的工作流ID', currentWid)
+      return { type: 'error', message: '当前工作流不可用' }
+    }
+
+    try {
+      // 类型化请求参数
+      const requestPayload = { wid: currentWid }
+
+      await postData('workflow/clearcache', requestPayload)
+      // 记录成功日志
+      console.debug('[Workflow] 清理缓存成功', { wid: currentWid })
+
+      return { type: 'success' }
+    } catch (error) {
+      // 错误处理
+      const err = error as Error
+      console.error('[Workflow] 清理缓存失败', {
+        wid: currentWid,
+        error: err.message,
+        stack: err.stack,
+      })
+
+      return { type: 'error', message: err.message }
     }
   }
 
@@ -1036,6 +1067,7 @@ export const useVFlowRequest = () => {
     editReleaseWorkflow,
 
     runflow,
+    clearflowcache,
     stopflow,
     clearWFStatus,
     checkWFStatusAndSwitch,

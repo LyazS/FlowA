@@ -29,6 +29,7 @@ import {
   PlayCircleOutline,
   Stop,
   DocumentText,
+  TrashOutline,
 } from '@vicons/ionicons5'
 import { useVFlowRequest } from '@/services/useVFlowRequest'
 import {
@@ -44,14 +45,14 @@ import {
   isShowVFlowMgr,
   isShowJinja2Render,
 } from '@/hooks/useVFlowAttribute'
-const { switchWorkflow, runflow, stopflow, loadReleaseWorkflow } = useVFlowRequest()
+const { switchWorkflow, runflow,clearflowcache, stopflow, loadReleaseWorkflow } = useVFlowRequest()
 
 const message = useMessage()
 
 const run_loading = ref<boolean>(false)
-const runIncrementalFlowAction = async (): Promise<void> => {
+const runFlowAction = async (): Promise<void> => {
   run_loading.value = true
-  const res = await runflow('Incremental')
+  const res = await runflow()
   run_loading.value = false
   if (res.type === 'success') {
     message.success('开始运行')
@@ -59,14 +60,14 @@ const runIncrementalFlowAction = async (): Promise<void> => {
     message.error(`运行失败：${res.message}`)
   }
 }
-const runFullFlowAction = async (): Promise<void> => {
+const clearFlowCacheAction = async (): Promise<void> => {
   run_loading.value = true
-  const res = await runflow('full')
+  const res = await clearflowcache()
   run_loading.value = false
   if (res.type === 'success') {
-    message.success('开始运行')
+    message.success('清空缓存成功')
   } else {
-    message.error(`运行失败：${res.message}`)
+    message.error(`清空缓存失败：${res.message}`)
   }
 }
 const loadReleaseWorkflowAction = async () => {
@@ -91,7 +92,7 @@ const loadReleaseWorkflowAction = async () => {
             round
             tertiary
             type="success"
-            @click="runIncrementalFlowAction"
+            @click="runFlowAction"
           >
             <template #icon>
               <n-icon>
@@ -101,19 +102,19 @@ const loadReleaseWorkflowAction = async () => {
             运行
           </n-button>
         </template>
-        <span>增量运行</span>
+        <span>运行当前工作流</span>
       </n-popover>
       <n-popover trigger="hover">
         <template #trigger>
-          <n-button class="glow-btn" circle tertiary type="success" @click="runFullFlowAction">
+          <n-button class="glow-btn" circle tertiary type="success" @click="clearFlowCacheAction">
             <template #icon>
               <n-icon>
-                <ReloadOutline />
+                <TrashOutline />
               </n-icon>
             </template>
           </n-button>
         </template>
-        <span>全量运行，将会清空所有节点缓存，重新运行工作流</span>
+        <span>清空当前工作流缓存</span>
       </n-popover>
     </template>
     <template v-else-if="WorkflowMode === WorkflowModeType.View">

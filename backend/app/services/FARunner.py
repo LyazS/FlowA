@@ -15,6 +15,7 @@ from app.schemas.farequest import (
     SSEResponseData,
     SSEResponseType,
     FAWorkflow,
+    FAWorkflowRunRequest,
 )
 from app.utils.tools import (
     getNestedLayout,
@@ -35,10 +36,11 @@ if TYPE_CHECKING:
 
 
 class FARunner:
-    def __init__(self, wid: str, vflowdata: dict):
-        self.wid = wid
-        self.oriflowdata = vflowdata
-        self.flowdata: VFlowData = VFlowData.model_validate(vflowdata)
+    def __init__(self, run_req: FAWorkflowRunRequest):
+        self.run_type = run_req.type
+        self.wid = run_req.wid
+        self.oriflowdata = run_req.vflow
+        self.flowdata: VFlowData = VFlowData.model_validate(run_req.vflow)
         self.nodes: Dict[str, "FABaseNode"] = {}
         self.status: FARunStatus = FARunStatus.Pending
         # 时间戳

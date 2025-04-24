@@ -72,7 +72,7 @@ async def run_flow(run_req: FAWorkflowRunRequest) -> FAWorkflowOperationResponse
         )
 
     # 开始运行 =============================================
-    await ALL_TASKS_MGR.start_run(run_req.wid, run_req.vflow)
+    await ALL_TASKS_MGR.start_run(run_req)
     logger.debug(f"running workflow: {ALL_TASKS_MGR.tasks.keys()}")
 
     try:

@@ -3,6 +3,7 @@ from typing import Callable, Awaitable, Any, Dict, Optional, TYPE_CHECKING
 from pydantic import BaseModel
 from loguru import logger
 from app.services.FARunner import FARunner
+from app.schemas.farequest import FAWorkflowRunRequest
 
 
 class TaskModel(BaseModel):
@@ -31,13 +32,14 @@ class TaskMgr:
         """检查是否在运行"""
         return wid in self.tasks
 
-    async def start_run(self, wid: str, vflow_data: dict):
+    async def start_run(self, run_req: FAWorkflowRunRequest):
         """启动运行"""
+        wid = run_req.wid
         async with self.lock:
             # 防止重复创建
             if wid not in self.tasks:
                 self.tasks[wid] = TaskModel(
-                    runner=FARunner(wid, vflow_data),
+                    runner=FARunner(run_req),
                     task=None,
                 )
                 self.tasks[wid].task = asyncio.create_task(self.tasks[wid].runner.run())

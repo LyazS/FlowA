@@ -37,6 +37,7 @@ from app.schemas.farequest import (
     FAWorkflowNodeRequest,
     FAWorkflowCreateType,
     FAWorkflowDeleteRequest,
+    FAClearCacheRequest,
 )
 from app.services.FARunner import FARunner
 from app.db.session import get_db_ctxmgr
@@ -167,7 +168,7 @@ async def read_workflow(read_request: FAWorkflowReadRequest):
                         db_result = await db.execute(stmt)
                         vflow = db_result.scalars().first()
                         result[location.value] = vflow
-                    
+
                     elif location == FAWorkflowLocation.rwfname:
                         stmt = select(FAReleasedWorkflowModel.name).where(
                             FAReleasedWorkflowModel.rwid == read_request.rwid,
@@ -324,103 +325,18 @@ async def delete_workflow(delete_request: FAWorkflowDeleteRequest):
         )
 
 
-# @router.post("/deleteresult")
-# async def delete_result(wid: str, tid: str):
-#     try:
-#         farunner: FARunner = await ALL_TASKS_MGR.get(tid)
-#         if farunner:
-#             await ALL_TASKS_MGR.remove(tid)
-
-#         async with get_db_ctxmgr() as db:
-#             await db.execute(
-#                 delete(FAWorkflowResultModel).where(
-#                     FAWorkflowResultModel.tid == tid,
-#                     FAWorkflowResultModel.wid == wid,
-#                 )
-#             )
-#             await db.commit()
-#             return FAWorkflowOperationResponse(success=True)
-#     except Exception as e:
-#         errmsg = traceback.format_exc()
-#         logger.error(f"delete result error: {errmsg}")
-#         return FAWorkflowOperationResponse(success=False, message=errmsg)
-
-
-# @router.get("/readallresults")
-# async def read_all_results(wid: str):
-#     try:
-#         result = []
-#         addedtid = set()
-#         runnertid = await ALL_TASKS_MGR.getAllTaskID()
-#         for tid in runnertid:
-#             farunner: FARunner = await ALL_TASKS_MGR.get(tid)
-#             if farunner and farunner.wid == wid:
-#                 addedtid.add(tid)
-#                 result.append(
-#                     FAResultBaseInfo(
-#                         tid=farunner.tid,
-#                         status=farunner.status,
-#                         starttime=farunner.starttime,
-#                         endtime=farunner.endtime,
-#                     )
-#                 )
-
-#         async with get_db_ctxmgr() as db:
-#             stmt = select(
-#                 FAWorkflowResultModel.tid,
-#                 FAWorkflowResultModel.status,
-#                 FAWorkflowResultModel.starttime,
-#                 FAWorkflowResultModel.endtime,
-#             ).where(FAWorkflowResultModel.wid == wid)
-#             db_result = await db.execute(stmt)
-#             db_results = db_result.mappings().all()
-#             for db_res in db_results:
-#                 tid = db_res["tid"]
-#                 if tid in addedtid:
-#                     continue
-#                 result.append(
-#                     FAResultBaseInfo(
-#                         tid=db_res["tid"],
-#                         status=db_res["status"],
-#                         starttime=db_res["starttime"],
-#                         endtime=db_res["endtime"],
-#                     )
-#                 )
-#         # 将result按照开始时间最新在前排序
-#         result.sort(
-#             key=lambda x: x.starttime.replace(tzinfo=ZoneInfo("Asia/Shanghai")),
-#             reverse=True,
-#         )
-#         return FAWorkflowOperationResponse(success=True, data=result)
-#     except Exception as e:
-#         errmsg = traceback.format_exc()
-#         logger.error(f"read all results error: {errmsg}")
-#         return FAWorkflowOperationResponse(success=False, message=errmsg)
-
-
-# @router.post("/loadresult")
-# async def load_result(wid: str, tid: str):
-#     try:
-#         test_farunner: FARunner = await ALL_TASKS_MGR.get(tid)
-#         if test_farunner:
-#             return FAWorkflowOperationResponse(
-#                 success=True,
-#                 data=test_farunner.oriflowdata,
-#             )
-#         else:
-#             test_farunner = FARunner(tid)
-#             loadOK = await test_farunner.loadResult(wid, tid)
-#             if loadOK:
-#                 await ALL_TASKS_MGR.add(test_farunner)
-#                 return FAWorkflowOperationResponse(
-#                     success=True,
-#                     data=test_farunner.oriflowdata,
-#                 )
-#             else:
-#                 return FAWorkflowOperationResponse(
-#                     success=False, message="Result not found"
-#                 )
-#     except Exception as e:
-#         errmsg = traceback.format_exc()
-#         logger.error(f"load result error: {errmsg}")
-#         return FAWorkflowOperationResponse(success=False, message=errmsg)
+@router.post("/clearcache")
+async def clear_cache(clear_req: FAClearCacheRequest):
+    try:
+        async with get_db_ctxmgr() as db:
+            stmt = delete(FANodeCacheModel).where(FANodeCacheModel.wid == clear_req.wid)
+            await db.execute(stmt)
+            await db.commit()
+            return FAWorkflowOperationResponse(type=FAWorkflowOperationType.success)
+    except Exception as e:
+        errmsg = traceback.format_exc()
+        logger.error(f"clear cache error: {errmsg}")
+        return FAWorkflowOperationResponse(
+            type=FAWorkflowOperationType.error,
+            message=errmsg,
+        )

@@ -233,3 +233,8 @@ class FAProgressRequest(BaseModel):
     wid: str
     selected_nids: Optional[List[str]] = None
     pass
+
+
+class FAClearCacheRequest(BaseModel):
+    wid: str
+    pass
