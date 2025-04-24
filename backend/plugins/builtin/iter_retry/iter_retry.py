@@ -60,12 +60,24 @@ class RetryType(StrEnum):
 
 
 class RetrySettingModel(BaseModel):
+    """重试设置模型
+
+    Type: 重试类型
+        - Immediate: 立即重试，不等待
+        - Delay: 固定延迟重试，每次重试前等待固定的Delay秒
+        - Exponential: 指数延迟重试，每次重试前等待时间按指数增长
+          等待时间计算公式: ExpBase * (ExpFactor ^ (retry_index - 1))
+
+    Num: 最大重试次数
+    Delay: 固定延迟时间（秒），仅在Type=Delay时使用
+    ExpBase: 指数基数，仅在Type=Exponential时使用
+    ExpFactor: 指数因子，仅在Type=Exponential时使用
+    """
     Type: RetryType = RetryType.Immediate
     Num: int = 5
     Delay: float = 5.0
     ExpBase: float = 2.0
     ExpFactor: float = 1.5
-    pass
 
 
 async def init_node_class():
@@ -155,7 +167,8 @@ class IterRetry(FATaskNode):
             self.id, RefVarItem.model_validate(D_IN_NODE.Data.value)
         )
         self.retry_index = 0
-
+        retry_type_str = "立即重试" if retry_config.Type == RetryType.Immediate else \
+                          "延迟重试" if retry_config.Type == RetryType.Delay else "指数重试"
         # 构建子图 ================================================
         flowdata: VFlowData = self.runner().flowdata
         child_node_infos: Dict[str, VFNodeInfo] = {}
@@ -212,6 +225,7 @@ class IterRetry(FATaskNode):
         AddInNodes: List[str] = []
         for retry_idx in range(retry_config.Num):
             self.retry_index = retry_idx
+
             # 构建break附属节点
             break_anode: FATaskNode = (FANODE_REGISTRY[break_anode_info.data.NType])(
                 self.wid,
@@ -294,13 +308,29 @@ class IterRetry(FATaskNode):
                     self.id, RefVarItem.model_validate(D_OUT_NODE.Data.value)
                 )
 
-            logger.error(f"不满足条件，继续重试{retry_idx+1}/{retry_config.Num}")
+            # 记录重试信息
+            logger.error(f"不满足条件，{retry_type_str}第{retry_idx+1}/{retry_config.Num}次")
+
+            # 清理节点
             for nid in AddInNodes:
                 self.runner().rmNode(nid)
             AddInNodes.clear()
-            continue
+
+            # 如果还有下一次重试，根据重试类型实现不同的等待策略
+            if retry_idx < retry_config.Num - 1:  # 如果还有下一次重试
+                if retry_config.Type == RetryType.Delay:
+                    # 固定延迟重试
+                    logger.info(f"延迟重试，等待{retry_config.Delay}秒")
+                    await asyncio.sleep(retry_config.Delay)
+                elif retry_config.Type == RetryType.Exponential:
+                    # 指数延迟重试
+                    wait_time = retry_config.ExpBase * (retry_config.ExpFactor ** retry_idx)
+                    logger.info(f"指数重试，等待{wait_time:.2f}秒")
+                    await asyncio.sleep(wait_time)
+                # Immediate类型不需要等待
         pass
-        raise Exception(f"子节点全部运行失败，共迭代重试{retry_config.Num}次")
+        # 所有重试失败，抛出异常
+        raise Exception(f"子节点全部运行失败，{retry_type_str}共{retry_config.Num}次均未成功")
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath

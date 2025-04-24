@@ -204,6 +204,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_HTTP_TIMEOUT",
       "Component": "http_request/UI_Http_Timeout.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_RETURN_FORMAT",
+      "Component": "http_request/UI_Http_ReturnFormat.py"
     }
   ]
 }
