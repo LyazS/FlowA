@@ -78,12 +78,12 @@ class SinglePrompt(BaseModel):
 
 class LLMModel(BaseModel):
     name: str
-    max_input_tokens: Decimal
-    max_output_tokens: Decimal
-    prompt: Decimal
-    complete: Decimal
-    rate: Decimal
-    capability: List[str]
+    # max_input_tokens: Decimal
+    # max_output_tokens: Decimal
+    # prompt: Decimal
+    # complete: Decimal
+    # rate: Decimal
+    # capability: List[str]
     pass
 
 
@@ -119,12 +119,12 @@ async def init_node_class():
     MODELS = {
         m["name"]: LLMModel(
             name=m["name"],
-            max_input_tokens=Decimal(m["max_input_tokens"]),
-            max_output_tokens=Decimal(m["max_output_tokens"]),
-            prompt=Decimal(m["prompt"]),
-            complete=Decimal(m["complete"]),
-            rate=Decimal(m["rate"]),
-            capability=m["capability"],
+            # max_input_tokens=Decimal(m["max_input_tokens"]),
+            # max_output_tokens=Decimal(m["max_output_tokens"]),
+            # prompt=Decimal(m["prompt"]),
+            # complete=Decimal(m["complete"]),
+            # rate=Decimal(m["rate"]),
+            # capability=m["capability"],
         )
         for m in NODE_CONFIG["models"]
     }
@@ -390,12 +390,12 @@ class LLMInference(FATaskNode):
         MODELS = {
             m.id: LLMModel(
                 name=m.id,
-                max_input_tokens=Decimal(0),
-                max_output_tokens=Decimal(0),
-                prompt=Decimal(0),
-                complete=Decimal(0),
-                rate=Decimal(1.0),
-                capability=[],
+                # max_input_tokens=Decimal(0),
+                # max_output_tokens=Decimal(0),
+                # prompt=Decimal(0),
+                # complete=Decimal(0),
+                # rate=Decimal(1.0),
+                # capability=[],
             )
             for m in modellist
         }
