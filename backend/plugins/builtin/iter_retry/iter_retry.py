@@ -219,7 +219,7 @@ class IterRetry(FATaskNode):
         input_anode.setNodeID(new_nid)
         self.runner().addNode(input_anode.id, input_anode)
         asyncio.create_task(self.runner().getNode(input_anode.id).invoke())
-        logger.info(f"启动附属节点{input_anode.data.Label} {input_anode.id}")
+        logger.debug(f"启动附属节点{input_anode.data.Label} {input_anode.id}")
         pass
         # 开始迭代
         AddInNodes: List[str] = []

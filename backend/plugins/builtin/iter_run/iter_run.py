@@ -191,7 +191,7 @@ class IterRun(FATaskNode):
             node.setNodeID(new_nid)
             self.runner().addNode(node.id, node)
         asyncio.create_task(self.runner().getNode(input_anode.id).invoke())
-        logger.info(f"启动附属节点{input_anode.data.Label} {node.id}")
+        logger.debug(f"启动附属节点{input_anode.data.Label} {node.id}")
         pass
         # 开始迭代
         for iter_idx in range(self.iter_array_len):

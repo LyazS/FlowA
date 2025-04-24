@@ -47,8 +47,6 @@ router = APIRouter()
 
 @router.post("/run")
 async def run_flow(run_req: FAWorkflowRunRequest) -> FAWorkflowOperationResponse:
-    if settings.DEBUG:
-        await asyncio.sleep(1)
     fav = FAValidator()
     flowdata = VFlowData.model_validate(run_req.vflow)
 
