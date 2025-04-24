@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     LOG_COMPRESSION: str = Field(default="zip", description="日志压缩格式")
 
     # 服务器配置
-    SERVER_HOST: str = Field(default="0.0.0.0", description="服务器主机地址")
+    SERVER_HOST: str = Field(default="localhost", description="服务器主机地址")
     SERVER_PORT: int = Field(default=9981, description="服务器端口号")
     CORS_ORIGINS: List[str] = Field(default=["*"], description="允许跨域请求的源")
 
