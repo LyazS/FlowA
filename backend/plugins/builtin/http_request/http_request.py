@@ -93,9 +93,9 @@ class HttpRequestConfig_COOKIE(HttpBaseDict):
 
 
 class HttpRequestConfig_TIMEOUT(BaseModel):
-    Connect: float = 3
-    Read: float = 10
-    Write: float = 5
+    Connect: float = 0
+    Read: float = 0
+    Write: float = 0
     pass
 
 
@@ -197,9 +197,9 @@ class HttpRequest(FATaskNode):
                 Data=[
                     HttpRequestConfig_COOKIE(Key="cook", Value="{{cooker}}"),
                 ],
-                UiType="@/FlowABuiltin/UI_xxx",
+                UiType="@/FlowABuiltin/UI_HTTP_COOKIE",
             ),
-            payload_id="D_BODY",
+            payload_id="D_COOKIES",
         )
 
         thisnode.add_payload(
@@ -207,7 +207,7 @@ class HttpRequest(FATaskNode):
                 Label="超时配置",
                 Type="Any",
                 Data=HttpRequestConfig_TIMEOUT(),
-                UiType="@/FlowABuiltin/UI_xxx",
+                UiType="@/FlowABuiltin/UI_HTTP_TIMEOUT",
             ),
             payload_id="D_TIMEOUT",
         )

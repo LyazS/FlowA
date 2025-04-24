@@ -4,3 +4,4 @@ workflows
 *.db
 .venv
 .VSCodeCounter
+.vscode

@@ -194,6 +194,16 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/UI_HTTP_BODY",
       "Component": "http_request/UI_Http_Body.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_COOKIE",
+      "Component": "http_request/UI_Http_Cookie.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/UI_HTTP_TIMEOUT",
+      "Component": "http_request/UI_Http_Timeout.py"
     }
   ]
 }
