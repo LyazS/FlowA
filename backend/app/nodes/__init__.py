@@ -4,4 +4,5 @@ from .NodeRegister import (
     FLOWA_PROVIDER_REGISTRY,
     FANODE_REGISTRY,
     FANODE_CONFIG_REGISTRY,
+    createRegisteredNode,
 )

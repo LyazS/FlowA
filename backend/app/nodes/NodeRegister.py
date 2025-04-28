@@ -4,13 +4,16 @@ import json
 import importlib
 from pathlib import Path
 import traceback
-from typing import Dict, Any, List
+from typing import Dict, Any, List, TYPE_CHECKING
 from loguru import logger
 from app.nodes.BaseNode import FABaseNode
 from app.uisdk import BaseComponent
 from app.schemas.VFlowPlugin import VFProvider
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFNodeInterface import VFNodeFlag
+
+if TYPE_CHECKING:
+    from app.services.FARunner import FARunner
 
 FLOWA_PROVIDER_REGISTRY: Dict[str, VFProvider] = {}
 FANODE_REGISTRY: Dict[str, FABaseNode] = {}  # 节点类型
@@ -99,3 +102,7 @@ async def register_plugins():
                         )
         pass
     logger.info("=" * 20 + f" Register Done. " + "=" * 20)
+
+
+def createRegisteredNode(ntype: str, wid: str, nodeinfo: VFNode, runner: "FARunner"):
+    return FANODE_REGISTRY[ntype](wid, nodeinfo, runner)

@@ -121,7 +121,7 @@ class IterRun(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
-        from app.nodes import FANODE_REGISTRY
+        from app.nodes import createRegisteredNode
 
         nest_layout = getNestedLayout(self.id)
         node_payloads = self.data.Payloads
@@ -175,12 +175,14 @@ class IterRun(FATaskNode):
             and next_anode_info is not None
         )
         pass
-        input_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+        input_anode: FATaskNode = createRegisteredNode(
+            input_anode_info.data.NType,
             self.wid,
             input_anode_info,
             self.runner(),
         )
-        output_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+        output_anode: FATaskNode = createRegisteredNode(
+            input_anode_info.data.NType,
             self.wid,
             output_anode_info,
             self.runner(),
@@ -196,7 +198,8 @@ class IterRun(FATaskNode):
         # 开始迭代
         for iter_idx in range(self.iter_array_len):
             # 构建next附属节点
-            next_anode: FATaskNode = (FANODE_REGISTRY[next_anode_info.data.NType])(
+            next_anode: FATaskNode = createRegisteredNode(
+                next_anode_info.data.NType,
                 self.wid,
                 next_anode_info,
                 self.runner(),
@@ -227,7 +230,8 @@ class IterRun(FATaskNode):
             for child_id, child_info in child_node_infos.items():
                 if child_info.id in anode_ids:
                     continue
-                child_node: FATaskNode = (FANODE_REGISTRY[child_info.data.NType])(
+                child_node: FATaskNode = createRegisteredNode(
+                    child_info.data.NType,
                     self.wid,
                     child_info,
                     self.runner(),

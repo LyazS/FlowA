@@ -73,6 +73,7 @@ class RetrySettingModel(BaseModel):
     ExpBase: 指数基数，仅在Type=Exponential时使用
     ExpFactor: 指数因子，仅在Type=Exponential时使用
     """
+
     Type: RetryType = RetryType.Immediate
     Num: int = 5
     Delay: float = 5.0
@@ -148,7 +149,7 @@ class IterRetry(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
-        from app.nodes import FANODE_REGISTRY
+        from app.nodes import createRegisteredNode
 
         nest_layout = getNestedLayout(self.id)
         node_payloads = self.data.Payloads
@@ -167,8 +168,11 @@ class IterRetry(FATaskNode):
             self.id, RefVarItem.model_validate(D_IN_NODE.Data.value)
         )
         self.retry_index = 0
-        retry_type_str = "立即重试" if retry_config.Type == RetryType.Immediate else \
-                          "延迟重试" if retry_config.Type == RetryType.Delay else "指数重试"
+        retry_type_str = (
+            "立即重试"
+            if retry_config.Type == RetryType.Immediate
+            else "延迟重试" if retry_config.Type == RetryType.Delay else "指数重试"
+        )
         # 构建子图 ================================================
         flowdata: VFlowData = self.runner().flowdata
         child_node_infos: Dict[str, VFNodeInfo] = {}
@@ -209,7 +213,8 @@ class IterRetry(FATaskNode):
             and break_anode_info is not None
         )
         pass
-        input_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+        input_anode: FATaskNode = createRegisteredNode(
+            input_anode_info.data.NType,
             self.wid,
             input_anode_info,
             self.runner(),
@@ -227,12 +232,14 @@ class IterRetry(FATaskNode):
             self.retry_index = retry_idx
 
             # 构建break附属节点
-            break_anode: FATaskNode = (FANODE_REGISTRY[break_anode_info.data.NType])(
+            break_anode: FATaskNode = createRegisteredNode(
+                break_anode_info.data.NType,
                 self.wid,
                 break_anode_info,
                 self.runner(),
             )
-            output_anode: FATaskNode = FANODE_REGISTRY[input_anode_info.data.NType](
+            output_anode: FATaskNode = createRegisteredNode(
+                input_anode_info.data.NType,
                 self.wid,
                 output_anode_info,
                 self.runner(),
@@ -251,7 +258,8 @@ class IterRetry(FATaskNode):
             for child_id, child_info in child_node_infos.items():
                 if child_info.id in anode_ids:
                     continue
-                child_node: FATaskNode = (FANODE_REGISTRY[child_info.data.NType])(
+                child_node: FATaskNode = createRegisteredNode(
+                    child_info.data.NType,
                     self.wid,
                     child_info,
                     self.runner(),
@@ -309,7 +317,9 @@ class IterRetry(FATaskNode):
                 )
 
             # 记录重试信息
-            logger.error(f"不满足条件，{retry_type_str}第{retry_idx+1}/{retry_config.Num}次")
+            logger.error(
+                f"不满足条件，{retry_type_str}第{retry_idx+1}/{retry_config.Num}次"
+            )
 
             # 清理节点
             for nid in AddInNodes:
@@ -324,13 +334,17 @@ class IterRetry(FATaskNode):
                     await asyncio.sleep(retry_config.Delay)
                 elif retry_config.Type == RetryType.Exponential:
                     # 指数延迟重试
-                    wait_time = retry_config.ExpBase * (retry_config.ExpFactor ** retry_idx)
+                    wait_time = retry_config.ExpBase * (
+                        retry_config.ExpFactor**retry_idx
+                    )
                     logger.info(f"指数重试，等待{wait_time:.2f}秒")
                     await asyncio.sleep(wait_time)
                 # Immediate类型不需要等待
         pass
         # 所有重试失败，抛出异常
-        raise Exception(f"子节点全部运行失败，{retry_type_str}共{retry_config.Num}次均未成功")
+        raise Exception(
+            f"子节点全部运行失败，{retry_type_str}共{retry_config.Num}次均未成功"
+        )
 
     async def getContentByPath(
         self, request_nid: str, path: FromInnerPath

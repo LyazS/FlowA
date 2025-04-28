@@ -177,14 +177,15 @@ class FARunner:
         return serialize_ref(ref_data.Data.value)
 
     def buildNodes(self):
-        from app.nodes import FANODE_REGISTRY
+        from app.nodes import createRegisteredNode
 
         # 初始化顶层节点
         for nodeinfo in self.flowdata.nodes:
             if nodeinfo.parentNode == None:
                 self.addNode(
                     nodeinfo.id,
-                    (FANODE_REGISTRY[nodeinfo.data.NType])(
+                    createRegisteredNode(
+                        nodeinfo.data.NType,
                         self.wid,
                         nodeinfo,
                         self,

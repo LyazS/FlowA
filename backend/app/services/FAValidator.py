@@ -15,7 +15,7 @@ from app.schemas.VFNodeInterface import (
     RefNodeHandleItem,
 )
 from app.uisdk.VFUIDefine import *
-from app.nodes import FATaskNode, FANODE_REGISTRY
+from app.nodes import FATaskNode, createRegisteredNode
 
 
 class ConnectEdge(BaseModel):
@@ -383,7 +383,9 @@ class FAValidator:
         # 处理stricthid参数（只获取与本节点有链接的handle）
         strict_items: List[Tuple[str, str]] = []
         if parsed_args["stricthid"]:
-            edges = self.get_handle_connections(thisnid, "target", parsed_args["stricthid"])
+            edges = self.get_handle_connections(
+                thisnid, "target", parsed_args["stricthid"]
+            )
             for edge in edges:
                 strict_items.append((edge.nid, edge.hid))
 
@@ -524,7 +526,7 @@ class FAValidator:
     ) -> Dict[str, ValidationError]:
         # 初始化所有节点
         for nodeinfo in flowdata.nodes:
-            node = (FANODE_REGISTRY[nodeinfo.data.NType])(wid, nodeinfo, None)
+            node = createRegisteredNode(nodeinfo.data.NType, wid, nodeinfo, None)
             self.nodes[nodeinfo.id] = node
             pass
 
