@@ -16,6 +16,7 @@ class VarType(StrEnum):
     Integer = "Integer"
     Number = "Number"
     Boolean = "Boolean"
+    Image = "Image"
     File = "File"
     Any = "Any"
     pass
@@ -29,7 +30,7 @@ class RefVarItem(BaseModel):
 
 class RefNodeHandleItem(BaseModel):
     Node: str
-    HandleType: 'VFNodeConnectionType'
+    HandleType: "VFNodeConnectionType"
     Handle: str
     pass
 
