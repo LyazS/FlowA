@@ -8,6 +8,8 @@ import sys
 import json
 import traceback
 import base64
+import io
+from PIL import Image
 from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
@@ -47,7 +49,7 @@ class EvalType(StrEnum):
 
 class CodeOutput(BaseModel):
     success: bool
-    output: Union[Dict, str] = None
+    output: Union[Dict, str, bytes] = None
     error: str = None
     pass
 
@@ -120,7 +122,32 @@ async def SimplePythonRun(code, evaltype: EvalType, snekboxUrl: str = ""):
             if "@CODEOUTPUT-BASE64" in output_type:
                 json_string = base64.b64decode(res).decode("utf-8")
                 res_json = json.loads(json_string)
-                return CodeOutput(success=True, output=res_json)
+
+                # 处理特殊类型的数据（二进制数据和图片）
+                def process_special_types(obj):
+                    if isinstance(obj, dict):
+                        if "__type__" in obj and "data" in obj:
+                            if obj["__type__"] == "binary":
+                                # 将base64编码的字符串转换回二进制数据
+                                return base64.b64decode(obj["data"])
+                            elif obj["__type__"] == "image":
+                                # 将base64编码的字符串转换回PIL图像
+                                binary_data = base64.b64decode(obj["data"])
+                                res_image = Image.open(io.BytesIO(binary_data))
+                                return res_image
+
+                        # 递归处理嵌套的字典
+                        return {k: process_special_types(v) for k, v in obj.items()}
+                    elif isinstance(obj, list):
+                        # 递归处理列表中的元素
+                        return [process_special_types(item) for item in obj]
+                    else:
+                        return obj
+
+                # 处理特殊类型的数据
+                processed_json = process_special_types(res_json)
+
+                return CodeOutput(success=True, output=processed_json)
             elif "@CODEOUTPUT-ERROR" in output_type:
                 return CodeOutput(success=False, error=res)
             else:
@@ -253,12 +280,12 @@ class CodeInterpreter(FATaskNode):
 
                 # 更新内部数据
                 self.data.Results.ById[rid].Data.value = codeResult.output[item.Label]
+
             # 返回之前要设置好输出handle状态
             self.setAllOutputStatus(FARunStatus.Success)
             return []
         else:
             raise Exception(f"执行代码失败：{codeResult.error}")
-        pass
 
     @staticmethod
     async def getNodeConfig():

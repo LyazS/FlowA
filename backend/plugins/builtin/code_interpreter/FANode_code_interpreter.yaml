@@ -21,7 +21,45 @@ codetemplate: |
       def _CI_JSONTOB64(json_obj):
           import base64
           import json
-          json_string = json.dumps(json_obj)
+          import io
+          from PIL import Image
+
+          # 处理字典中的二进制数据
+          def process_binary_data(obj):
+              if isinstance(obj, dict):
+                  result = {}
+                  for k, v in obj.items():
+                      if isinstance(v, bytes):
+                          # 将二进制数据转换为base64编码的字符串，并添加类型标记
+                          result[k] = {
+                              "__type__": "binary",
+                              "data": base64.b64encode(v).decode("utf-8")
+                          }
+                      elif isinstance(v, Image.Image):
+                          # 将PIL图像转换为base64编码的字符串，并添加类型标记
+                          buffer = io.BytesIO()
+                          v.save(buffer, format="PNG")
+                          result[k] = {
+                              "__type__": "image",
+                              "data": base64.b64encode(buffer.getvalue()).decode("utf-8")
+                          }
+                      elif isinstance(v, dict):
+                          result[k] = process_binary_data(v)
+                      elif isinstance(v, list):
+                          result[k] = [process_binary_data(item) if isinstance(item, (dict, list)) else item for item in v]
+                      else:
+                          result[k] = v
+                  return result
+              elif isinstance(obj, list):
+                  return [process_binary_data(item) if isinstance(item, (dict, list)) else item for item in obj]
+              else:
+                  return obj
+
+          # 处理二进制数据
+          processed_obj = process_binary_data(json_obj)
+
+          # 序列化为JSON字符串
+          json_string = json.dumps(processed_obj)
           base64_string = base64.b64encode(json_string.encode("utf-8")).decode("utf-8")
           return base64_string
 

@@ -296,8 +296,12 @@ def serialize_ref(value):
     elif isinstance(value, BaseModel):
         return serialize_ref(value.model_dump())
     elif isinstance(value, Image.Image):
-        # 序列化为base64
-        return base64.b64encode(value.tobytes()).decode("utf-8")
+        # 序列化为适合HTML使用的base64格式，包含前缀
+        import io
+        buffer = io.BytesIO()
+        value.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return f"data:image/png;base64,{img_str}"
     elif isinstance(value, bytes):
         # 序列化为base64
         return base64.b64encode(value).decode("utf-8")
