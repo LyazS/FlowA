@@ -75,11 +75,11 @@ class VarTypeSelect(NormalComponent):
                 "size": "small",
                 "consistent-menu-width": False,
                 "options": [
-                    {"label": "引用", "value": "Ref"},
-                    {"label": "字符串", "value": "String"},
-                    {"label": "整数", "value": "Integer"},
-                    {"label": "数字", "value": "Number"},
-                    {"label": "布尔", "value": "Boolean"},
+                    {"label": "引用", "value": VarType.Ref},
+                    {"label": "字符串", "value": VarType.String},
+                    {"label": "整数", "value": VarType.Integer},
+                    {"label": "数字", "value": VarType.Number},
+                    {"label": "布尔", "value": VarType.Boolean},
                 ],
                 "value": VModelProp(
                     [

@@ -391,7 +391,7 @@ const getConnectionsByArgs = (args: string[]) => {
       varItems = varItems.filter((item) => {
         const node = findNode(item.Nid) as NodeWithVFData
         const dtype = node.data[item.Path.ContentName].ById[item.Path.ContentId].Type
-        return dtype === parsed_args.filtertype
+        return dtype === parsed_args.filtertype || dtype === VarType.Any
       })
     }
     if (parsed_args.level === CONNECT_VAR_LEVEL) {

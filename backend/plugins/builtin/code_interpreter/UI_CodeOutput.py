@@ -32,12 +32,15 @@ class VarTypeSelect(NormalComponent):
                 "size": "small",
                 "consistent-menu-width": False,
                 "options": [
-                    {"label": "字符串 String", "value": "String"},
-                    {"label": "整数 Integer", "value": "Integer"},
-                    {"label": "数字 Number", "value": "Number"},
-                    {"label": "布尔 Boolean", "value": "Boolean"},
-                    {"label": "列表 List", "value": "List"},
-                    {"label": "字典 Dict", "value": "Dict"},
+                    {"label": "字符串 String", "value": VarType.String},
+                    {"label": "整数 Integer", "value": VarType.Integer},
+                    {"label": "数字 Number", "value": VarType.Number},
+                    {"label": "布尔 Boolean", "value": VarType.Boolean},
+                    {"label": "列表 List", "value": VarType.List},
+                    {"label": "字典 Dict", "value": VarType.Dict},
+                    {"label": "图片 Image", "value": VarType.Image},
+                    {"label": "文件 File", "value": VarType.File},
+                    {"label": "任意 Any", "value": VarType.Any},
                 ],
                 "value": VModelProp(
                     [
