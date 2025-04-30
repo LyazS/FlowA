@@ -15,6 +15,7 @@ typing_extensions
 uvicorn
 numpy
 opencv-python
+pillow
 psutil
 aiofiles
 loguru

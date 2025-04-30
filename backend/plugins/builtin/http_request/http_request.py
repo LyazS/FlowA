@@ -2,11 +2,13 @@ from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union, Literal
 import asyncio
 import aiohttp
 import os
+import io
 import re
 import ast
 import copy
 import sys
 import json
+from PIL import Image
 import traceback
 import base64
 from loguru import logger
@@ -32,6 +34,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
     FromInnerPath,
+    VarType,
 )
 from app.utils.tools import read_yaml, reduceGet, replace_vars
 from app.utils.db4node import loadNodeConfig, setNodeConfig
@@ -108,6 +111,7 @@ class HttpResponseFormat(StrEnum):
     TEXT = "TEXT"
     JSON = "JSON"
     BINARY = "BINARY"
+    IMAGE = "IMAGE"
     pass
 
 
@@ -320,13 +324,23 @@ class HttpRequest(FATaskNode):
                     if return_format == HttpResponseFormat.BINARY:
                         # 强制作为二进制处理
                         binary_data = await response.read()
-                        base64_data = base64.b64encode(binary_data).decode("utf-8")
-                        response_text = base64_data
+                        self.data.Results.ById["DR_RESPONSE"].Type = VarType.File
+                        self.data.Results.ById["DR_RESPONSE"].Data.value = binary_data
+                    elif return_format == HttpResponseFormat.IMAGE:
+                        # 强制作为PIL图片处理
+                        binary_data = await response.read()
+                        img = Image.open(io.BytesIO(binary_data))
+                        self.data.Results.ById["DR_RESPONSE"].Type = VarType.Image
+                        self.data.Results.ById["DR_RESPONSE"].Data.value = img
                     elif return_format == HttpResponseFormat.JSON:
                         # 强制作为JSON处理
                         try:
                             # 先尝试直接使用response.json()
                             response_text = await response.json(content_type=None)
+                            self.data.Results.ById["DR_RESPONSE"].Type = VarType.Dict
+                            self.data.Results.ById["DR_RESPONSE"].Data.value = (
+                                response_text
+                            )
                         except Exception as json_err:
                             # 如果json()失败，尝试先获取文本再解析
                             try:
@@ -341,9 +355,14 @@ class HttpRequest(FATaskNode):
                                     encoding=charset, errors="replace"
                                 )
                                 response_text = json.loads(text_data)
+                                self.data.Results.ById["DR_RESPONSE"].Type = (
+                                    VarType.Dict
+                                )
+                                self.data.Results.ById["DR_RESPONSE"].Data.value = (
+                                    response_text
+                                )
                             except Exception as e:
                                 # 如果仍然失败，则报错
-                                logger.warning(f"JSON解析失败: {str(e)}，返回原始文本")
                                 raise Exception(f"JSON解析失败: {str(e)}")
                     elif return_format == HttpResponseFormat.TEXT:
                         # 强制作为文本处理
@@ -357,7 +376,9 @@ class HttpRequest(FATaskNode):
                         response_text = await response.text(
                             encoding=charset, errors="replace"
                         )
-                    
+                        self.data.Results.ById["DR_RESPONSE"].Type = VarType.String
+                        self.data.Results.ById["DR_RESPONSE"].Data.value = response_text
+
                     # 更新结果
                     self.data.Results.ById["DR_STATUS"].Data.value = response_status
                     self.data.Results.ById["DR_HEADER"].Data.value = json.dumps(
@@ -369,7 +390,6 @@ class HttpRequest(FATaskNode):
                     self.data.Results.ById["DR_CONTENTTYPE"].Data.value = (
                         response_content_type
                     )
-                    self.data.Results.ById["DR_RESPONSE"].Data.value = response_text
 
             # 设置所有输出状态为成功
             self.setAllOutputStatus(FARunStatus.Success)

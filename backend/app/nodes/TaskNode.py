@@ -6,8 +6,14 @@ from pydantic import BaseModel
 import traceback
 import json
 import copy
+from PIL import Image
 from loguru import logger
-from app.schemas.VFNodeInterface import FromInnerPath, VFNodeContentData, VFNodeContents
+from app.schemas.VFNodeInterface import (
+    VarType,
+    FromInnerPath,
+    VFNodeContentData,
+    VFNodeContents,
+)
 from app.schemas.VFlowRunData import (
     FARunStatus,
     FANodeWaitType,
@@ -30,7 +36,6 @@ from app.schemas.farequest import (
 )
 from app.utils.tools import reduceGet
 from app.nodes.BaseNode import FABaseNode
-
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.utils.cacheKey import buildCache4GenerateKey
 
@@ -49,6 +54,12 @@ class NodeCancelException(asyncio.CancelledError):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
+
+
+class ResultTypeError(Exception):
+    def __init__(self, messages: List[str]):
+        self.messages = messages
+        super().__init__(self.messages)
 
 
 class FATaskNode(FABaseNode):
@@ -84,6 +95,43 @@ class FATaskNode(FABaseNode):
                 output=outhandle,
             )
         )
+        pass
+
+    def checkResultType(self):
+        """
+        检查Result的Data类型是否符合Type
+        """
+        allok = []
+        allmsg = []
+        for rid in self.data.Results.Order:
+            isok = False
+            res_data = self.data.Results.ById[rid].Data.value
+            if self.data.Results.ById[rid].Type == VarType.Any:
+                isok = True
+            elif self.data.Results.ById[rid].Type == VarType.String:
+                isok = isinstance(res_data, str)
+            elif self.data.Results.ById[rid].Type == VarType.Integer:
+                isok = isinstance(res_data, int)
+            elif self.data.Results.ById[rid].Type == VarType.Number:
+                isok = isinstance(res_data, (int, float))
+            elif self.data.Results.ById[rid].Type == VarType.Boolean:
+                isok = isinstance(res_data, bool)
+            elif self.data.Results.ById[rid].Type == VarType.List:
+                isok = isinstance(res_data, list)
+            elif self.data.Results.ById[rid].Type == VarType.Dict:
+                isok = isinstance(res_data, dict)
+            elif self.data.Results.ById[rid].Type == VarType.Image:
+                isok = isinstance(res_data, Image.Image)
+            elif self.data.Results.ById[rid].Type == VarType.File:
+                isok = isinstance(res_data, bytes)
+            if not isok:
+                label = self.data.Results.ById[rid].Label
+                errmsg = f"Result [{label}] type should be [{self.data.Results.ById[rid].Type}] but {type(res_data)} found"
+                logger.error(errmsg)
+                allmsg.append(errmsg)
+            allok.append(isok)
+        if not all(allok):
+            raise ResultTypeError(allmsg)
         pass
 
     async def invoke(self):
@@ -141,7 +189,7 @@ class FATaskNode(FABaseNode):
             # 设置运行状态（Running） ========================================
             # ===============================================================
             self.setAllOutputStatus(FARunStatus.Running)
-            self.putNodeStatus(FARunStatus.Running)
+            self.pushNodeStatus(FARunStatus.Running)
             updateDatas = None
 
             # ===============================================================
@@ -161,6 +209,7 @@ class FATaskNode(FABaseNode):
             if not isUseCache:
                 # 前置节点全部成功，本节点开始运行
                 updateDatas = await self.run()
+                self.checkResultType()
                 if cacheKey.Key and cacheKey.After == VFNodeCacheKeyAfter.Save:
                     await self.runner().setCache(
                         self.id,
@@ -174,7 +223,7 @@ class FATaskNode(FABaseNode):
             logger.debug(f"run success {self.data.Label} {self.id}")
             # self.setAllOutputStatus(FANodeStatus.Success)
             # 各个输出handle的成功需要由子类函数来设置
-            self.putNodeStatus(FARunStatus.Success)
+            self.pushNodeStatus(FARunStatus.Success)
             nodeUpdateDatas = []
             if updateDatas:
                 nodeUpdateDatas.extend(updateDatas)
@@ -202,13 +251,22 @@ class FATaskNode(FABaseNode):
                     f"node cancel {self.data.Label} {self.id} due to runner cancel"
                 )
             self.setAllOutputStatus(FARunStatus.Canceled)
-            self.putNodeStatus(FARunStatus.Canceled)
+            self.pushNodeStatus(FARunStatus.Canceled)
             pass
+        except ResultTypeError as e:
+            logger.error(f"node error {self.data.Label} {self.id}")
+            for msg in e.messages:
+                logger.error(msg)
+            self.setAllOutputStatus(FARunStatus.Error)
+            self.pushNodeStatus(FARunStatus.Error)
+            self.pushNodeErrors(e.messages)
         except Exception as e:
             error_message = traceback.format_exc()
-            logger.error(f"node error {self.data.Label} {error_message} {self.id}")
+            msg = f"node error {self.data.Label} {error_message} {self.id}"
+            logger.error(msg)
             self.setAllOutputStatus(FARunStatus.Error)
-            self.putNodeStatus(FARunStatus.Error)
+            self.pushNodeStatus(FARunStatus.Error)
+            self.pushNodeErrors([msg])
         finally:
             # 确保挂起任务被取消
             if all_events_task and not all_events_task.done():
@@ -230,7 +288,7 @@ class FATaskNode(FABaseNode):
         self.outputStatus[oname] = status
         pass
 
-    def putNodeStatus(self, status: FARunStatus):
+    def pushNodeStatus(self, status: FARunStatus):
         self.runStatus = status
         ALL_MESSAGES_MGR.put(
             f"{self.wid}/{FAProgressRequestType.VFlowUI}",
@@ -250,7 +308,25 @@ class FATaskNode(FABaseNode):
             ),
         )
         pass
-
+    def pushNodeErrors(self, error_messages: List[str]):
+        ALL_MESSAGES_MGR.put(
+            f"{self.wid}/{FAProgressRequestType.VFlowUI}",
+            SSEResponse(
+                event=SSEResponseType.updatenode,
+                data=SSEResponseData(
+                    nid=self.id,
+                    oriid=self.oriid,
+                    data=[
+                        FANodeUpdateData(
+                            type=FANodeUpdateType.overwrite,
+                            path=["State", "Errors"],
+                            data=error_messages,
+                        ),
+                    ],
+                ),
+            ),
+        )
+        pass
     # 需要子类实现的函数 ===============================================================
 
     def getCacheKey(self, request_nid: str) -> VFNodeCacheKey:

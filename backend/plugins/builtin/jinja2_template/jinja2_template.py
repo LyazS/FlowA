@@ -145,10 +145,12 @@ class Jinja2Template(FABaseNode):
                     data=RefTriggerData(
                         path=[],
                         operation=RefOptions.Set,
-                        new_value=await InputVarModel.get_value(
-                            var,
-                            self.id,
-                            self.runner().getRefData,
+                        new_value=serialize_ref(
+                            await InputVarModel.get_value(
+                                var,
+                                self.id,
+                                self.runner().getRefData,
+                            )
                         ),
                         old_value=None,
                     ),

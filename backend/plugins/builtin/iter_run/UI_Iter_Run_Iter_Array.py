@@ -5,6 +5,7 @@ from app.schemas.VFNodeInterface import VFNodeConnectionType
 from ..UI_Components.Header import Header
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
 from ..UI_Components.NFlex import NFlex
+from app.schemas.VFNodeInterface import VarType
 
 
 class UI_Iter_Run_Iter_Array(NFlex):
@@ -45,6 +46,8 @@ class UI_Iter_Run_Iter_Array(NFlex):
                                 CONNECT_DATA_TO_SELECT,
                                 "--level",
                                 CONNECT_VAR_LEVEL,
+                                "--filtertype",
+                                VarType.List,
                             ]
                         ),
                         value=VModelProp(

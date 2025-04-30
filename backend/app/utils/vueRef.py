@@ -2,6 +2,8 @@ from typing import Any, List, Dict, Union
 import copy
 from enum import Enum
 import asyncio
+import base64
+from PIL import Image
 from loguru import logger
 from pydantic_core import core_schema
 from typing_extensions import Annotated
@@ -293,6 +295,12 @@ def serialize_ref(value):
         return serialize_ref(value.value)
     elif isinstance(value, BaseModel):
         return serialize_ref(value.model_dump())
+    elif isinstance(value, Image.Image):
+        # 序列化为base64
+        return base64.b64encode(value.tobytes()).decode("utf-8")
+    elif isinstance(value, bytes):
+        # 序列化为base64
+        return base64.b64encode(value).decode("utf-8")
     elif value is None:
         return None
     else:

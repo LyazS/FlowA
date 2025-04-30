@@ -58,8 +58,12 @@ class UI_Http_ReturnFormat(NFlex):
                                     "value": HttpResponseFormat.TEXT,
                                 },
                                 {
-                                    "label": "BINARY-将转换为BASE64格式",
+                                    "label": "BINARY-二进制文件格式",
                                     "value": HttpResponseFormat.BINARY,
+                                },
+                                {
+                                    "label": "IMAGE-PIL图片格式",
+                                    "value": HttpResponseFormat.IMAGE,
                                 },
                             ],
                             "value": VModelProp(

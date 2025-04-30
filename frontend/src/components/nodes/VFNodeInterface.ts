@@ -1,3 +1,15 @@
+enum VarType {
+  Ref = 'Ref',
+  String = 'String',
+  Integer = 'Integer',
+  Number = 'Number',
+  Boolean = 'Boolean',
+  List = 'List',
+  Dict = 'Dict',
+  Image = 'Image',
+  File = 'File',
+  Any = 'Any',
+}
 interface FromInnerPath {
   ContentName: 'Payloads' | 'Results'
   ContentId: string
@@ -46,8 +58,7 @@ interface VFNodeContentDataConfig {
 }
 interface VFNodeContentData {
   Label: string
-  Type: string
-  // Key: string
+  Type: VarType
   Data: any
   Config?: VFNodeContentDataConfig
   Hid?: string
@@ -204,6 +215,7 @@ export type {
   VFNodeAttachingPos,
 }
 export {
+  VarType,
   VFNodeConnectionDataType,
   VFNodeConnectionType,
   VFNodeAttachingPosType,

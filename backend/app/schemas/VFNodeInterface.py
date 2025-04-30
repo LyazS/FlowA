@@ -16,11 +16,11 @@ class VarType(StrEnum):
     Integer = "Integer"
     Number = "Number"
     Boolean = "Boolean"
+    List = "List"
+    Dict = "Dict"
     Image = "Image"
     File = "File"
     Any = "Any"
-    List = "List"
-    Dict = "Dict"
     pass
 
 

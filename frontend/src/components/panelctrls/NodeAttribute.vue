@@ -66,6 +66,7 @@ import {
   type VFNodeHandle,
   VFNodeConnectionDataType,
   type FromInnerPath,
+  VarType,
 } from '@/components/nodes/VFNodeInterface'
 
 const { recursiveFindVariables, uniqueVarItems } = useNodeUtils()
@@ -152,6 +153,8 @@ const getConnectionsByArgs = (args: string[]) => {
     CONNECT_ALL_DATA：表示上述节点的所有handels
     string 上述节点的handle的id
     不填，则只收集到handle层级
+  --filtertype 非必填，过滤变量类型
+    VarType：表示变量类型
   ====================================================
   --level 必填，输出层级
     CONNECT_NODE_LEVEL
@@ -188,6 +191,7 @@ const getConnectionsByArgs = (args: string[]) => {
       handle: string | undefined
       stricthid: string | undefined
       hid: string | undefined
+      filtertype: VarType | undefined
       outfmt: string | undefined
       notop: boolean | undefined
     } = {
@@ -198,6 +202,7 @@ const getConnectionsByArgs = (args: string[]) => {
       handle: undefined,
       stricthid: undefined,
       hid: undefined,
+      filtertype: undefined,
       outfmt: undefined,
       notop: undefined,
     }
@@ -382,6 +387,13 @@ const getConnectionsByArgs = (args: string[]) => {
       }
     }
     varItems = uniqueVarItems(varItems)
+    if (parsed_args.filtertype) {
+      varItems = varItems.filter((item) => {
+        const node = findNode(item.Nid) as NodeWithVFData
+        const dtype = node.data[item.Path.ContentName].ById[item.Path.ContentId].Type
+        return dtype === parsed_args.filtertype
+      })
+    }
     if (parsed_args.level === CONNECT_VAR_LEVEL) {
       if (
         parsed_args.outfmt === CONNECT_ALL_DATA ||

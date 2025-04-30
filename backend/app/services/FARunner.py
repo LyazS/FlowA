@@ -24,7 +24,6 @@ from app.utils.tools import (
     regexMatchNodeId,
     concatNestedNodeId,
 )
-from app.utils.vueRef import serialize_ref
 from app.schemas.VFNodeInterface import (
     VFNodeFlag,
     FromInnerPath,
@@ -175,7 +174,7 @@ class FARunner:
             request_nid,
             refdata.Path,
         )
-        return serialize_ref(ref_data.Data.value)
+        return ref_data.Data.value
 
     def buildNodes(self):
         from app.nodes import createRegisteredNode

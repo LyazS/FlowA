@@ -296,7 +296,7 @@ class CodeInterpreter(FATaskNode):
             VFNodeContentData(
                 Label="Python代码",
                 Type=VarType.String,
-                Data='#You can use numpy and cv2 by import\ndef main(arg1, arg2):\n    # do something\n    return {\n        "output1": arg1,\n        "output2": arg2\n    }',
+                Data='#You can import some modules here\ndef main(arg1, arg2):\n    # do something\n    return {\n        "output1": arg1,\n        "output2": arg2\n    }',
                 UiType="@/FlowABuiltin/UI_CODE_EDITOR",
                 Config=VFNodeContentDataConfig(Language="python"),
             ),
