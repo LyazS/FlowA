@@ -328,11 +328,16 @@ async def delete_workflow(delete_request: FAWorkflowDeleteRequest):
 @router.post("/clearcache")
 async def clear_cache(clear_req: FAClearCacheRequest):
     try:
-        async with get_db_ctxmgr() as db:
-            stmt = delete(FANodeCacheModel).where(FANodeCacheModel.wid == clear_req.wid)
-            await db.execute(stmt)
-            await db.commit()
-            return FAWorkflowOperationResponse(type=FAWorkflowOperationType.success)
+        from app.services.MemCacheMgr import _GLOBAL_CACHE, _GLOBAL_LOCK
+
+        # 使用全局锁清除指定工作流的缓存
+        async with _GLOBAL_LOCK:
+            if clear_req.wid in _GLOBAL_CACHE:
+                # 清除指定工作流的缓存
+                _GLOBAL_CACHE.pop(clear_req.wid, None)
+                logger.debug(f"Cleared memory cache for wid {clear_req.wid}")
+
+        return FAWorkflowOperationResponse(type=FAWorkflowOperationType.success)
     except Exception as e:
         errmsg = traceback.format_exc()
         logger.error(f"clear cache error: {errmsg}")

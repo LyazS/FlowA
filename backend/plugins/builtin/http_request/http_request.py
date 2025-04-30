@@ -403,7 +403,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="输入变量",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     InputVarModel(Key="query", ValueStr="say"),
                     InputVarModel(Key="ask", ValueStr="hi"),
@@ -417,7 +417,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="请求 Method & URL",
-                Type="Any",
+                Type=VarType.Any,
                 Data=HttpRequestConfig_URL(
                     Url="https://api.example.com?{{query}}={{ask}}"
                 ),
@@ -429,7 +429,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="请求头 Header",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     HttpRequestConfig_HEADER(
                         Key="Authorization", Value="Bearer {{token}}"
@@ -443,7 +443,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="请求体 Body",
-                Type="Any",
+                Type=VarType.Any,
                 Data=HttpRequestConfig_BODY(),
                 UiType="@/FlowABuiltin/UI_HTTP_BODY",
             ),
@@ -453,7 +453,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="Cookies",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     HttpRequestConfig_COOKIE(Key="cook", Value="{{cooker}}"),
                 ],
@@ -465,7 +465,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="返回格式",
-                Type="Any",
+                Type=VarType.String,
                 Data=HttpResponseFormat.TEXT,
                 UiType="@/FlowABuiltin/UI_HTTP_RETURN_FORMAT",
             ),
@@ -475,7 +475,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="超时配置",
-                Type="Any",
+                Type=VarType.Any,
                 Data=HttpRequestConfig_TIMEOUT(),
                 UiType="@/FlowABuiltin/UI_HTTP_TIMEOUT",
             ),
@@ -485,7 +485,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="返回状态",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_status",
@@ -494,7 +494,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="返回头",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",
@@ -503,7 +503,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="返回Cookie",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",
@@ -512,7 +512,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="返回类型",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",
@@ -521,7 +521,7 @@ class HttpRequest(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="返回结果",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",

@@ -290,7 +290,7 @@ class CondBranch(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="-",
-                Type="Any",
+                Type=VarType.Any,
                 Data=None,
                 UiType="@/FlowABuiltin/UI_COND_BRANCH",
             ),
@@ -300,7 +300,7 @@ class CondBranch(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="CASE 1",
-                Type="Dict",
+                Type=VarType.Dict,
                 Data=Single_ConditionDict(
                     OutputKey="output-init",
                     CondIsAnd=True,

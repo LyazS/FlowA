@@ -5,6 +5,7 @@ from app.schemas.VFNodeInterface import (
     VFNodeConnectionType,
     VFNodeContentDataConfig,
     VFNodeContentData,
+    VarType,
 )
 from ..UI_Components.Header import Header
 from ..UI_Components.RefVarSelect import UI_RefVarSelect
@@ -54,7 +55,7 @@ class UI_Iter_Run_Output(NFlex):
                                                     HandleId=ValueProp("output"),
                                                     Result=VFNodeContentData(
                                                         Label="",
-                                                        Type="List",
+                                                        Type=VarType.List,
                                                         Data=[],
                                                         Config=VFNodeContentDataConfig(
                                                             Ref=None

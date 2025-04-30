@@ -3,14 +3,16 @@ import json
 from datetime import datetime
 from pydantic import BaseModel
 from enum import StrEnum
-from app.schemas.VFNodeInterface import FromInnerPath
+from app.schemas.VFNodeInterface import FromInnerPath, VarType
+
 
 class VarItem(BaseModel):
     NodeId: str
     NodeLabel: str
     DataPath: FromInnerPath
     DataLabel: str
-    DataType: str
+    DataType: VarType
+    pass
 
 
 class VarSelectOption(BaseModel):

@@ -19,6 +19,8 @@ class VarType(StrEnum):
     Image = "Image"
     File = "File"
     Any = "Any"
+    List = "List"
+    Dict = "Dict"
     pass
 
 
@@ -84,7 +86,7 @@ class VFNodeContentDataConfig(BaseModel):
 
 class VFNodeContentData(BaseModel):
     Label: str
-    Type: str
+    Type: VarType
     Data: RefType
     Config: Optional[VFNodeContentDataConfig] = None
     Hid: Optional[str] = None

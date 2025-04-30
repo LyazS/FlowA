@@ -37,6 +37,7 @@ from app.schemas.VFNodeInterface import (
     FromInnerPath,
     RefVarItem,
     RefNodeHandleItem,
+    VarType,
 )
 from app.utils.tools import (
     read_yaml,
@@ -444,7 +445,7 @@ class IterRetry(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="",
-                Type="List",
+                Type=VarType.List,
                 Data=None,
                 UiType="@/FlowABuiltin/UI_ITER_RETRY_INNER_VAR",
             ),
@@ -454,7 +455,7 @@ class IterRetry(FATaskNode):
         pid_D_ITER_ITEM = thisnode.add_payload(
             VFNodeContentData(
                 Label="迭代项目",
-                Type="Any",
+                Type=VarType.Any,
                 Data=None,
             ),
             payload_id="D_ITER_ITEM",
@@ -462,7 +463,7 @@ class IterRetry(FATaskNode):
         pid_D_ITER_INDEX = thisnode.add_payload(
             VFNodeContentData(
                 Label="重试次数",
-                Type="Integer",
+                Type=VarType.Integer,
                 Data=None,
             ),
             payload_id="D_ITER_INDEX",
@@ -487,7 +488,7 @@ class IterRetry(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="重试设置",
-                Type="Dict",
+                Type=VarType.Dict,
                 Data=RetrySettingModel(),
                 UiType="@/FlowABuiltin/UI_ITER_RETRY_SETTING",
             ),
@@ -498,7 +499,7 @@ class IterRetry(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="",
-                Type="List",
+                Type=VarType.List,
                 Data=None,
                 UiType="@/FlowABuiltin/UI_ITER_RETRY_INOUT",
             ),
@@ -508,7 +509,7 @@ class IterRetry(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="初始变量",
-                Type="Ref",
+                Type=VarType.Ref,
                 Data="",
             ),
             payload_id="D_IN_NODE",
@@ -516,7 +517,7 @@ class IterRetry(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="迭代变量",
-                Type="Ref",
+                Type=VarType.Ref,
                 Data="",
             ),
             payload_id="D_OUT_NODE",
@@ -533,7 +534,7 @@ class IterRetry(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="输出变量",
-                Type="Any",
+                Type=VarType.Any,
                 Data=None,
             ),
             handle_id="output",

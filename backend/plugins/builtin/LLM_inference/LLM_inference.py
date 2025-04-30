@@ -424,7 +424,7 @@ class LLMInference(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="模型设置",
-                Type="Dict",
+                Type=VarType.Dict,
                 Data=LLMSettings(
                     Model=LLMSetting(
                         Label="模型选择",
@@ -474,7 +474,7 @@ class LLMInference(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="输入变量",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     InputVarModel(Key="arg1", ValueStr="good"),
                     InputVarModel(Key="arg2", ValueStr="assistant"),
@@ -486,7 +486,7 @@ class LLMInference(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="Prompts设计",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     SinglePrompt(
                         role=LLMRole.system, content="You ara a {{arg1}} {{arg2}}."
@@ -501,7 +501,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="思考结果",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",
@@ -510,7 +510,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="推理结果",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_res",
@@ -519,7 +519,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="LLM模型",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_info",
@@ -528,7 +528,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="输入Token",
-                Type="Integer",
+                Type=VarType.Integer,
                 Data=0,
             ),
             handle_id="output_info",
@@ -537,7 +537,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="输出Token",
-                Type="Integer",
+                Type=VarType.Integer,
                 Data=0,
             ),
             handle_id="output_info",
@@ -546,7 +546,7 @@ class LLMInference(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="停止原因",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output_info",

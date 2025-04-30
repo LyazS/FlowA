@@ -214,7 +214,7 @@ class Jinja2Template(FABaseNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="输入变量",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     InputVarModel(Key="arg1", ValueStr="hello"),
                     InputVarModel(Key="arg2", ValueStr="world"),
@@ -226,7 +226,7 @@ class Jinja2Template(FABaseNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="Jinja2模板",
-                Type="String",
+                Type=VarType.String,
                 Data="<p>{{ arg1 }}</p>\n<hr>\n<p>{{ arg2 }}</p>",
                 UiType="@/FlowABuiltin/UI_CODE_EDITOR_DISABLED",
                 Config=VFNodeContentDataConfig(Language="django"),

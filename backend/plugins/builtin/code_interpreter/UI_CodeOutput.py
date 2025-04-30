@@ -1,4 +1,4 @@
-from app.schemas.VFNodeInterface import VFNodeContentData
+from app.schemas.VFNodeInterface import VFNodeContentData, VarType
 from app.uisdk import *
 from ..UI_Components.Header import Header
 from ..UI_Components.NInput import NInput
@@ -76,7 +76,7 @@ class UI_CodeOutput(NFlex):
                                                     HandleId=ValueProp("output"),
                                                     Result=VFNodeContentData(
                                                         Label="",
-                                                        Type="String",
+                                                        Type=VarType.String,
                                                         Data=None,
                                                     ),
                                                 )

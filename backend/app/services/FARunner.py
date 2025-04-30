@@ -7,6 +7,7 @@ from app.schemas.VFlowData import VFlowData, VFNodeInfo, VFEdgeInfo
 from app.schemas.VFlowRunData import FARunStatus
 from app.services.messageMgr import ALL_MESSAGES_MGR
 from app.services.CacheMgr import CacheMgr
+from app.services.MemCacheMgr import MemCacheMgr
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -49,7 +50,7 @@ class FARunner:
 
         self.cancel_event = asyncio.Event()
         self.running_tasks: Set[asyncio.Task] = set()  # 跟踪所有节点任务
-        self.cachemgr = CacheMgr(self.wid)
+        self.cachemgr = MemCacheMgr(self.wid)
 
         # 方便的全局父子节点结构
         self.nestedGraph: Dict[str, List[str]] = {}

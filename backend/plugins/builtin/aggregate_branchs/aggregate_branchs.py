@@ -176,7 +176,7 @@ class AggregateBranch(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="聚合分支变量",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     Single_AggregateBranch(OrderKey=getUuid()),
                 ],
@@ -188,7 +188,7 @@ class AggregateBranch(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="输出变量",
-                Type="Any",
+                Type=VarType.Any,
                 Data=None,
             ),
             handle_id="output",

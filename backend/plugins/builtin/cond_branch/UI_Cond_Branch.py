@@ -713,7 +713,7 @@ class UI_Cond_Branch(NFlex):
                                                     ),
                                                     Payload=VFNodeContentData(
                                                         Label="-",
-                                                        Type="Dict",
+                                                        Type=VarType.Dict,
                                                         Data=Single_ConditionDict(
                                                             OutputKey=VBindProp(
                                                                 [

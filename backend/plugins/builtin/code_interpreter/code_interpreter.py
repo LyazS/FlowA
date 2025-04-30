@@ -283,7 +283,7 @@ class CodeInterpreter(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="输入变量",
-                Type="List",
+                Type=VarType.List,
                 Data=[
                     InputVarModel(Key="arg1", ValueStr="hello"),
                     InputVarModel(Key="arg2", ValueStr="world"),
@@ -295,7 +295,7 @@ class CodeInterpreter(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="Python代码",
-                Type="String",
+                Type=VarType.String,
                 Data='#You can use numpy and cv2 by import\ndef main(arg1, arg2):\n    # do something\n    return {\n        "output1": arg1,\n        "output2": arg2\n    }',
                 UiType="@/FlowABuiltin/UI_CODE_EDITOR",
                 Config=VFNodeContentDataConfig(Language="python"),
@@ -306,7 +306,7 @@ class CodeInterpreter(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="output1",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output",
@@ -314,7 +314,7 @@ class CodeInterpreter(FATaskNode):
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="output2",
-                Type="String",
+                Type=VarType.String,
                 Data="",
             ),
             handle_id="output",
