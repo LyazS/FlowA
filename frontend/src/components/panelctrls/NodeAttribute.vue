@@ -39,7 +39,7 @@ import { type InputNode, type NodeWithVFData } from '@/schemas/schemas'
 import {
   PropVarType,
   THIS_NODE_DATA,
-  CONTEXT_FUNCTION,
+  COMPONENT_CONTEXT,
   VFOR_DATA,
   CONNECT_DATA_TO_SELECT,
   CONNECT_ALL_DATA,
@@ -437,7 +437,7 @@ const payloadComponents = computed<Record<string, VNode>>(() => {
   for (const pid of curSelectedNode.value.data.Payloads.Order) {
     const context = {
       [THIS_NODE_DATA]: curSelectedNode.value.data,
-      [CONTEXT_FUNCTION]: {
+      [COMPONENT_CONTEXT]: {
         [PAYLOADS_ID]: pid,
       },
     }
@@ -459,7 +459,7 @@ const outputsComponents = computed<VNode | null>(() => {
   if (!curSelectedNode.value) return null
   const context = {
     [THIS_NODE_DATA]: curSelectedNode.value.data,
-    [CONTEXT_FUNCTION]: {},
+    [COMPONENT_CONTEXT]: {},
   }
   const uitype = curSelectedNode.value.data.Config.OutputsUiType
   if (uitype && AllUIComponents.value.hasOwnProperty(uitype)) {

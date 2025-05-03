@@ -475,8 +475,8 @@ class UI_Cond_Card(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=FunctionProp(
-                            Funcs=[
+                        onClick=OperateFunctionProp(
+                            [
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
                                         DstPath=VBindProp(
@@ -521,8 +521,8 @@ class UI_Branch_Card(NormalComponent):
                 "header-extra": NButton(
                     type="error",
                     text=True,
-                    onClick=FunctionProp(
-                        Funcs=[
+                    onClick=OperateFunctionProp(
+                        [
                             REMOVEPAYLOAD_FuncProp(
                                 Arg=FuncArg_REMOVEPAYLOAD(
                                     PayloadId=VBindProp([VFOR_DATA, "@OutHandleName"]),
@@ -564,8 +564,8 @@ class UI_Branch_Card(NormalComponent):
                                 style={"width": "100%"},
                                 type="success",
                                 text=True,
-                                onClick=FunctionProp(
-                                    Funcs=[
+                                onClick=OperateFunctionProp(
+                                    [
                                         APPENDITEM_FuncProp(
                                             Arg=FuncArg_APPENDITEM(
                                                 DstPath=VBindProp(
@@ -620,8 +620,8 @@ class UI_Drag_Branch(NormalComponent):
                         "Order",
                     ]
                 ),
-                "onUpdate": FunctionProp(
-                    Funcs=[
+                "onUpdate": OperateFunctionProp(
+                    [
                         UPDATENODEINTERNAL_FuncProp(),
                     ]
                 ),
@@ -664,15 +664,27 @@ class UI_Cond_Branch(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             SETCONTEXT_FuncProp(
                                                 Arg=FuncArg_SETCONTEXT(
                                                     Key=ValueProp("branchid"),
-                                                    Value=VBindProp(
-                                                        [GENERATE_UUID],
-                                                        Replace="output-{{Data}}",  # handle必须以output|input开头
+                                                    Value=ReturnFunctionProp(
+                                                        FORMATSTRING_FuncProp(
+                                                            Arg=FuncArg_FORMATSTRING(
+                                                                FString="output-{{Data}}",
+                                                                Args={
+                                                                    "Data": ReturnFunctionProp(
+                                                                        GENERATEUUID_FuncProp()
+                                                                    ),
+                                                                },
+                                                            )
+                                                        )
                                                     ),
+                                                    # VBindProp(
+                                                    #     [GENERATE_UUID],
+                                                    #     FA_Replace__="output-{{Data}}",  # handle必须以output|input开头
+                                                    # ),
                                                 )
                                             ),
                                             ADDHANDLE_FuncProp(
@@ -680,7 +692,7 @@ class UI_Cond_Branch(NFlex):
                                                     HandleType=VFNodeConnectionType.Outputs,
                                                     HandleId=VBindProp(
                                                         [
-                                                            CONTEXT_ARG,
+                                                            ARG_CONTEXT,
                                                             "branchid",
                                                         ],
                                                     ),
@@ -693,7 +705,7 @@ class UI_Cond_Branch(NFlex):
                                                     HandleType=VFNodeConnectionType.Outputs,
                                                     HandleId=VBindProp(
                                                         [
-                                                            CONTEXT_ARG,
+                                                            ARG_CONTEXT,
                                                             "branchid",
                                                         ],
                                                     ),
@@ -707,7 +719,7 @@ class UI_Cond_Branch(NFlex):
                                                 Arg=FuncArg_ADDPAYLOAD(
                                                     PayloadId=VBindProp(
                                                         [
-                                                            CONTEXT_ARG,
+                                                            ARG_CONTEXT,
                                                             "branchid",
                                                         ],
                                                     ),
@@ -717,7 +729,7 @@ class UI_Cond_Branch(NFlex):
                                                         Data=Single_ConditionDict(
                                                             OutputKey=VBindProp(
                                                                 [
-                                                                    CONTEXT_ARG,
+                                                                    ARG_CONTEXT,
                                                                     "branchid",
                                                                 ],
                                                             ),

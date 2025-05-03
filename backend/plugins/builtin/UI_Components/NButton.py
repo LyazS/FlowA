@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Literal
 from app.uisdk.VFUISchemas import (
-    FunctionProp,
+    OperateFunctionProp,
     PropVar,
     PropVarType,
     NormalComponent,
@@ -38,7 +38,7 @@ class NButton(NormalComponent):
             ]
         ) = "default",
         level: Optional[Literal["secondary", "tertiary", "quaternary"]] = None,
-        onClick: Optional[FunctionProp] = None,
+        onClick: Optional[OperateFunctionProp] = None,
         otherProps: Dict = {},
         style: Optional[Dict] = None,
         slots: Optional[Dict] = None,

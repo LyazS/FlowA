@@ -172,7 +172,7 @@ class UI_TAG_OUTPUTS(NFlex):
                     Header(type="info", text="输出变量"),
                     ForLoopComponent(
                         Items=VBindProp(
-                            Data=[
+                            [
                                 CONNECT_DATA,
                                 "--node",
                                 CONNECT_CUR_NODE,

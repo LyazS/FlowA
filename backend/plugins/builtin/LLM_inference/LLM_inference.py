@@ -9,7 +9,20 @@ from loguru import logger
 from decimal import Decimal
 import openai
 from openai import AsyncOpenAI, NotGiven
-from openai.types.chat import ChatCompletion, ChatCompletionChunk
+from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionSystemMessageParam,
+    ChatCompletionUserMessageParam,
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionToolMessageParam,
+    ChatCompletionFunctionMessageParam,
+    ChatCompletionContentPartParam,
+    ChatCompletionContentPartTextParam,
+    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartInputAudioParam,
+)
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
 from app.schemas.VFlowRunData import FARunStatus
@@ -70,9 +83,43 @@ class LLMRole(StrEnum):
     pass
 
 
-class SinglePrompt(BaseModel):
+class LLMPromptType(StrEnum):
+    text = "text"
+    image_url = "image_url"
+
+
+class LLMPromptImageDetail(StrEnum):
+    auto = "auto"
+    low = "low"
+    high = "high"
+
+
+class LLMPromptImageURL(BaseModel):
+    url: str  # Either a URL of the image or the base64 encoded image data.
+    detail: LLMPromptImageDetail
+    pass
+
+
+class LLMPromptImageParamType(StrEnum):
+    FromUpload = "FromUpload"
+    FromRef = "FromRef"
+
+
+class LLMPromptImageParam(BaseModel):
+    type: LLMPromptType = LLMPromptType.image_url
+    image_url: LLMPromptImageURL
+    image_type: LLMPromptImageParamType
+    pass
+
+
+class LLMPromptTextParam(BaseModel):
+    type: LLMPromptType = LLMPromptType.text
+    text: str
+
+
+class LLMPrompt(BaseModel):
     role: LLMRole
-    content: str
+    content: List[Union[LLMPromptImageParam, LLMPromptTextParam]]
     pass
 
 
@@ -291,7 +338,7 @@ class LLMInference(FATaskNode):
                 # messages
                 messages = []
                 for prompt in D_PROMPTS.Data.value:
-                    prompt_obj = SinglePrompt.model_validate(prompt)
+                    prompt_obj = LLMPrompt.model_validate(prompt)
                     prompt_obj.content = replace_vars(prompt_obj.content, InputArgs)
                     messages.append(json.loads(prompt_obj.model_dump_json()))
                     pass
@@ -488,10 +535,16 @@ class LLMInference(FATaskNode):
                 Label="Prompts设计",
                 Type=VarType.List,
                 Data=[
-                    SinglePrompt(
-                        role=LLMRole.system, content="You ara a {{arg1}} {{arg2}}."
+                    LLMPrompt(
+                        role=LLMRole.system,
+                        content=[
+                            LLMPromptTextParam(text="You ara a {{arg1}} {{arg2}}.")
+                        ],
                     ),
-                    SinglePrompt(role=LLMRole.user, content="Hi."),
+                    LLMPrompt(
+                        role=LLMRole.user,
+                        content=[LLMPromptTextParam(text="Hi.")],
+                    ),
                 ],
                 UiType="@/FlowABuiltin/UI_LLM_PROMPTS",
             ),

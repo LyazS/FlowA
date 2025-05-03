@@ -35,7 +35,7 @@ class http_cookie_data(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -54,7 +54,7 @@ class http_cookie_data(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -91,7 +91,7 @@ class UI_http_cookie(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -102,8 +102,8 @@ class UI_http_cookie(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             APPENDITEM_FuncProp(
                                                 Arg=FuncArg_APPENDITEM(
                                                     DstPath=VBindProp(
@@ -113,7 +113,7 @@ class UI_http_cookie(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -146,7 +146,7 @@ class UI_http_cookie(NFlex):
                                         "ById",
                                         VBindProp(
                                             [
-                                                CONTEXT_FUNCTION,
+                                                COMPONENT_CONTEXT,
                                                 PAYLOADS_ID,
                                             ]
                                         ),
@@ -172,8 +172,8 @@ class UI_http_cookie(NFlex):
                                                 size="small",
                                                 circle=True,
                                                 level="tertiary",
-                                                onClick=FunctionProp(
-                                                    Funcs=[
+                                                onClick=OperateFunctionProp(
+                                                    [
                                                         REMOVEITEM_FuncProp(
                                                             Arg=FuncArg_REMOVEITEM(
                                                                 DstPath=VBindProp(
@@ -183,7 +183,7 @@ class UI_http_cookie(NFlex):
                                                                         "ById",
                                                                         VBindProp(
                                                                             [
-                                                                                CONTEXT_FUNCTION,
+                                                                                COMPONENT_CONTEXT,
                                                                                 PAYLOADS_ID,
                                                                             ]
                                                                         ),

@@ -25,7 +25,7 @@ class UI_http_url(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -70,7 +70,7 @@ class UI_http_url(NFlex):
                                                 "ById",
                                                 VBindProp(
                                                     [
-                                                        CONTEXT_FUNCTION,
+                                                        COMPONENT_CONTEXT,
                                                         PAYLOADS_ID,
                                                     ]
                                                 ),
@@ -89,7 +89,7 @@ class UI_http_url(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),

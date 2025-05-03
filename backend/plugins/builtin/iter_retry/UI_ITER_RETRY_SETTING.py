@@ -53,7 +53,7 @@ class retry_type(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -107,13 +107,13 @@ class retry_num(NFlex):
                             "step": step,
                             "precision": precision,
                             "value": VModelProp(
-                                Data=[
+                                [
                                     THIS_NODE_DATA,
                                     "Payloads",
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -146,7 +146,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -181,7 +181,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -201,7 +201,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -230,7 +230,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -257,7 +257,7 @@ class UI_ITER_RETRY_SETTING(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),

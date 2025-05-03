@@ -36,7 +36,7 @@ class UI_CodeEditor(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -47,8 +47,8 @@ class UI_CodeEditor(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             OPENEDITOR_FuncProp(
                                                 Arg=FuncArg_OPENEDITOR(
                                                     DstPath=VBindProp(
@@ -58,7 +58,7 @@ class UI_CodeEditor(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -90,7 +90,7 @@ class UI_CodeEditor(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -105,7 +105,7 @@ class UI_CodeEditor(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),

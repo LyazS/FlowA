@@ -16,7 +16,7 @@ class UI_ITER_RETRY_INOUT(NFlex):
                 "default": [
                     Header(
                         type="warning",
-                        text=ValueProp(Data="变量设置"),
+                        text=ValueProp("变量设置"),
                     ),
                     NFlex(
                         vertical=False,

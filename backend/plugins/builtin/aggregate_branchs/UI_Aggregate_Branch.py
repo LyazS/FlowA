@@ -41,7 +41,7 @@ class UI_Branch_Select(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -78,7 +78,7 @@ class UI_Branch_Select(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -157,8 +157,8 @@ class UI_Single_Branch(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=FunctionProp(
-                            Funcs=[
+                        onClick=OperateFunctionProp(
+                            [
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
                                         DstPath=VBindProp(
@@ -168,7 +168,7 @@ class UI_Single_Branch(NFlex):
                                                 "ById",
                                                 VBindProp(
                                                     [
-                                                        CONTEXT_FUNCTION,
+                                                        COMPONENT_CONTEXT,
                                                         PAYLOADS_ID,
                                                     ]
                                                 ),
@@ -197,13 +197,13 @@ class UI_Drag_Branch(NormalComponent):
                 "ghostClass": "ghost",
                 "animation": 150,
                 "modelValue": VModelProp(
-                    Data=[
+                    [
                         THIS_NODE_DATA,
                         "Payloads",
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -214,13 +214,13 @@ class UI_Drag_Branch(NormalComponent):
             Slots={
                 "default": ForLoopComponent(
                     Items=VBindProp(
-                        Data=[
+                        [
                             THIS_NODE_DATA,
                             "Payloads",
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -257,7 +257,7 @@ class UI_Aggregate_Branch(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -268,12 +268,15 @@ class UI_Aggregate_Branch(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             SETCONTEXT_FuncProp(
                                                 Arg=FuncArg_SETCONTEXT(
                                                     Key=ValueProp("orderkey"),
-                                                    Value=VBindProp([GENERATE_UUID]),
+                                                    Value=ReturnFunctionProp(
+                                                        GENERATEUUID_FuncProp()
+                                                    ),
+                                                    # VBindProp([GENERATE_UUID]),
                                                 )
                                             ),
                                             APPENDITEM_FuncProp(
@@ -285,7 +288,7 @@ class UI_Aggregate_Branch(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -295,7 +298,7 @@ class UI_Aggregate_Branch(NFlex):
                                                     ItemValue=Single_AggregateBranch(
                                                         OrderKey=VBindProp(
                                                             [
-                                                                CONTEXT_ARG,
+                                                                ARG_CONTEXT,
                                                                 "orderkey",
                                                             ]
                                                         )

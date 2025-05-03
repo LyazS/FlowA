@@ -268,3 +268,46 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error
   return `系统异常: ${JSON.stringify(error)}`
 }
+
+
+export const handleSelectImage = async () => {
+  try {
+    // 通过 Promise 封装文件选择逻辑
+    const file = await new Promise<File>((resolve, reject) => {
+      // 创建隐藏的 input 元素
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*' // 限制只允许选择图片
+
+      // 处理文件选择
+      input.onchange = (e: Event) => {
+        const file = (e.target as HTMLInputElement)?.files?.[0]
+        file ? resolve(file) : reject(new Error('未选择文件'))
+      }
+
+      // 处理取消选择
+      input.oncancel = () => reject(new Error('取消选择'))
+      document.body.appendChild(input)
+      input.click()
+      setTimeout(() => input.remove(), 1000) // 清理 DOM
+    })
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      throw new Error('非图片文件')
+    }
+
+    // 转换为 base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+
+    return base64
+  } catch (error: any) {
+    console.error('文件处理失败:', error.message)
+    return null
+  }
+}

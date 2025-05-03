@@ -32,7 +32,7 @@ class UI_http_header(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
@@ -43,8 +43,8 @@ class UI_http_header(NFlex):
                                 NButton(
                                     type="warning",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             APPENDITEM_FuncProp(
                                                 Arg=FuncArg_APPENDITEM(
                                                     DstPath=VBindProp(
@@ -54,7 +54,7 @@ class UI_http_header(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -90,7 +90,7 @@ class UI_http_header(NFlex):
                                         "ById",
                                         VBindProp(
                                             [
-                                                CONTEXT_FUNCTION,
+                                                COMPONENT_CONTEXT,
                                                 PAYLOADS_ID,
                                             ]
                                         ),
@@ -129,7 +129,7 @@ class UI_http_header(NFlex):
                                                                     "ById",
                                                                     VBindProp(
                                                                         [
-                                                                            CONTEXT_FUNCTION,
+                                                                            COMPONENT_CONTEXT,
                                                                             PAYLOADS_ID,
                                                                         ]
                                                                     ),
@@ -153,7 +153,7 @@ class UI_http_header(NFlex):
                                                                     "ById",
                                                                     VBindProp(
                                                                         [
-                                                                            CONTEXT_FUNCTION,
+                                                                            COMPONENT_CONTEXT,
                                                                             PAYLOADS_ID,
                                                                         ]
                                                                     ),
@@ -177,8 +177,8 @@ class UI_http_header(NFlex):
                                                 size="small",
                                                 circle=True,
                                                 level="tertiary",
-                                                onClick=FunctionProp(
-                                                    Funcs=[
+                                                onClick=OperateFunctionProp(
+                                                    [
                                                         REMOVEITEM_FuncProp(
                                                             Arg=FuncArg_REMOVEITEM(
                                                                 DstPath=VBindProp(
@@ -188,7 +188,7 @@ class UI_http_header(NFlex):
                                                                         "ById",
                                                                         VBindProp(
                                                                             [
-                                                                                CONTEXT_FUNCTION,
+                                                                                COMPONENT_CONTEXT,
                                                                                 PAYLOADS_ID,
                                                                             ]
                                                                         ),

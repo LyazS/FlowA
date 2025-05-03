@@ -9,14 +9,16 @@ from .LLM_inference import (
     LLMTypeOptionsWnull,
     LLMRoleOptions,
     LLMRole,
-    SinglePrompt,
+    LLMPrompt,
+    LLMPromptTextParam,
+    LLMPromptImageParam,
 )
 from ..UI_Components.Header import Header
 from ..UI_Components.NInput import NInput, NInputAutoSize
 from ..UI_Components.NButton import NButton
 from ..UI_Components.NFlex import NFlex
 
-DefaultPrompt = SinglePrompt(role=LLMRole.user, content="")
+DefaultPrompt = LLMPrompt(role=LLMRole.user, content=[LLMPromptTextParam(text="")])
 
 
 class UI_PromptOperate(NFlex):
@@ -45,7 +47,7 @@ class UI_PromptOperate(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -60,8 +62,8 @@ class UI_PromptOperate(NFlex):
                         style={"margin-bottom": 0},
                         type="warning",
                         text=True,
-                        onClick=FunctionProp(
-                            Funcs=[
+                        onClick=OperateFunctionProp(
+                            [
                                 OPENEDITOR_FuncProp(
                                     Arg=FuncArg_OPENEDITOR(
                                         DstPath=VBindProp(
@@ -71,7 +73,7 @@ class UI_PromptOperate(NFlex):
                                                 "ById",
                                                 VBindProp(
                                                     [
-                                                        CONTEXT_FUNCTION,
+                                                        COMPONENT_CONTEXT,
                                                         PAYLOADS_ID,
                                                     ]
                                                 ),
@@ -115,7 +117,7 @@ class UI_PromptContent(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -131,8 +133,8 @@ class UI_PromptContent(NFlex):
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=FunctionProp(
-                            Funcs=[
+                        onClick=OperateFunctionProp(
+                            [
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
                                         DstPath=VBindProp(
@@ -142,7 +144,7 @@ class UI_PromptContent(NFlex):
                                                 "ById",
                                                 VBindProp(
                                                     [
-                                                        CONTEXT_FUNCTION,
+                                                        COMPONENT_CONTEXT,
                                                         PAYLOADS_ID,
                                                     ]
                                                 ),
@@ -188,7 +190,7 @@ class UI_SinglePrompt(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -215,15 +217,15 @@ class UI_SinglePromptWrmbtn(NFlex):
             },
             slots={
                 "default": [
-                    UI_SinglePrompt(),
+                    # UI_SinglePrompt(),
                     NButton(
                         style={"width": "5%"},
                         type="error",
                         size="small",
                         circle=True,
                         level="tertiary",
-                        onClick=FunctionProp(
-                            Funcs=[
+                        onClick=OperateFunctionProp(
+                            [
                                 REMOVEITEM_FuncProp(
                                     Arg=FuncArg_REMOVEITEM(
                                         DstPath=VBindProp(
@@ -233,7 +235,7 @@ class UI_SinglePromptWrmbtn(NFlex):
                                                 "ById",
                                                 VBindProp(
                                                     [
-                                                        CONTEXT_FUNCTION,
+                                                        COMPONENT_CONTEXT,
                                                         PAYLOADS_ID,
                                                     ]
                                                 ),
@@ -268,42 +270,56 @@ class UI_LLM_PROMPTS(NFlex):
                         slots={
                             "default": [
                                 Header(type="warning", text="Prompts设计"),
-                                NButton(
-                                    type="warning",
-                                    text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
-                                            APPENDITEM_FuncProp(
-                                                Arg=FuncArg_APPENDITEM(
-                                                    DstPath=VBindProp(
-                                                        [
-                                                            THIS_NODE_DATA,
-                                                            "Payloads",
-                                                            "ById",
-                                                            VBindProp(
-                                                                [
-                                                                    CONTEXT_FUNCTION,
-                                                                    PAYLOADS_ID,
-                                                                ]
-                                                            ),
-                                                            "Data",
-                                                        ]
-                                                    ),
-                                                    ItemValue=DefaultPrompt,
-                                                )
-                                            )
-                                        ]
-                                    ),
-                                    slots={
-                                        "default": SpanComponent(ValueProp("添加")),
-                                        "icon": NormalComponent(Type="Add"),
-                                    },
-                                ),
+                                # NormalComponent(
+                                #     Type="NDropdown",
+                                #     Props={
+                                #         "trigger": "hover",
+                                #         "options": [
+                                #             {
+                                #                 "label": "添加",
+                                #                 "key": "add",
+                                #             },
+                                #         ],
+                                #     },
+                                # ),
+                                # NButton(
+                                #     type="warning",
+                                #     text=True,
+                                #     onClick=FunctionProp(
+                                #         Funcs=[
+                                #             APPENDITEM_FuncProp(
+                                #                 Arg=FuncArg_APPENDITEM(
+                                #                     DstPath=VBindProp(
+                                #                         [
+                                #                             THIS_NODE_DATA,
+                                #                             "Payloads",
+                                #                             "ById",
+                                #                             VBindProp(
+                                #                                 [
+                                #                                     CONTEXT_FUNCTION,
+                                #                                     PAYLOADS_ID,
+                                #                                 ]
+                                #                             ),
+                                #                             "Data",
+                                #                         ]
+                                #                     ),
+                                #                     ItemValue=DefaultPrompt,
+                                #                 )
+                                #             )
+                                #         ]
+                                #     ),
+                                #     slots={
+                                #         "default": SpanComponent(ValueProp("添加")),
+                                #         "icon": NormalComponent(Type="Add"),
+                                #     },
+                                # ),
                             ]
                         },
                     ),
                     NFlex(
-                        vertical=True,
+                        vertical=False,
+                        justify="flex-start",
+                        style={"align-content": "center", "align-items": "center"},
                         size="small",
                         slots={
                             "default": ForLoopComponent(
@@ -314,7 +330,7 @@ class UI_LLM_PROMPTS(NFlex):
                                         "ById",
                                         VBindProp(
                                             [
-                                                CONTEXT_FUNCTION,
+                                                COMPONENT_CONTEXT,
                                                 PAYLOADS_ID,
                                             ]
                                         ),
@@ -333,3 +349,10 @@ class UI_LLM_PROMPTS(NFlex):
 
 
 EXPORT_UI = UI_LLM_PROMPTS
+"""
+两种
+1. 上传，传给image_url就是b64str
+2. 引用，传给image_url就是RefVarItem
+    引用的如果是Image就转成b64
+    如果是str就直接用
+"""
