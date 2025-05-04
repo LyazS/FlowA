@@ -110,6 +110,7 @@ const {
   addHandleData,
   removeHandleData,
   openCodeEditor,
+  deleteImage,
   getValueFromROP,
   getValueFromROPAsync,
 } = useDynamicComp()
@@ -312,6 +313,14 @@ const processedProps = computed(() => {
           } else if (prop_Function.Func == FunctionPropType.UPDATENODEINTERNAL) {
             functions.push(async (__, _) => {
               if (selectedNodeId.value) updateNodeInternals([selectedNodeId.value])
+            })
+          } else if (prop_Function.Func == FunctionPropType.DELETEIMAGE) {
+            const { Filename } = prop_Function.Arg
+            functions.push(async (getFunc, _) => {
+              const filename = await getFunc(Filename)
+              if (filename) {
+                await deleteImage(filename)
+              }
             })
           }
         }

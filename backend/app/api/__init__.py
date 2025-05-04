@@ -3,10 +3,11 @@
 
 from fastapi import APIRouter
 
-from app.api import flow_mgr, node_mgr, run_flow, frontend
+from app.api import file_mgr, flow_mgr, node_mgr, run_flow, frontend
 
 api_router = APIRouter()
 api_router.include_router(run_flow.router, prefix="/api", tags=["api"])
 api_router.include_router(node_mgr.router, prefix="/node", tags=["node"])
 api_router.include_router(flow_mgr.router, prefix="/workflow", tags=["workflow"])
+api_router.include_router(file_mgr.router, prefix="/file", tags=["file"])
 api_router.include_router(frontend.router, tags=["frontend"])

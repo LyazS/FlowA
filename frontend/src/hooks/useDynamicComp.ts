@@ -53,11 +53,6 @@ import {
   VOpFuncPropSchema,
   VRetFuncPropSchema,
 } from '@/schemas/plugin_schemas'
-import {
-  DYNAMIC_COMPONENTS_MAP,
-  DYNAMIC_FA_COMPONENTS_MAP,
-  DYNAMIC_ICONS_MAP,
-} from '@/schemas/dynamic_components_map'
 import { VFNode, InsertPos } from '@/components/nodes/VFNodeClass'
 import {
   selectedNodeId,
@@ -74,8 +69,66 @@ import {
   VFNodeConnectionType,
   type VFNodeContentData,
 } from '@/components/nodes/VFNodeInterface'
-import { cloneDeep } from 'lodash'
-import { getUuid, handleSelectImage } from '@/utils/tools'
+import { getUuid } from '@/utils/tools'
+import { WorkflowID } from '@/hooks/useVFlowAttribute'
+
+// 处理图片上传
+const handleSelectImage = async () => {
+  try {
+    // 获取当前工作流ID
+    const workflowId = WorkflowID.value
+    if (!workflowId) {
+      throw new Error('未找到当前工作流ID')
+    }
+
+    // 通过 Promise 封装文件选择逻辑
+    const file = await new Promise<File>((resolve, reject) => {
+      // 创建隐藏的 input 元素
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*' // 限制只允许选择图片
+
+      // 处理文件选择
+      input.onchange = (e: Event) => {
+        const file = (e.target as HTMLInputElement)?.files?.[0]
+        file ? resolve(file) : reject(new Error('未选择文件'))
+      }
+
+      // 处理取消选择
+      input.oncancel = () => reject(new Error('取消选择'))
+      document.body.appendChild(input)
+      input.click()
+      setTimeout(() => input.remove(), 1000) // 清理 DOM
+    })
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      throw new Error('非图片文件')
+    }
+
+    // 创建FormData对象
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 上传到后端API，带上工作流ID
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/file/upload?wid=${workflowId}`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`上传失败: ${errorText}`)
+    }
+
+    // 获取返回的图片URL
+    const result = await response.json()
+    // return `${import.meta.env.VITE_API_URL}${result.url}`
+    return result.url
+  } catch (error: any) {
+    throw new Error(`图片上传失败: ${error.message}`)
+  }
+}
 
 interface DynamicCompInstance {
   resolveVBindDataPath: (
@@ -174,6 +227,7 @@ interface DynamicCompInstance {
     prop: ReadOnlyPropVar,
     tmpFunction?: Record<string, (args: (string | number)[]) => any>,
   ) => Promise<any>
+  deleteImage: (filename: string) => void
 }
 let instance: DynamicCompInstance | null = null
 export const useDynamicComp = () => {
@@ -506,6 +560,12 @@ export const useDynamicComp = () => {
     }
   }
 
+  // 删除图片
+  const deleteImage = async (filename: string) => {
+    const url = `${import.meta.env.VITE_API_URL}/file/delete/${filename}`
+    await fetch(url, { method: 'DELETE' })
+  }
+
   // 获取ReadOnlyPropVar的值
   const getValueFromROP = (
     dataContext: Record<string, any>,
@@ -534,6 +594,10 @@ export const useDynamicComp = () => {
             return FString.replace(/\{\{(\w+)\}\}/g, (match, key) => {
               return args[key] || ''
             })
+          }
+        } else if (prop_Function.Func === FunctionPropType.BACKENDURL) {
+          func = () => {
+            return import.meta.env.VITE_API_URL
           }
         }
         if (func) {
@@ -585,6 +649,7 @@ export const useDynamicComp = () => {
     addHandleData,
     removeHandleData,
     openCodeEditor,
+    deleteImage,
     getValueFromROP,
     getValueFromROPAsync,
   }

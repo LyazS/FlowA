@@ -55,10 +55,12 @@ export enum FunctionPropType {
   REMOVEHANDLEDATA = '@REMOVEHANDLEDATA@',
   UPDATENODEINTERNAL = '@UPDATENODEINTERNAL@',
   OPENEDITOR = '@OPENEDITOR@',
+  DELETEIMAGE = '@DELETEIMAGE@',
   // Return =======================
   UPLOADIMAGE = '@UPLOADIMAGE@',
   GENERATEUUID = '@GENERATEUUID@',
   FORMATSTRING = '@FORMATSTRING@',
+  BACKENDURL = '@BACKENDURL@',
 }
 export enum PropVarType {
   Value = '@VALUE@',
@@ -181,6 +183,10 @@ export interface FuncArg_FORMATSTRING {
   Args: Record<string, ReadOnlyPropVar>
 }
 
+export interface FuncArg_DELETEIMAGE {
+  Filename: ReadOnlyPropVar
+}
+
 // 函数属性基类
 export interface _FuncPropBase {
   Func: FunctionPropType
@@ -280,6 +286,14 @@ export interface FORMATSTRING_FuncProp extends _FuncPropBase {
   Func: FunctionPropType.FORMATSTRING
   Arg: FuncArg_FORMATSTRING
 }
+export interface DELETEIMAGE_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.DELETEIMAGE
+  Arg: FuncArg_DELETEIMAGE
+}
+export interface BACKENDURL_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.BACKENDURL
+  Arg: null
+}
 // 单个函数属性联合类型
 export type Operate_FuncProps =
   | SETCONTEXT_FuncProp
@@ -298,7 +312,8 @@ export type Operate_FuncProps =
   | REMOVEHANDLEDATA_FuncProp
   | UPDATENODEINTERNAL_FuncProp
   | OPENEDITOR_FuncProp
-export type Return_FuncProps = GENERATEUUID_FuncProp | FORMATSTRING_FuncProp
+  | DELETEIMAGE_FuncProp
+export type Return_FuncProps = GENERATEUUID_FuncProp | FORMATSTRING_FuncProp | BACKENDURL_FuncProp
 export type AsyncReturn_FuncProps = UPLOADIMAGE_FuncProp
 // 函数属性接口
 export interface OperateFunctionProp extends PropVarBase {

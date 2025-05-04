@@ -5,3 +5,4 @@ workflows
 .venv
 .VSCodeCounter
 .vscode
+data

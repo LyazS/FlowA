@@ -424,24 +424,40 @@ class UI_Prompt_Image_Upload(NFlex):
                             "height": "100px",
                             "width": "100px",
                             "object-fit": "cover",
-                            "src": VBindProp(
-                                [
-                                    THIS_NODE_DATA,
-                                    "Payloads",
-                                    "ById",
-                                    VBindProp(
-                                        [
-                                            COMPONENT_CONTEXT,
-                                            PAYLOADS_ID,
-                                        ]
-                                    ),
-                                    "Data",
-                                    VBindProp([VFOR_DATA, "@PromptIndex"]),
-                                    "content",
-                                    VBindProp([VFOR_DATA, "@PromptItemIndex"]),
-                                    "image_url",
-                                    "url",
-                                ]
+                            "src": ReturnFunctionProp(
+                                FORMATSTRING_FuncProp(
+                                    Arg=FuncArg_FORMATSTRING(
+                                        FString="{{backendurl}}/file/get/{{imgurl}}",
+                                        Args={
+                                            "backendurl": ReturnFunctionProp(
+                                                BACKENDURL_FuncProp()
+                                            ),
+                                            "imgurl": VBindProp(
+                                                [
+                                                    THIS_NODE_DATA,
+                                                    "Payloads",
+                                                    "ById",
+                                                    VBindProp(
+                                                        [
+                                                            COMPONENT_CONTEXT,
+                                                            PAYLOADS_ID,
+                                                        ]
+                                                    ),
+                                                    "Data",
+                                                    VBindProp(
+                                                        [VFOR_DATA, "@PromptIndex"]
+                                                    ),
+                                                    "content",
+                                                    VBindProp(
+                                                        [VFOR_DATA, "@PromptItemIndex"]
+                                                    ),
+                                                    "image_url",
+                                                    "url",
+                                                ]
+                                            ),
+                                        },
+                                    )
+                                )
                             ),
                         },
                     ),
@@ -498,6 +514,39 @@ class UI_Prompt_Image_Upload(NFlex):
                                     size="tiny",
                                     onClick=OperateFunctionProp(
                                         [
+                                            DELETEIMAGE_FuncProp(
+                                                Arg=FuncArg_DELETEIMAGE(
+                                                    Filename=VBindProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    COMPONENT_CONTEXT,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                            VBindProp(
+                                                                [
+                                                                    VFOR_DATA,
+                                                                    "@PromptIndex",
+                                                                ]
+                                                            ),
+                                                            "content",
+                                                            VBindProp(
+                                                                [
+                                                                    VFOR_DATA,
+                                                                    "@PromptItemIndex",
+                                                                ]
+                                                            ),
+                                                            "image_url",
+                                                            "url",
+                                                        ]
+                                                    ),
+                                                )
+                                            ),
                                             REMOVEITEM_FuncProp(
                                                 Arg=FuncArg_REMOVEITEM(
                                                     DstPath=VBindProp(
@@ -525,7 +574,7 @@ class UI_Prompt_Image_Upload(NFlex):
                                                         [VFOR_DATA, "@PromptItemIndex"]
                                                     ),
                                                 )
-                                            )
+                                            ),
                                         ]
                                     ),
                                     slots={"default": SpanComponent(ValueProp("删除"))},

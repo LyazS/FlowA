@@ -108,10 +108,12 @@ class FunctionPropType(StrEnum):
     REMOVEHANDLEDATA = "@REMOVEHANDLEDATA@"
     UPDATENODEINTERNAL = "@UPDATENODEINTERNAL@"
     OPENEDITOR = "@OPENEDITOR@"
+    DELETEIMAGE = "@DELETEIMAGE@"
     # Return =======================
     UPLOADIMAGE = "@UPLOADIMAGE@"
     GENERATEUUID = "@GENERATEUUID@"
     FORMATSTRING = "@FORMATSTRING@"
+    BACKENDURL = "@BACKENDURL@"
     pass
 
 
@@ -220,6 +222,11 @@ class FuncArg_FORMATSTRING(BaseModel):
     pass
 
 
+class FuncArg_DELETEIMAGE(BaseModel):
+    Filename: "ReadOnlyPropVar" = Field(..., description="文件名")
+    pass
+
+
 # ================= 强化函数属性 =================
 
 
@@ -319,9 +326,19 @@ class GENERATEUUID_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.GENERATEUUID] = FunctionPropType.GENERATEUUID
     Arg: Any = None
 
+
 class FORMATSTRING_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.FORMATSTRING] = FunctionPropType.FORMATSTRING
     Arg: FuncArg_FORMATSTRING
+
+
+class DELETEIMAGE_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.DELETEIMAGE] = FunctionPropType.DELETEIMAGE
+    Arg: FuncArg_DELETEIMAGE
+
+class BACKENDURL_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.BACKENDURL] = FunctionPropType.BACKENDURL
+    Arg: Any = None
 
 Operate_FuncProps = Union[
     SETCONTEXT_FuncProp,
@@ -340,14 +357,14 @@ Operate_FuncProps = Union[
     REMOVEHANDLEDATA_FuncProp,
     UPDATENODEINTERNAL_FuncProp,
     OPENEDITOR_FuncProp,
+    DELETEIMAGE_FuncProp,
 ]
 Return_FuncProps = Union[
     GENERATEUUID_FuncProp,
     FORMATSTRING_FuncProp,
+    BACKENDURL_FuncProp,
 ]
-AsyncReturn_FuncProps = Union[
-    UPLOADIMAGE_FuncProp,
-]
+AsyncReturn_FuncProps = Union[UPLOADIMAGE_FuncProp,]
 
 
 class OperateFunctionProp(PropVarBase):
@@ -369,6 +386,7 @@ class ReturnFunctionProp(PropVarBase):
             kwargs["FA_Func__"] = func
         super().__init__(**kwargs)
 
+
 class AsyncReturnFunctionProp(PropVarBase):
     FA_Type__: Literal[PropVarType.AReturnFunc] = PropVarType.AReturnFunc
     FA_Func__: AsyncReturn_FuncProps
@@ -377,6 +395,7 @@ class AsyncReturnFunctionProp(PropVarBase):
         if not "FA_Func__" in kwargs:
             kwargs["FA_Func__"] = func
         super().__init__(**kwargs)
+
 
 # ================= 最终联合类型 =================
 PropVar = Union[

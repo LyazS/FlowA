@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.db.session import init_db, close_db_connection
 from app.nodes.NodeRegister import register_plugins
 from app.api.frontend import mount_static_files
+from app.api.file_mgr import init_file_mgr
 
 if settings.DEBUG:
     tracemalloc.start()
@@ -16,6 +17,7 @@ if settings.DEBUG:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_file_mgr()
     init_logging(settings.LOG_FILE_PATH)
     await init_db()
     # 要先初始化数据库再初始化插件

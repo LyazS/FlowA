@@ -1,31 +1,11 @@
-from typing import List, Dict, Optional
-from typing import Annotated
-from fastapi import Body, FastAPI
-import asyncio
-import uuid
+from typing import List
+import os
 import traceback
-import json
-import aiofiles
-from aiofiles import os as aiofiles_os
 from fastapi import APIRouter
 from loguru import logger
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from fastapi.background import BackgroundTasks
-from sse_starlette.sse import EventSourceResponse
-from app.core.config import settings
-from app.services.FARunner import FARunner
-from app.services.FAValidator import FAValidator
-from app.services.messageMgr import ALL_MESSAGES_MGR
-from app.services.taskMgr import ALL_TASKS_MGR
 from app.schemas.farequest import (
-    ValidationError,
-    FANodeUpdateType,
-    FANodeUpdateData,
-    SSEResponse,
-    SSEResponseData,
-    SSEResponseType,
-    FAWorkflow,
     FAWorkflowLocation,
     FAWorkflowUpdateRequset,
     FAWorkflowReadRequest,
@@ -34,20 +14,18 @@ from app.schemas.farequest import (
     FAWorkflowOperationType,
     FAWorkflowInfo,
     FAReleaseWorkflowInfo,
-    FAWorkflowNodeRequest,
     FAWorkflowCreateType,
     FAWorkflowDeleteRequest,
     FAClearCacheRequest,
 )
-from app.services.FARunner import FARunner
 from app.db.session import get_db_ctxmgr
 from app.models.fastore import (
     FAWorkflowModel,
     FAReleasedWorkflowModel,
-    FANodeCacheModel,
 )
-from sqlalchemy import select, update, exc, exists, delete
+from sqlalchemy import select, update, exists
 from app.utils.tools import getUuid
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -298,6 +276,25 @@ async def delete_workflow(delete_request: FAWorkflowDeleteRequest):
                 stmt = select(FAWorkflowModel).where(
                     FAWorkflowModel.wid == delete_request.wid
                 )
+
+                # 删除工作流时，同时删除相关的图片文件
+                workflow_images_dir = os.path.join(
+                    settings.DATA_PATH,
+                    "workflows",
+                    delete_request.wid,
+                )
+                if os.path.exists(workflow_images_dir):
+                    try:
+                        import shutil
+
+                        shutil.rmtree(workflow_images_dir)
+                        logger.info(
+                            f"Deleted workflow images directory: {workflow_images_dir}"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to delete workflow images directory: {str(e)}"
+                        )
             else:
                 stmt = select(FAReleasedWorkflowModel).where(
                     FAReleasedWorkflowModel.wid == delete_request.wid,
