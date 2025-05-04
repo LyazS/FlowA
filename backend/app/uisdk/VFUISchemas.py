@@ -15,41 +15,43 @@ class PropVarType(StrEnum):
     Value = "@VALUE@"
     VBind = "@VBIND@"
     VModel = "@VMODEL@"
-    Function = "@FUNCTION@"
+    OperateFunc = "@OPERATEFUNC@"
+    ReturnFunc = "@RETURNFUNC@"
+    AReturnFunc = "@ARETURNFUNC@"
 
 
 class PropVarBase(BaseModel):
-    Type: PropVarType
+    FA_Type__: PropVarType
 
 
 # ================= 基础属性类型 =================
 class ValueProp(PropVarBase):
-    Type: Literal[PropVarType.Value] = PropVarType.Value
-    Data: Any = Field(..., description="静态值")
+    FA_Type__: Literal[PropVarType.Value] = PropVarType.Value
+    FA_Data__: Any = Field(..., description="静态值")
 
-    def __init__(self, data=None, **kwargs):
-        if not "Data" in kwargs:
-            kwargs["Data"] = data
+    def __init__(self, data: Any, **kwargs):
+        if not "FA_Data__" in kwargs:
+            kwargs["FA_Data__"] = data
         super().__init__(**kwargs)
 
 
 class VBindProp(PropVarBase):
-    Type: Literal[PropVarType.VBind] = PropVarType.VBind
-    Data: List[Union[str, int, ValueProp, "VBindProp"]] = Field(
+    FA_Type__: Literal[PropVarType.VBind] = PropVarType.VBind
+    FA_Data__: List[Union[str, int, ValueProp, "VBindProp"]] = Field(
         ..., description="数据路径数组", min_length=1
     )
-    Replace: Optional[str] = Field(None, description="替换模板")
+    FA_Replace__: Optional[str] = Field(None, description="替换模板")
 
-    def __init__(self, data=None, replace=None, **kwargs):
+    def __init__(self, data: list, replace: Optional[str] = None, **kwargs):
         """
         初始化 VBindProp 对象
         如果传入的第一个参数是列表，则将其作为 Data 字段的值
         否则使用标准的关键字参数初始化
         """
-        if data is not None and isinstance(data, list) and not "Data" in kwargs:
-            kwargs["Data"] = data
+        if isinstance(data, list) and not "FA_Data__" in kwargs:
+            kwargs["FA_Data__"] = data
         if replace is not None:
-            kwargs["Replace"] = replace
+            kwargs["FA_Replace__"] = replace
         super().__init__(**kwargs)
 
     @model_validator(mode="after")
@@ -58,30 +60,30 @@ class VBindProp(PropVarBase):
         递归将Data中的str, int转换为ValueProp
         需要递归解包VBindProp的内容
         """
-        for i, item in enumerate(self.Data):
+        for i, item in enumerate(self.FA_Data__):
             if isinstance(item, (str, int)):
-                self.Data[i] = ValueProp(Data=item)
+                self.FA_Data__[i] = ValueProp(item)
             elif isinstance(item, VBindProp):
                 item.check_data_type()
         return self
 
 
 class VModelProp(PropVarBase):
-    Type: Literal[PropVarType.VModel] = PropVarType.VModel
-    Data: List[Union[str, int, ValueProp, VBindProp]] = Field(
+    FA_Type__: Literal[PropVarType.VModel] = PropVarType.VModel
+    FA_Data__: List[Union[str, int, ValueProp, VBindProp]] = Field(
         ..., description="双向绑定路径数组", min_length=1
     )
 
-    def __init__(self, data=None, **kwargs):
-        if data is not None and isinstance(data, list) and not "Data" in kwargs:
-            kwargs["Data"] = data
+    def __init__(self, data: list, **kwargs):
+        if isinstance(data, list) and not "FA_Data__" in kwargs:
+            kwargs["FA_Data__"] = data
         super().__init__(**kwargs)
 
     @model_validator(mode="after")
     def check_data_type(self):
-        for i, item in enumerate(self.Data):
+        for i, item in enumerate(self.FA_Data__):
             if isinstance(item, (str, int)):
-                self.Data[i] = ValueProp(Data=item)
+                self.FA_Data__[i] = ValueProp(item)
             elif isinstance(item, VBindProp):
                 item.check_data_type()
         return self
@@ -89,6 +91,7 @@ class VModelProp(PropVarBase):
 
 # ================= 函数类型增强 =================
 class FunctionPropType(StrEnum):
+    # Operate =======================
     SETCONTEXT = "@SETCONTEXT@"
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
@@ -105,6 +108,10 @@ class FunctionPropType(StrEnum):
     REMOVEHANDLEDATA = "@REMOVEHANDLEDATA@"
     UPDATENODEINTERNAL = "@UPDATENODEINTERNAL@"
     OPENEDITOR = "@OPENEDITOR@"
+    # Return =======================
+    UPLOADIMAGE = "@UPLOADIMAGE@"
+    GENERATEUUID = "@GENERATEUUID@"
+    FORMATSTRING = "@FORMATSTRING@"
     pass
 
 
@@ -130,6 +137,7 @@ class FuncArg_REMOVEITEM(BaseModel):
 class FuncArg_APPENDITEM(BaseModel):
     DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemValue: Any = Field(..., description="item的value数据")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
     pass
 
 
@@ -203,6 +211,12 @@ class FuncArg_REMOVEHANDLEDATA(BaseModel):
     HandleType: VFNodeConnectionType = Field(..., description="句柄类型")
     HandleId: Optional["ReadOnlyPropVar"] = Field(..., description="句柄id")
     DataId: Optional["ReadOnlyPropVar"] = Field(..., description="连接数据id")
+    pass
+
+
+class FuncArg_FORMATSTRING(BaseModel):
+    FString: str = Field(..., description="格式化字符串")
+    Args: Dict[str, "ReadOnlyPropVar"] = Field(..., description="格式化参数")
     pass
 
 
@@ -296,7 +310,20 @@ class OPENEDITOR_FuncProp(_FuncPropBase):
     Arg: FuncArg_OPENEDITOR
 
 
-SingleFunctionProp = Union[
+class UPLOADIMAGE_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.UPLOADIMAGE] = FunctionPropType.UPLOADIMAGE
+    Arg: Any = None
+
+
+class GENERATEUUID_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.GENERATEUUID] = FunctionPropType.GENERATEUUID
+    Arg: Any = None
+
+class FORMATSTRING_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.FORMATSTRING] = FunctionPropType.FORMATSTRING
+    Arg: FuncArg_FORMATSTRING
+
+Operate_FuncProps = Union[
     SETCONTEXT_FuncProp,
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
@@ -314,16 +341,58 @@ SingleFunctionProp = Union[
     UPDATENODEINTERNAL_FuncProp,
     OPENEDITOR_FuncProp,
 ]
+Return_FuncProps = Union[
+    GENERATEUUID_FuncProp,
+    FORMATSTRING_FuncProp,
+]
+AsyncReturn_FuncProps = Union[
+    UPLOADIMAGE_FuncProp,
+]
 
 
-class FunctionProp(PropVarBase):
-    Type: Literal[PropVarType.Function] = PropVarType.Function
-    Funcs: List[SingleFunctionProp]
+class OperateFunctionProp(PropVarBase):
+    FA_Type__: Literal[PropVarType.OperateFunc] = PropVarType.OperateFunc
+    FA_Funcs__: List[Operate_FuncProps]
 
+    def __init__(self, funcs: List[Operate_FuncProps], **kwargs):
+        if not "FA_Funcs__" in kwargs:
+            kwargs["FA_Funcs__"] = funcs
+        super().__init__(**kwargs)
+
+
+class ReturnFunctionProp(PropVarBase):
+    FA_Type__: Literal[PropVarType.ReturnFunc] = PropVarType.ReturnFunc
+    FA_Func__: Return_FuncProps
+
+    def __init__(self, func: Return_FuncProps, **kwargs):
+        if not "FA_Func__" in kwargs:
+            kwargs["FA_Func__"] = func
+        super().__init__(**kwargs)
+
+class AsyncReturnFunctionProp(PropVarBase):
+    FA_Type__: Literal[PropVarType.AReturnFunc] = PropVarType.AReturnFunc
+    FA_Func__: AsyncReturn_FuncProps
+
+    def __init__(self, func: AsyncReturn_FuncProps, **kwargs):
+        if not "FA_Func__" in kwargs:
+            kwargs["FA_Func__"] = func
+        super().__init__(**kwargs)
 
 # ================= 最终联合类型 =================
-PropVar = Union[ValueProp, VBindProp, VModelProp, FunctionProp]
-ReadOnlyPropVar = Union[ValueProp, VBindProp]
+PropVar = Union[
+    ValueProp,
+    VBindProp,
+    VModelProp,
+    OperateFunctionProp,
+    ReturnFunctionProp,
+    AsyncReturnFunctionProp,
+]
+ReadOnlyPropVar = Union[
+    ValueProp,
+    VBindProp,
+    ReturnFunctionProp,
+    AsyncReturnFunctionProp,
+]
 
 
 # ================= 条件系统 =================
@@ -448,7 +517,8 @@ for cls in [
     ValueProp,
     VBindProp,
     VModelProp,
-    FunctionProp,
+    OperateFunctionProp,
+    ReturnFunctionProp,
 ]:
     cls.model_rebuild()
 

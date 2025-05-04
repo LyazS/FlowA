@@ -35,7 +35,7 @@ class UI_Http_ReturnFormat(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -73,7 +73,7 @@ class UI_Http_ReturnFormat(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),

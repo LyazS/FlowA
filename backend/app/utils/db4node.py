@@ -5,6 +5,7 @@ from app.models.fastore import FANodeConfigStoreModel
 
 
 async def loadNodeConfig(node_name: str):
+    return False, None
     async with get_db_ctxmgr() as db:
         stmt = select(exists().where(FANodeConfigStoreModel.NodeName == node_name))
         db_result = await db.execute(stmt)

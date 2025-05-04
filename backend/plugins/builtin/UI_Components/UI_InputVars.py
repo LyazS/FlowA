@@ -54,7 +54,7 @@ class VarNameInput(NInput):
                     "ById",
                     VBindProp(
                         [
-                            CONTEXT_FUNCTION,
+                            COMPONENT_CONTEXT,
                             PAYLOADS_ID,
                         ]
                     ),
@@ -88,7 +88,7 @@ class VarTypeSelect(NormalComponent):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -113,7 +113,7 @@ class VarStringInput(NInput):
                     "ById",
                     VBindProp(
                         [
-                            CONTEXT_FUNCTION,
+                            COMPONENT_CONTEXT,
                             PAYLOADS_ID,
                         ]
                     ),
@@ -130,7 +130,7 @@ class VarStringInput(NInput):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -159,7 +159,7 @@ class VarIntegerInput(NormalComponent):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -178,7 +178,7 @@ class VarIntegerInput(NormalComponent):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -207,7 +207,7 @@ class VarNumberInput(NormalComponent):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -225,7 +225,7 @@ class VarNumberInput(NormalComponent):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -256,7 +256,7 @@ class VarBooleanInput(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -275,7 +275,7 @@ class VarBooleanInput(NFlex):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -331,7 +331,7 @@ class UI_SingleInputVars(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -348,7 +348,7 @@ class UI_SingleInputVars(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -383,8 +383,8 @@ class UI_InputVars(NFlex):
                                 NButton(
                                     type="success",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             APPENDITEM_FuncProp(
                                                 Arg=FuncArg_APPENDITEM(
                                                     DstPath=VBindProp(
@@ -394,7 +394,7 @@ class UI_InputVars(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -422,7 +422,7 @@ class UI_InputVars(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -445,8 +445,8 @@ class UI_InputVars(NFlex):
                                         size="small",
                                         circle=True,
                                         level="tertiary",
-                                        onClick=FunctionProp(
-                                            Funcs=[
+                                        onClick=OperateFunctionProp(
+                                            [
                                                 REMOVEITEM_FuncProp(
                                                     Arg=FuncArg_REMOVEITEM(
                                                         DstPath=VBindProp(
@@ -456,7 +456,7 @@ class UI_InputVars(NFlex):
                                                                 "ById",
                                                                 VBindProp(
                                                                     [
-                                                                        CONTEXT_FUNCTION,
+                                                                        COMPONENT_CONTEXT,
                                                                         PAYLOADS_ID,
                                                                     ]
                                                                 ),

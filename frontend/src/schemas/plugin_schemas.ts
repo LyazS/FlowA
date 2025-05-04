@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import {
   type CodeEditorLanguage,
   type VFNodeHandleData,
@@ -9,13 +10,13 @@ import { InsertPos } from '@/components/nodes/VFNodeClass'
 // 特殊定义 =====================================================================
 // 路径定义
 export const THIS_NODE_DATA = '@THIS_NODE_DATA@' as const
-export const CONTEXT_FUNCTION = '@CONTEXT_FUNCTION@' as const
+export const COMPONENT_CONTEXT = '@COMPONENT_CONTEXT@' as const
 export const VFOR_DATA = '@VFOR_DATA@' as const
 export const NODE_CONFIG_DATA = '@NODE_CONFIG_DATA@' as const
 export const PAYLOADS_ID = '@PAYLOADS_ID@' as const
-export const CONTEXT_ARG = '@CONTEXT_ARG@' as const
+export const ARG_CONTEXT = '@ARG_CONTEXT@' as const
 // 专供FUNCTION_CONTEXT
-export const GENERATE_UUID = '@GENERATE_UUID@' as const
+// export const GENERATE_UUID = '@GENERATE_UUID@' as const
 // 连接项定义，路径为[CONNECT_*, <Handle Type>, <Handle Id>], 如果没有<Handle Id>则默认获取所有<Handle Id>
 export const CONNECT_DATA = '@CONNECT_DATA@' as const
 export const CONNECT_DATA_TO_SELECT = '@CONNECT_DATA_TO_SELECT@' as const
@@ -37,6 +38,7 @@ export const TYPE_CONDITION_DIRECT = '@CONDITION_DIRECT@' as const
 export const TYPE_CONDITION_VBIND = '@CONDITION_VBIND@' as const
 export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
 export enum FunctionPropType {
+  // Operate =======================
   SETCONTEXT = '@SETCONTEXT@',
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
@@ -53,34 +55,40 @@ export enum FunctionPropType {
   REMOVEHANDLEDATA = '@REMOVEHANDLEDATA@',
   UPDATENODEINTERNAL = '@UPDATENODEINTERNAL@',
   OPENEDITOR = '@OPENEDITOR@',
+  // Return =======================
+  UPLOADIMAGE = '@UPLOADIMAGE@',
+  GENERATEUUID = '@GENERATEUUID@',
+  FORMATSTRING = '@FORMATSTRING@',
 }
 export enum PropVarType {
   Value = '@VALUE@',
   VBind = '@VBIND@',
   VModel = '@VMODEL@',
-  Function = '@FUNCTION@',
+  OperateFunc = '@OPERATEFUNC@',
+  ReturnFunc = '@RETURNFUNC@',
+  AReturnFunc = '@ARETURNFUNC@',
 }
 
 // =============================================================================
 // 接口定义
 export interface PropVarBase {
-  Type: PropVarType
+  FA_Type__: PropVarType
 }
 
 export interface ValueProp<T = any> extends PropVarBase {
-  Type: PropVarType.Value
-  Data: T
+  FA_Type__: PropVarType.Value
+  FA_Data__: T
 }
 
 export interface VBindProp extends PropVarBase {
-  Type: PropVarType.VBind
-  Data: (ValueProp | VBindProp)[]
-  Replace?: string
+  FA_Type__: PropVarType.VBind
+  FA_Data__: (ValueProp | VBindProp)[]
+  FA_Replace__?: string
 }
 
 export interface VModelProp extends PropVarBase {
-  Type: PropVarType.VModel
-  Data: (ValueProp | VBindProp)[]
+  FA_Type__: PropVarType.VModel
+  FA_Data__: (ValueProp | VBindProp)[]
 }
 
 // 函数参数接口定义
@@ -103,6 +111,7 @@ export interface FuncArg_REMOVEITEM {
 export interface FuncArg_APPENDITEM {
   DstPath: VBindProp
   ItemValue: any
+  Position: InsertPos
 }
 
 export interface FuncArg_ADDPAYLOAD {
@@ -165,6 +174,11 @@ export interface FuncArg_REMOVEHANDLEDATA {
 export interface FuncArg_OPENEDITOR {
   Language: CodeEditorLanguage
   DstPath: VBindProp
+}
+
+export interface FuncArg_FORMATSTRING {
+  FString: string
+  Args: Record<string, ReadOnlyPropVar>
 }
 
 // 函数属性基类
@@ -253,8 +267,21 @@ export interface OPENEDITOR_FuncProp extends _FuncPropBase {
   Arg: FuncArg_OPENEDITOR
 }
 
+export interface UPLOADIMAGE_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.UPLOADIMAGE
+  Arg: null
+}
+
+export interface GENERATEUUID_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.GENERATEUUID
+  Arg: null
+}
+export interface FORMATSTRING_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.FORMATSTRING
+  Arg: FuncArg_FORMATSTRING
+}
 // 单个函数属性联合类型
-export type SingleFunctionProp =
+export type Operate_FuncProps =
   | SETCONTEXT_FuncProp
   | ADDITEM_FuncProp
   | REMOVEITEM_FuncProp
@@ -271,16 +298,70 @@ export type SingleFunctionProp =
   | REMOVEHANDLEDATA_FuncProp
   | UPDATENODEINTERNAL_FuncProp
   | OPENEDITOR_FuncProp
-
+export type Return_FuncProps = GENERATEUUID_FuncProp | FORMATSTRING_FuncProp
+export type AsyncReturn_FuncProps = UPLOADIMAGE_FuncProp
 // 函数属性接口
-export interface FunctionProp extends PropVarBase {
-  Type: PropVarType.Function
-  Funcs: SingleFunctionProp[]
+export interface OperateFunctionProp extends PropVarBase {
+  FA_Type__: PropVarType.OperateFunc
+  FA_Funcs__: Operate_FuncProps[]
+}
+export interface ReturnFunctionProp extends PropVarBase {
+  FA_Type__: PropVarType.ReturnFunc
+  FA_Func__: Return_FuncProps
+}
+export interface AsyncReturnFunctionProp extends PropVarBase {
+  FA_Type__: PropVarType.AReturnFunc
+  FA_Func__: AsyncReturn_FuncProps
 }
 
-export type PropVar = ValueProp | VBindProp | VModelProp | FunctionProp
-export type ReadOnlyPropVar = ValueProp | VBindProp
+export type PropVar =
+  | ValueProp
+  | VBindProp
+  | VModelProp
+  | OperateFunctionProp
+  | ReturnFunctionProp
+  | AsyncReturnFunctionProp
+export type ReadOnlyPropVar = ValueProp | VBindProp | ReturnFunctionProp | AsyncReturnFunctionProp
 export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
+
+// 使用 zod 进行类型验证
+export const ValuePropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.Value]),
+    FA_Data__: z.any(),
+  })
+  .strict()
+export const VBindPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.VBind]),
+    FA_Data__: z.array(z.any()),
+    FA_Replace__: z.string().nullable().optional(),
+  })
+  .strict()
+export const VModelPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.VModel]),
+    FA_Data__: z.array(z.any()),
+  })
+  .strict()
+export const VOpFuncPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.OperateFunc]),
+    FA_Funcs__: z.array(z.any()),
+  })
+  .strict()
+export const VRetFuncPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.ReturnFunc]),
+    FA_Func__: z.any(),
+  })
+  .strict()
+export const VARetFuncPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.AReturnFunc]),
+    FA_Func__: z.any(),
+  })
+  .strict()
 
 // 普通组件类型
 export interface NormalComponent {
@@ -290,7 +371,7 @@ export interface NormalComponent {
   IfCondition?: Condition
 }
 
-// 特殊绑定组件 (@Value@/@VBind@)
+// span绑定组件（@VSPAN@）
 export interface SpanComponent {
   Type: typeof TYPE_VSPAN
   Data: ReadOnlyPropVar

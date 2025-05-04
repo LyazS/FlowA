@@ -23,7 +23,7 @@ class UI_Iter_Run_Iter_Array(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -46,7 +46,7 @@ class UI_Iter_Run_Iter_Array(NFlex):
                                 CONNECT_DATA_TO_SELECT,
                                 "--level",
                                 CONNECT_VAR_LEVEL,
-                                "--filtertype",
+                                "--filtertypes",
                                 VarType.List,
                             ]
                         ),
@@ -57,7 +57,7 @@ class UI_Iter_Run_Iter_Array(NFlex):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),

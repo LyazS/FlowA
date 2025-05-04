@@ -271,7 +271,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -293,7 +293,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -309,7 +309,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -328,7 +328,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -348,7 +348,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -368,7 +368,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -388,7 +388,7 @@ class UI_LLM_ATTRIBUTE_TAG(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),

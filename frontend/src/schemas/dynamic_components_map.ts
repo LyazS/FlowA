@@ -174,3 +174,5 @@ export const DYNAMIC_ICONS_MAP: Record<string, Component> = {
   CreateOutline: CreateOutline,
   EllipsisVertical: EllipsisVertical,
 }
+
+export const EXTRA_DIV_COMPONENTS = ['NDropdown']

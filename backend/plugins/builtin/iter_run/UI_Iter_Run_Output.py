@@ -48,8 +48,8 @@ class UI_Iter_Run_Output(NFlex):
                                 NButton(
                                     type="info",
                                     text=True,
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             ADDRESULT2OUT_FuncProp(
                                                 Arg=FuncArg_ADDRESULT2OUT(
                                                     HandleId=ValueProp("output"),
@@ -142,8 +142,8 @@ class UI_Iter_Run_Output(NFlex):
                                         size="small",
                                         circle=True,
                                         level="tertiary",
-                                        onClick=FunctionProp(
-                                            Funcs=[
+                                        onClick=OperateFunctionProp(
+                                            [
                                                 REMOVERESULT4OUT_FuncProp(
                                                     Arg=FuncArg_REMOVERESULT4OUT(
                                                         ResultId=VBindProp(

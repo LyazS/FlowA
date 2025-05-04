@@ -29,7 +29,7 @@ class content1_body(NInput):
                     "ById",
                     VBindProp(
                         [
-                            CONTEXT_FUNCTION,
+                            COMPONENT_CONTEXT,
                             PAYLOADS_ID,
                         ]
                     ),
@@ -48,7 +48,7 @@ class content1_body(NInput):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -67,7 +67,7 @@ class content1_body(NInput):
                                 "ById",
                                 VBindProp(
                                     [
-                                        CONTEXT_FUNCTION,
+                                        COMPONENT_CONTEXT,
                                         PAYLOADS_ID,
                                     ]
                                 ),
@@ -94,7 +94,7 @@ class content2_body(NFlex):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -115,7 +115,7 @@ class content2_body(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -155,7 +155,7 @@ class content2_body(NFlex):
                                                         "ById",
                                                         VBindProp(
                                                             [
-                                                                CONTEXT_FUNCTION,
+                                                                COMPONENT_CONTEXT,
                                                                 PAYLOADS_ID,
                                                             ]
                                                         ),
@@ -180,7 +180,7 @@ class content2_body(NFlex):
                                                         "ById",
                                                         VBindProp(
                                                             [
-                                                                CONTEXT_FUNCTION,
+                                                                COMPONENT_CONTEXT,
                                                                 PAYLOADS_ID,
                                                             ]
                                                         ),
@@ -205,8 +205,8 @@ class content2_body(NFlex):
                                     size="small",
                                     circle=True,
                                     level="tertiary",
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             REMOVEITEM_FuncProp(
                                                 Arg=FuncArg_REMOVEITEM(
                                                     DstPath=VBindProp(
@@ -216,7 +216,7 @@ class content2_body(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -257,7 +257,7 @@ class content3_body(NFlex):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -278,7 +278,7 @@ class content3_body(NFlex):
                             "ById",
                             VBindProp(
                                 [
-                                    CONTEXT_FUNCTION,
+                                    COMPONENT_CONTEXT,
                                     PAYLOADS_ID,
                                 ]
                             ),
@@ -318,7 +318,7 @@ class content3_body(NFlex):
                                                         "ById",
                                                         VBindProp(
                                                             [
-                                                                CONTEXT_FUNCTION,
+                                                                COMPONENT_CONTEXT,
                                                                 PAYLOADS_ID,
                                                             ]
                                                         ),
@@ -357,7 +357,7 @@ class content3_body(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -383,7 +383,7 @@ class content3_body(NFlex):
                                                         "ById",
                                                         VBindProp(
                                                             [
-                                                                CONTEXT_FUNCTION,
+                                                                COMPONENT_CONTEXT,
                                                                 PAYLOADS_ID,
                                                             ]
                                                         ),
@@ -408,8 +408,8 @@ class content3_body(NFlex):
                                     size="small",
                                     circle=True,
                                     level="tertiary",
-                                    onClick=FunctionProp(
-                                        Funcs=[
+                                    onClick=OperateFunctionProp(
+                                        [
                                             REMOVEITEM_FuncProp(
                                                 Arg=FuncArg_REMOVEITEM(
                                                     DstPath=VBindProp(
@@ -419,7 +419,7 @@ class content3_body(NFlex):
                                                             "ById",
                                                             VBindProp(
                                                                 [
-                                                                    CONTEXT_FUNCTION,
+                                                                    COMPONENT_CONTEXT,
                                                                     PAYLOADS_ID,
                                                                 ]
                                                             ),
@@ -460,7 +460,7 @@ class http_content1_text_btn(NButton):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -473,8 +473,8 @@ class http_content1_text_btn(NButton):
             ),
             type="warning",
             text=True,
-            onClick=FunctionProp(
-                Funcs=[
+            onClick=OperateFunctionProp(
+                [
                     OPENEDITOR_FuncProp(
                         Arg=FuncArg_OPENEDITOR(
                             DstPath=VBindProp(
@@ -484,7 +484,7 @@ class http_content1_text_btn(NButton):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -515,7 +515,7 @@ class http_content1_json_btn(NButton):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -528,8 +528,8 @@ class http_content1_json_btn(NButton):
             ),
             type="warning",
             text=True,
-            onClick=FunctionProp(
-                Funcs=[
+            onClick=OperateFunctionProp(
+                [
                     OPENEDITOR_FuncProp(
                         Arg=FuncArg_OPENEDITOR(
                             DstPath=VBindProp(
@@ -539,7 +539,7 @@ class http_content1_json_btn(NButton):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -570,7 +570,7 @@ class http_content2_btn(NButton):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -583,8 +583,8 @@ class http_content2_btn(NButton):
             ),
             type="warning",
             text=True,
-            onClick=FunctionProp(
-                Funcs=[
+            onClick=OperateFunctionProp(
+                [
                     APPENDITEM_FuncProp(
                         Arg=FuncArg_APPENDITEM(
                             DstPath=VBindProp(
@@ -594,7 +594,7 @@ class http_content2_btn(NButton):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -625,7 +625,7 @@ class http_content3_btn(NButton):
                         "ById",
                         VBindProp(
                             [
-                                CONTEXT_FUNCTION,
+                                COMPONENT_CONTEXT,
                                 PAYLOADS_ID,
                             ]
                         ),
@@ -638,8 +638,8 @@ class http_content3_btn(NButton):
             ),
             type="warning",
             text=True,
-            onClick=FunctionProp(
-                Funcs=[
+            onClick=OperateFunctionProp(
+                [
                     APPENDITEM_FuncProp(
                         Arg=FuncArg_APPENDITEM(
                             DstPath=VBindProp(
@@ -649,7 +649,7 @@ class http_content3_btn(NButton):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -718,7 +718,7 @@ class http_type_btn(NFlex):
                                     "ById",
                                     VBindProp(
                                         [
-                                            CONTEXT_FUNCTION,
+                                            COMPONENT_CONTEXT,
                                             PAYLOADS_ID,
                                         ]
                                     ),
@@ -755,7 +755,7 @@ class UI_http_body(NFlex):
                                             "ById",
                                             VBindProp(
                                                 [
-                                                    CONTEXT_FUNCTION,
+                                                    COMPONENT_CONTEXT,
                                                     PAYLOADS_ID,
                                                 ]
                                             ),
