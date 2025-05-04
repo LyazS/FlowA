@@ -437,19 +437,13 @@ export interface LogicalCondition {
 }
 
 // 插件系统
-export interface VFPluginSetting {
-  Execute: string
-}
-
 export interface VFPlugin {
   Type: string
   Name: string
   Label: string
+  Path?: string
   Description: string
-  Execute: string
-  Setting: VFPluginSetting
   CreateInfo: any
-  NeedOptions: any
 }
 
 export interface VFUIPlugin {
@@ -465,7 +459,6 @@ export interface VFProvider {
   Description: string
   Author: string
   Icon?: string
-  ProviderSetting: VFPluginSetting
   Plugins: VFPlugin[]
   UIPlugins: VFUIPlugin[]
 }

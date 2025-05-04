@@ -7,15 +7,14 @@ import type {
   VFProvider,
   VFUIPlugin,
   VFPlugin,
-  VFPluginSetting,
 } from '@/schemas/plugin_schemas'
 import basenode from '@/components/nodes/all_nodes_vue/basenode.vue'
 import attached_node from '@/components/nodes/all_nodes_vue/attached_node.vue'
 
 interface VFlowInitInstance {
+  AllProviders: Ref<Record<string, VFProvider>>
   AllVFNodeTypes: Record<string, Component>
   AllNodeCreateFuncs: Ref<Record<string, () => VFNode>>
-  AllNodeNeedOptions: Ref<Record<string, any>>
   AllTestNodes: Ref<Record<string, VFNode>>
   AllUIComponents: Ref<Record<string, BaseComponent>>
   AllNodeConfig: Ref<Record<string, any>>
@@ -31,9 +30,9 @@ export const useVFlowInitial = (): VFlowInitInstance => {
 
   const logger = new Logger('Initial')
 
+  const AllProviders = ref<Record<string, VFProvider>>({})
   const AllVFNodeTypes = reactive<Record<string, Component>>({})
   const AllNodeCreateFuncs = ref<Record<string, () => VFNode>>({})
-  const AllNodeNeedOptions = ref<Record<string, any>>({})
   const AllTestNodes = ref<Record<string, VFNode>>({})
   const AllUIComponents = ref<Record<string, BaseComponent>>({})
   const AllNodeConfig = ref<Record<string, any>>({})
@@ -41,6 +40,7 @@ export const useVFlowInitial = (): VFlowInitInstance => {
   const importAllNodes = async () => {
     const response = await getData<Record<string, VFProvider>>('node/initinfo')
     logger.debug('getCreateInfo', response)
+    AllProviders.value = response
     for (const provider in response) {
       for (const plugin of response[provider].Plugins) {
         // 获取插件的创建信息
@@ -83,9 +83,9 @@ export const useVFlowInitial = (): VFlowInitInstance => {
   }
 
   instance = {
+    AllProviders,
     AllVFNodeTypes,
     AllNodeCreateFuncs,
-    AllNodeNeedOptions,
     AllTestNodes,
     AllUIComponents,
     AllNodeConfig,

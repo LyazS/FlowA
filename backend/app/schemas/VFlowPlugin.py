@@ -13,6 +13,7 @@ class VFPlugin(BaseModel):
     Type: str
     Name: str  # 独属名字
     Label: str  # 节点显示名字
+    Path: Optional[str] = None
     Description: str
     Execute: str
     Setting: Optional[VFPluginSetting]
@@ -36,6 +37,22 @@ class VFProvider(BaseModel):
     ProviderSetting: Optional[VFPluginSetting]
     Plugins: List[VFPlugin]
     UIPlugins: List[VFUIPlugin]
+
+    def model_dump(self, **kwargs) -> dict:
+        """自定义序列化方法，排除Plugins列表中每个元素的Execute字段"""
+        # 调用父类的model_dump方法获取完整的字典
+        result = super().model_dump(**kwargs)
+
+        # 处理Plugins列表，移除每个插件的Execute和Setting字段
+        if "Plugins" in result and result["Plugins"]:
+            for plugin in result["Plugins"]:
+                if "Execute" in plugin:
+                    del plugin["Execute"]
+                if "Setting" in plugin:
+                    del plugin["Setting"]
+        if 'ProviderSetting' in result:
+            del result['ProviderSetting']
+        return result
 
     @field_validator("Provider")
     @classmethod

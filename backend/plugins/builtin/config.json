@@ -1,7 +1,7 @@
 {
   "Provider": "FlowABuiltin",
   "Label": "内置节点",
-  "Version": "1.0.0",
+  "Version": "0.0.1",
   "Description": "This is a built-in provider for FlowA",
   "Author": "FlowA Team",
   "Icon": "flowa.png",
@@ -67,6 +67,7 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/IterRun",
       "Label": "迭代运行",
+      "Path": "流程控制/",
       "Description": "迭代运行，可以嵌套",
       "Execute": "iter_run/iter_run.py",
       "Setting": null
@@ -75,6 +76,7 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/IterRetry",
       "Label": "迭代重试",
+      "Path": "流程控制/",
       "Description": "迭代重试，可以嵌套",
       "Execute": "iter_retry/iter_retry.py",
       "Setting": null
@@ -83,6 +85,7 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/CondBranch",
       "Label": "条件分支",
+      "Path": "流程控制/",
       "Description": "条件分支",
       "Execute": "cond_branch/cond_branch.py",
       "Setting": null
@@ -91,6 +94,7 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltin/AggregateBranch",
       "Label": "分支聚合",
+      "Path": "流程控制/",
       "Description": "分支聚合",
       "Execute": "aggregate_branchs/aggregate_branchs.py",
       "Setting": null

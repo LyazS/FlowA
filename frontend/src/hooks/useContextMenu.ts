@@ -67,7 +67,7 @@ export const useContextMenu = (): ContextMenuInstance => {
   const logger = new Logger('ContextMenu')
 
   const { screenToFlowCoordinate, removeEdges } = useVueFlow()
-  const { AllTestNodes } = useVFlowInitial()
+  const { AllTestNodes, AllProviders } = useVFlowInitial()
   const {
     removeNodeFromVFlow,
     removeEdgeFromVFlow,
@@ -77,8 +77,6 @@ export const useContextMenu = (): ContextMenuInstance => {
   } = useVFlowManager()
   const { copyNode, pasteNode } = useCopyPasteNode()
 
-  const AddNodesInPane = ref<VFNode[]>([])
-  const AddNodesInNest = ref<VFNode[]>([])
   const showMenu = ref(false)
   const menuOptions = reactive<MenuOptions>({
     theme: 'mac dark',
@@ -89,17 +87,144 @@ export const useContextMenu = (): ContextMenuInstance => {
     items: [],
   })
 
+  // 预构建的多级菜单项（按Provider和Path分组）
+  const prebuiltPaneNodeMenu = ref<MenuItem[]>([])
+  const prebuiltNestedNodeMenu = ref<MenuItem[]>([])
+
+  // 当前右键点击事件
+  let currentEvent: ContextMenuEvent | undefined
+
+  // 创建添加节点的通用处理函数
+  const createAddNodeHandler = (ntype: string) => {
+    return () => {
+      if (!currentEvent) return
+
+      logger.log('add node', ntype)
+      const node_info: NodeAddInfo = {
+        type: 'client',
+        ntype: ntype,
+        parentNodeId: currentEvent.node?.id,
+        pos: {
+          ...screenToFlowCoordinate({
+            x: currentEvent.event.clientX,
+            y: currentEvent.event.clientY,
+          }),
+        },
+      }
+      addNodeToVFlow(node_info)
+      currentEvent = undefined
+    }
+  }
+
+  // 构建分层菜单
+  const buildHierarchicalMenu = (nodes: any[]) => {
+    // 创建一个映射，用于存储每个Provider的节点
+    const providerMap: Record<string, MenuItem> = {}
+
+    // 遍历所有Provider
+    for (const providerKey in AllProviders.value) {
+      const provider = AllProviders.value[providerKey]
+
+      // 为每个Provider创建一个菜单项
+      providerMap[providerKey] = {
+        label: provider.Label,
+        children: []
+      }
+
+      // 遍历Provider的所有插件
+      for (const plugin of provider.Plugins) {
+        // 检查该插件对应的节点是否在传入的节点列表中
+        const node = nodes.find(n => n.NType === plugin.CreateInfo?.NType)
+        if (!node) continue
+
+        // 如果插件有Path，则按Path分组
+        if (plugin.Path) {
+          // 清理Path前后的斜杠，然后按斜杠分割成多级
+          const cleanPath = plugin.Path.replace(/^\/+|\/+$/g, '')
+          const pathParts = cleanPath.split('/').filter(part => part.length > 0)
+
+          if (pathParts.length > 0) {
+            // 从Provider的子菜单开始
+            let currentMenu = providerMap[providerKey].children!
+            let currentPath = ''
+
+            // 为每一级Path创建对应的菜单项
+            for (let i = 0; i < pathParts.length; i++) {
+              const part = pathParts[i]
+              currentPath += (currentPath ? '/' : '') + part
+
+              // 查找当前路径是否已有菜单项
+              let pathMenuItem = currentMenu.find(item => item.label === part)
+
+              // 如果没有，则创建一个
+              if (!pathMenuItem) {
+                pathMenuItem = {
+                  label: part,
+                  children: []
+                }
+                currentMenu.push(pathMenuItem)
+              }
+
+              // 确保children数组存在
+              if (!pathMenuItem.children) {
+                pathMenuItem.children = []
+              }
+
+              // 移动到下一级菜单
+              currentMenu = pathMenuItem.children
+            }
+
+            // 将节点添加到最后一级Path的子菜单中
+            currentMenu.push({
+              label: node.Label,
+              onClick: createAddNodeHandler(node.NType)
+            })
+          } else {
+            // 如果Path为空或只有斜杠，则直接添加到Provider的子菜单中
+            providerMap[providerKey].children!.push({
+              label: node.Label,
+              onClick: createAddNodeHandler(node.NType)
+            })
+          }
+        } else {
+          // 如果插件没有Path，则直接添加到Provider的子菜单中
+          providerMap[providerKey].children!.push({
+            label: node.Label,
+            onClick: createAddNodeHandler(node.NType)
+          })
+        }
+      }
+
+      // 如果Provider没有子菜单，则删除该Provider
+      if (providerMap[providerKey].children!.length === 0) {
+        delete providerMap[providerKey]
+      }
+    }
+
+    // 将Provider映射转换为菜单项数组
+    return Object.values(providerMap)
+  }
+
   const initContextMenu = () => {
-    AddNodesInPane.value = Object.entries(AllTestNodes.value)
+    // 初始化节点列表并直接构建菜单
+    const nodesInPane = Object.entries(AllTestNodes.value)
       .sort((a, b) => a[0].localeCompare(b[0])) // 按key排序
-      .map(([key, item]) => item)
+      .map(([_, item]) => item) // 使用下划线表示未使用的变量
       .filter((item) => !item.isAttachedNode())
-    AddNodesInNest.value = Object.entries(AllTestNodes.value)
+
+    const nodesInNest = Object.entries(AllTestNodes.value)
       .sort((a, b) => a[0].localeCompare(b[0])) // 按key排序
-      .map(([key, item]) => item)
+      .map(([_, item]) => item) // 使用下划线表示未使用的变量
       .filter((item) => !item.isAttachedNode() && !(VFNodeFlag.IsPassive & item.Flag))
-    logger.debug('AddNodesInPane', AddNodesInPane.value)
-    logger.debug('AddNodesInNest', AddNodesInNest.value)
+
+    // 构建分层菜单（按Provider和Path分组）
+    prebuiltPaneNodeMenu.value = buildHierarchicalMenu(nodesInPane)
+    prebuiltNestedNodeMenu.value = buildHierarchicalMenu(nodesInNest)
+
+    logger.debug('nodesInPane', nodesInPane)
+    logger.debug('nodesInNest', nodesInNest)
+    logger.debug('prebuiltPaneNodeMenu', prebuiltPaneNodeMenu.value)
+    logger.debug('prebuiltNestedNodeMenu', prebuiltNestedNodeMenu.value)
   }
 
   const onClickContextMenuRmNode = (event_cm: NodeContextMenuEvent) => {
@@ -112,30 +237,15 @@ export const useContextMenu = (): ContextMenuInstance => {
   }
 
   const AddNodeList = (event_cm: ContextMenuEvent) => {
-    let nodelist = AddNodesInPane.value
-    if (event_cm.type == 'node') {
-      if ((event_cm.node.data as VFNode).isNestedNode()) {
-        nodelist = AddNodesInNest.value
-      }
+    // 更新当前事件引用
+    currentEvent = event_cm
+
+    // 根据上下文选择预构建的菜单项
+    if (event_cm.type == 'node' && (event_cm.node.data as VFNode).isNestedNode()) {
+      return prebuiltNestedNodeMenu.value
+    } else {
+      return prebuiltPaneNodeMenu.value
     }
-    return nodelist.map((item) => ({
-      label: item.Label,
-      onClick: () => {
-        logger.log('add node', item.NType)
-        const node_info: NodeAddInfo = {
-          type: 'client',
-          ntype: item.NType,
-          parentNodeId: event_cm.node?.id,
-          pos: {
-            ...screenToFlowCoordinate({
-              x: event_cm.event.clientX,
-              y: event_cm.event.clientY,
-            }),
-          },
-        }
-        addNodeToVFlow(node_info)
-      },
-    }))
   }
 
   const onClickContextMenuRmEdge = (event_cm: EdgeContextMenuEvent) => {
