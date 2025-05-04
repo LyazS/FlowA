@@ -276,7 +276,6 @@ class UI_Aggregate_Branch(NFlex):
                                                     Value=ReturnFunctionProp(
                                                         GENERATEUUID_FuncProp()
                                                     ),
-                                                    # VBindProp([GENERATE_UUID]),
                                                 )
                                             ),
                                             APPENDITEM_FuncProp(

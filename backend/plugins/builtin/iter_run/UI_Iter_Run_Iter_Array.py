@@ -46,7 +46,7 @@ class UI_Iter_Run_Iter_Array(NFlex):
                                 CONNECT_DATA_TO_SELECT,
                                 "--level",
                                 CONNECT_VAR_LEVEL,
-                                "--filtertype",
+                                "--filtertypes",
                                 VarType.List,
                             ]
                         ),

@@ -681,10 +681,6 @@ class UI_Cond_Branch(NFlex):
                                                             )
                                                         )
                                                     ),
-                                                    # VBindProp(
-                                                    #     [GENERATE_UUID],
-                                                    #     FA_Replace__="output-{{Data}}",  # handle必须以output|input开头
-                                                    # ),
                                                 )
                                             ),
                                             ADDHANDLE_FuncProp(

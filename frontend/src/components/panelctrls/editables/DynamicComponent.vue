@@ -52,11 +52,13 @@ import {
   VModelPropSchema,
   VOpFuncPropSchema,
   VRetFuncPropSchema,
+  VARetFuncPropSchema,
 } from '@/schemas/plugin_schemas'
 import {
   DYNAMIC_COMPONENTS_MAP,
   DYNAMIC_FA_COMPONENTS_MAP,
   DYNAMIC_ICONS_MAP,
+  EXTRA_DIV_COMPONENTS,
 } from '@/schemas/dynamic_components_map'
 import { VFNode, InsertPos } from '@/components/nodes/VFNodeClass'
 import {
@@ -108,8 +110,8 @@ const {
   addHandleData,
   removeHandleData,
   openCodeEditor,
-  getValueFromVBProp,
   getValueFromROP,
+  getValueFromROPAsync,
 } = useDynamicComp()
 
 // 这里需要递归解析result，解包ReadOnlyPropVar
@@ -120,6 +122,11 @@ const parseResult = async (result: any, getValueFunc: Function) => {
       if (ValuePropSchema.safeParse(value).success || VBindPropSchema.safeParse(value).success) {
         // This is a ReadOnlyPropVar
         return await getValueFunc(value as ReadOnlyPropVar)
+      } else if (
+        VRetFuncPropSchema.safeParse(value).success ||
+        VARetFuncPropSchema.safeParse(value).success
+      ) {
+        return await getValueFromROPAsync(props.dataContext, value)
       } else if (Array.isArray(value)) {
         return await Promise.all(value.map(parseValue))
       } else {
@@ -136,28 +143,13 @@ const parseResult = async (result: any, getValueFunc: Function) => {
   return await parseValue(result)
 }
 
-const getPropValueFromReadOnlyPropVar = (prop: ReadOnlyPropVar): any => {
-  switch (prop.FA_Type__) {
-    case PropVarType.Value:
-      return prop.FA_Data__
-    case PropVarType.VBind:
-      return getValueByPath(props.dataContext, prop)
-    default:
-      return null
-  }
-}
-
 // 属性处理器
-const processedProps = computed(async (): Promise<Record<string, any>> => {
+const processedProps = computed(() => {
   const propsObj: Record<string, any> = {
     disabled: !isEditorMode.value,
   }
 
-  const processValuePropRecursively = async (
-    parent: any,
-    key: string,
-    value: any,
-  ): Promise<void> => {
+  const processValuePropRecursively = (parent: any, key: string, value: any) => {
     if (value === null || value === undefined) {
       parent[key] = value
     } else if (Array.isArray(value)) {
@@ -165,14 +157,14 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
       const processedArray: any[] = []
       for (let i = 0; i < value.length; i++) {
         const tempObj: Record<string, any> = {}
-        await processValuePropRecursively(tempObj, 'item', value[i])
+        processValuePropRecursively(tempObj, 'item', value[i])
         processedArray.push(tempObj.item)
       }
       parent[key] = processedArray
     } else if (typeof value === 'object') {
       if (ValuePropSchema.safeParse(value).success) {
         // This is a ValueProp
-        await processValuePropRecursively(parent, key, value.FA_Data__)
+        processValuePropRecursively(parent, key, value.FA_Data__)
       } else if (VBindPropSchema.safeParse(value).success) {
         // This is a VBindProp
         parent[key] = getValueByPath(props.dataContext, value)
@@ -194,7 +186,10 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
           if (prop_Function.Func == FunctionPropType.SETCONTEXT) {
             functions.push(async (_, setFunc) => {
               const { Key, Value } = prop_Function.Arg
-              setFunc(getPropValueFromReadOnlyPropVar(Key), getPropValueFromReadOnlyPropVar(Value))
+              setFunc(
+                await getValueFromROPAsync(props.dataContext, Key),
+                await getValueFromROPAsync(props.dataContext, Value),
+              )
             })
           } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
@@ -216,14 +211,15 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
               ),
             )
           } else if (prop_Function.Func == FunctionPropType.APPENDITEM) {
-            const { DstPath, ItemValue } = prop_Function.Arg
-            functions.push(async (getFunc, _) =>
+            const { DstPath, ItemValue, Position } = prop_Function.Arg
+            functions.push(async (getFunc, _) => {
               appendItemByPath(
                 props.dataContext,
                 resolveDataPath(props.dataContext, DstPath),
-                cloneDeep(parseResult(ItemValue, getFunc)),
-              ),
-            )
+                cloneDeep(await parseResult(ItemValue, getFunc)),
+                Position,
+              )
+            })
           } else if (prop_Function.Func == FunctionPropType.ADDPAYLOAD) {
             const { Payload, PayloadId, Position } = prop_Function.Arg
             functions.push(async (getFunc, _) =>
@@ -330,7 +326,7 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
                 [ARG_CONTEXT]: (path: (string | number)[]) =>
                   path.reduce((acc, key) => acc?.[key], f_Context),
               }
-              const data = await getValueFromROP(props.dataContext, propvar, tmpfunc)
+              const data = await getValueFromROPAsync(props.dataContext, propvar, tmpfunc)
               return data
             }
           }
@@ -343,12 +339,12 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
           }
         }
       } else if (VRetFuncPropSchema.safeParse(value).success) {
-        parent[key] = await getValueFromROP(props.dataContext, value)
+        parent[key] = getValueFromROP(props.dataContext, value)
       } else {
         // This is a plain object, process each property recursively
         const processedObj: Record<string, any> = {}
         for (const [objKey, objValue] of Object.entries(value)) {
-          await processValuePropRecursively(processedObj, objKey, objValue)
+          processValuePropRecursively(processedObj, objKey, objValue)
         }
         parent[key] = processedObj
       }
@@ -361,7 +357,7 @@ const processedProps = computed(async (): Promise<Record<string, any>> => {
   for (const [propName, propVar] of Object.entries(
     (props.componentData as NormalComponent).Props || {},
   )) {
-    await processValuePropRecursively(propsObj, propName, propVar)
+    processValuePropRecursively(propsObj, propName, propVar)
   }
 
   return propsObj
@@ -373,7 +369,7 @@ const resolveCondition = (condition?: Condition): boolean => {
 
   switch (condition.Type) {
     case TYPE_CONDITION_DIRECT:
-      return getPropValueFromReadOnlyPropVar(condition.Condition)
+      return getValueFromROP(props.dataContext, condition.Condition)
     case TYPE_CONDITION_COMPARE:
       return handleCompare(condition)
     case TYPE_CONDITION_LOGICAL:
@@ -384,8 +380,8 @@ const resolveCondition = (condition?: Condition): boolean => {
 }
 
 const handleCompare = (config: CompareCondition): boolean => {
-  const left = getPropValueFromReadOnlyPropVar(config.Left)
-  const right = getPropValueFromReadOnlyPropVar(config.Right)
+  const left = getValueFromROP(props.dataContext, config.Left)
+  const right = getValueFromROP(props.dataContext, config.Right)
 
   const operators: Record<string, (a: any, b: any) => boolean> = {
     '==': (a, b) => a == b,
@@ -416,7 +412,7 @@ const getSpanValue = (config: SpanComponent): any => {
 }
 
 // 循环处理器
-const handleForLoop = async (config: ForLoopComponent) => {
+const handleForLoop = (config: ForLoopComponent) => {
   if (config.Type !== TYPE_VFOR) return null
 
   let items = []
@@ -462,7 +458,7 @@ const handleForLoop = async (config: ForLoopComponent) => {
     }
   })
 
-  return await h(Fragment, {}, nodes)
+  return h(Fragment, {}, nodes)
 }
 
 // 插槽处理器 - 直接返回插槽内容，不再包装为渲染函数
@@ -485,6 +481,31 @@ const resolveNormalComponent = (componentType: string) => {
     return DYNAMIC_FA_COMPONENTS_MAP[componentType]
   } else if (DYNAMIC_ICONS_MAP.hasOwnProperty(componentType)) {
     return DYNAMIC_ICONS_MAP[componentType]
+  } else if (
+    [
+      'div',
+      'span',
+      'p',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'ul',
+      'ol',
+      'li',
+      'a',
+      'img',
+      'button',
+      'input',
+      'textarea',
+      'select',
+      'option',
+    ].includes(componentType.toLowerCase())
+  ) {
+    // 处理原生HTML元素
+    return componentType.toLowerCase()
   } else {
     console.error(`Unsupported component type: ${componentType}`)
     return null
@@ -509,7 +530,7 @@ const resolveNormalComponent = (componentType: string) => {
     <!-- 处理普通组件 -->
     <component v-else :is="resolveNormalComponent(componentData.Type)" v-bind="processedProps">
       <!-- 递归渲染每个插槽 -->
-      <template v-for="(slotContent, name) in processedSlots" #[name]="slotProps">
+      <template v-for="(slotContent, name) in processedSlots" #[name]>
         <!-- 处理数组类型插槽内容 -->
         <template v-if="Array.isArray(slotContent)">
           <DynamicComponent
@@ -521,7 +542,12 @@ const resolveNormalComponent = (componentType: string) => {
         </template>
 
         <!-- 处理单个组件类型插槽内容 -->
-        <DynamicComponent v-else :component-data="slotContent" :data-context="dataContext" />
+        <template v-else>
+          <div v-if="EXTRA_DIV_COMPONENTS.includes(componentData.Type)">
+            <DynamicComponent :component-data="slotContent" :data-context="dataContext" />
+          </div>
+          <DynamicComponent v-else :component-data="slotContent" :data-context="dataContext" />
+        </template>
       </template>
     </component>
   </template>

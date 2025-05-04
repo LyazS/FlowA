@@ -66,6 +66,7 @@ export enum PropVarType {
   VModel = '@VMODEL@',
   OperateFunc = '@OPERATEFUNC@',
   ReturnFunc = '@RETURNFUNC@',
+  AReturnFunc = '@ARETURNFUNC@',
 }
 
 // =============================================================================
@@ -110,6 +111,7 @@ export interface FuncArg_REMOVEITEM {
 export interface FuncArg_APPENDITEM {
   DstPath: VBindProp
   ItemValue: any
+  Position: InsertPos
 }
 
 export interface FuncArg_ADDPAYLOAD {
@@ -296,7 +298,8 @@ export type Operate_FuncProps =
   | REMOVEHANDLEDATA_FuncProp
   | UPDATENODEINTERNAL_FuncProp
   | OPENEDITOR_FuncProp
-export type Return_FuncProps = UPLOADIMAGE_FuncProp | GENERATEUUID_FuncProp | FORMATSTRING_FuncProp
+export type Return_FuncProps = GENERATEUUID_FuncProp | FORMATSTRING_FuncProp
+export type AsyncReturn_FuncProps = UPLOADIMAGE_FuncProp
 // 函数属性接口
 export interface OperateFunctionProp extends PropVarBase {
   FA_Type__: PropVarType.OperateFunc
@@ -306,9 +309,19 @@ export interface ReturnFunctionProp extends PropVarBase {
   FA_Type__: PropVarType.ReturnFunc
   FA_Func__: Return_FuncProps
 }
+export interface AsyncReturnFunctionProp extends PropVarBase {
+  FA_Type__: PropVarType.AReturnFunc
+  FA_Func__: AsyncReturn_FuncProps
+}
 
-export type PropVar = ValueProp | VBindProp | VModelProp | OperateFunctionProp | ReturnFunctionProp
-export type ReadOnlyPropVar = ValueProp | VBindProp | ReturnFunctionProp
+export type PropVar =
+  | ValueProp
+  | VBindProp
+  | VModelProp
+  | OperateFunctionProp
+  | ReturnFunctionProp
+  | AsyncReturnFunctionProp
+export type ReadOnlyPropVar = ValueProp | VBindProp | ReturnFunctionProp | AsyncReturnFunctionProp
 export type BaseComponent = NormalComponent | SpanComponent | ForLoopComponent
 
 // 使用 zod 进行类型验证
@@ -340,7 +353,13 @@ export const VOpFuncPropSchema = z
 export const VRetFuncPropSchema = z
   .object({
     FA_Type__: z.enum([PropVarType.ReturnFunc]),
-    FA_Funcs__: z.any(),
+    FA_Func__: z.any(),
+  })
+  .strict()
+export const VARetFuncPropSchema = z
+  .object({
+    FA_Type__: z.enum([PropVarType.AReturnFunc]),
+    FA_Func__: z.any(),
   })
   .strict()
 

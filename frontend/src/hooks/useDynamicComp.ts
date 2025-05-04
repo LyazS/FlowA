@@ -26,6 +26,7 @@ import type {
   ValueProp,
   VModelProp,
   ReturnFunctionProp,
+  AsyncReturnFunctionProp,
 } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
@@ -107,6 +108,7 @@ interface DynamicCompInstance {
     dataContext: Record<string, any>,
     resolvePath: (string | number)[],
     value: any,
+    pos?: InsertPos,
   ) => void
   removeItemByPath: (
     dataContext: Record<string, any>,
@@ -162,8 +164,12 @@ interface DynamicCompInstance {
     dataId: string,
   ) => void
   openCodeEditor: (resolvePath: (string | number)[], lang: CodeEditorLanguage) => void
-  getValueFromVBProp: (dataContext: Record<string, any>, prop: ValueProp | VBindProp) => any
   getValueFromROP: (
+    dataContext: Record<string, any>,
+    prop: ReadOnlyPropVar,
+    tmpFunction?: Record<string, (args: (string | number)[]) => any>,
+  ) => any
+  getValueFromROPAsync: (
     dataContext: Record<string, any>,
     prop: ReadOnlyPropVar,
     tmpFunction?: Record<string, (args: (string | number)[]) => any>,
@@ -337,13 +343,15 @@ export const useDynamicComp = () => {
     dataContext: Record<string, any>,
     resolvePath: (string | number)[],
     value: any,
+    pos?: InsertPos,
   ) => {
     // 根据路径插入值
     const firstKey = resolvePath.shift()!
     if (firstKey === THIS_NODE_DATA) {
       const parent = resolvePath.reduce((acc, key) => acc?.[key], dataContext[THIS_NODE_DATA])
       if (parent) {
-        parent.push(value)
+        if (pos === InsertPos.Start) parent.unshift(value)
+        else parent.push(value)
         return
       }
     }
@@ -498,21 +506,8 @@ export const useDynamicComp = () => {
     }
   }
 
-  const getValueFromVBProp = (
-    dataContext: Record<string, any>,
-    prop: ValueProp | VBindProp,
-  ): any => {
-    switch (prop.FA_Type__) {
-      case PropVarType.Value:
-        return prop.FA_Data__
-      case PropVarType.VBind:
-        return getValueByPath(dataContext, prop)
-      default:
-        return null
-    }
-  }
-
-  const getValueFromROP = async (
+  // 获取ReadOnlyPropVar的值
+  const getValueFromROP = (
     dataContext: Record<string, any>,
     prop: ReadOnlyPropVar,
     tmpFunction?: Record<string, (args: (string | number)[]) => any>,
@@ -529,14 +524,12 @@ export const useDynamicComp = () => {
         let func: CallableFunction | null = null
         if (prop_Function.Func === FunctionPropType.GENERATEUUID) {
           func = getUuid
-        } else if (prop_Function.Func === FunctionPropType.UPLOADIMAGE) {
-          func = handleSelectImage
         } else if (prop_Function.Func === FunctionPropType.FORMATSTRING) {
-          func = async () => {
+          func = () => {
             const { FString, Args } = prop_Function.Arg
             const args: Record<string, any> = {}
             for (const [key, propvar] of Object.entries(Args)) {
-              args[key] = await getValueFromROP(dataContext, propvar, tmpFunction)
+              args[key] = getValueFromROP(dataContext, propvar, tmpFunction)
             }
             return FString.replace(/\{\{(\w+)\}\}/g, (match, key) => {
               return args[key] || ''
@@ -544,16 +537,32 @@ export const useDynamicComp = () => {
           }
         }
         if (func) {
-          const result = func()
-          if (result && typeof result === 'object' && typeof result.then === 'function') {
-            return await result
-          } else {
-            return result
-          }
+          return func()
         }
       }
       default:
         return null
+    }
+  }
+
+  const getValueFromROPAsync = async (
+    dataContext: Record<string, any>,
+    prop: ReadOnlyPropVar,
+    tmpFunction?: Record<string, (args: (string | number)[]) => any>,
+  ) => {
+    switch (prop.FA_Type__) {
+      case PropVarType.AReturnFunc: {
+        const prop_Function = (prop as AsyncReturnFunctionProp).FA_Func__
+        let func: CallableFunction | null = null
+        if (prop_Function.Func === FunctionPropType.UPLOADIMAGE) {
+          func = handleSelectImage
+        }
+        if (func) {
+          return await func()
+        }
+      }
+      default:
+        return getValueFromROP(dataContext, prop, tmpFunction)
     }
   }
 
@@ -576,8 +585,8 @@ export const useDynamicComp = () => {
     addHandleData,
     removeHandleData,
     openCodeEditor,
-    getValueFromVBProp,
     getValueFromROP,
+    getValueFromROPAsync,
   }
 
   return instance

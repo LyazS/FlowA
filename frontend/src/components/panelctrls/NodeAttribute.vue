@@ -26,6 +26,8 @@ import {
   NDivider,
   NModal,
   NAlert,
+  NDropdown,
+  NButton,
   type SelectOption,
 } from 'naive-ui'
 import { Panel, useVueFlow } from '@vue-flow/core'
@@ -153,8 +155,8 @@ const getConnectionsByArgs = (args: string[]) => {
     CONNECT_ALL_DATA：表示上述节点的所有handels
     string 上述节点的handle的id
     不填，则只收集到handle层级
-  --filtertype 非必填，过滤变量类型
-    VarType：表示变量类型
+  --filtertypes 非必填，过滤变量类型
+    VarType[]：表示变量类型数组
   ====================================================
   --level 必填，输出层级
     CONNECT_NODE_LEVEL
@@ -191,7 +193,7 @@ const getConnectionsByArgs = (args: string[]) => {
       handle: string | undefined
       stricthid: string | undefined
       hid: string | undefined
-      filtertype: VarType | undefined
+      filtertypes: VarType[] | undefined
       outfmt: string | undefined
       notop: boolean | undefined
     } = {
@@ -202,7 +204,7 @@ const getConnectionsByArgs = (args: string[]) => {
       handle: undefined,
       stricthid: undefined,
       hid: undefined,
-      filtertype: undefined,
+      filtertypes: undefined,
       outfmt: undefined,
       notop: undefined,
     }
@@ -224,8 +226,25 @@ const getConnectionsByArgs = (args: string[]) => {
 
         // 确保下一个参数不是另一个选项
         if (nextArg.startsWith('--')) continue
-        ;(parsed_args as any)[key] = nextArg
-        i++ // 跳过已处理的值
+
+        // 特殊处理filtertype参数，支持数组输入
+        if (key === 'filtertypes') {
+          // 收集所有非--开头的参数作为filtertype数组元素
+          const filterTypes: string[] = []
+
+          // 收集当前参数和后续所有非--开头的参数
+          while (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+            filterTypes.push(args[i + 1])
+            i++
+          }
+
+          // 设置filtertype为收集到的数组
+          ;(parsed_args as any)[key] = filterTypes
+        } else {
+          // 其他参数正常处理
+          ;(parsed_args as any)[key] = nextArg
+          i++ // 跳过已处理的值
+        }
       }
     }
     if (!parsed_args.node || !parsed_args.level || !parsed_args.outfmt) {
@@ -387,11 +406,12 @@ const getConnectionsByArgs = (args: string[]) => {
       }
     }
     varItems = uniqueVarItems(varItems)
-    if (parsed_args.filtertype) {
+    const filterTypes = parsed_args.filtertypes // 创建一个本地变量，这样TypeScript就知道它不是undefined
+    if (filterTypes) {
       varItems = varItems.filter((item) => {
         const node = findNode(item.Nid) as NodeWithVFData
         const dtype = node.data[item.Path.ContentName].ById[item.Path.ContentId].Type
-        return dtype === parsed_args.filtertype || dtype === VarType.Any
+        return filterTypes.includes(dtype) || dtype === VarType.Any
       })
     }
     if (parsed_args.level === CONNECT_VAR_LEVEL) {
@@ -523,7 +543,7 @@ onUnmounted(() => {})
         <n-divider />
         <pre>节点id: {{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
-        <!-- <pre>{{ nodedatatext }}</pre> -->
+        <pre>{{ nodedatatext }}</pre>
       </n-flex>
     </n-card>
   </n-scrollbar>

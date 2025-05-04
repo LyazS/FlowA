@@ -17,6 +17,7 @@ class PropVarType(StrEnum):
     VModel = "@VMODEL@"
     OperateFunc = "@OPERATEFUNC@"
     ReturnFunc = "@RETURNFUNC@"
+    AReturnFunc = "@ARETURNFUNC@"
 
 
 class PropVarBase(BaseModel):
@@ -136,6 +137,7 @@ class FuncArg_REMOVEITEM(BaseModel):
 class FuncArg_APPENDITEM(BaseModel):
     DstPath: VBindProp = Field(..., description="目标路径数组")
     ItemValue: Any = Field(..., description="item的value数据")
+    Position: Optional[InsertPos] = Field(InsertPos.End, description="插入位置")
     pass
 
 
@@ -340,9 +342,11 @@ Operate_FuncProps = Union[
     OPENEDITOR_FuncProp,
 ]
 Return_FuncProps = Union[
-    UPLOADIMAGE_FuncProp,
     GENERATEUUID_FuncProp,
     FORMATSTRING_FuncProp,
+]
+AsyncReturn_FuncProps = Union[
+    UPLOADIMAGE_FuncProp,
 ]
 
 
@@ -365,6 +369,14 @@ class ReturnFunctionProp(PropVarBase):
             kwargs["FA_Func__"] = func
         super().__init__(**kwargs)
 
+class AsyncReturnFunctionProp(PropVarBase):
+    FA_Type__: Literal[PropVarType.AReturnFunc] = PropVarType.AReturnFunc
+    FA_Func__: AsyncReturn_FuncProps
+
+    def __init__(self, func: AsyncReturn_FuncProps, **kwargs):
+        if not "FA_Func__" in kwargs:
+            kwargs["FA_Func__"] = func
+        super().__init__(**kwargs)
 
 # ================= 最终联合类型 =================
 PropVar = Union[
@@ -373,11 +385,13 @@ PropVar = Union[
     VModelProp,
     OperateFunctionProp,
     ReturnFunctionProp,
+    AsyncReturnFunctionProp,
 ]
 ReadOnlyPropVar = Union[
     ValueProp,
     VBindProp,
     ReturnFunctionProp,
+    AsyncReturnFunctionProp,
 ]
 
 

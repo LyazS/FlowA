@@ -94,21 +94,23 @@ class LLMPromptImageDetail(StrEnum):
     high = "high"
 
 
-class LLMPromptImageURL(BaseModel):
-    url: str  # Either a URL of the image or the base64 encoded image data.
-    detail: LLMPromptImageDetail
-    pass
-
-
 class LLMPromptImageParamType(StrEnum):
     FromUpload = "FromUpload"
     FromRef = "FromRef"
 
 
+class LLMPromptImageURL(BaseModel):
+    # Either a URL of the image or the base64 encoded image data.
+    url: Optional[ReadOnlyPropVar] = None
+    detail: LLMPromptImageDetail
+    urlRef: Optional[RefVarItem] = None
+    urlType: LLMPromptImageParamType
+    pass
+
+
 class LLMPromptImageParam(BaseModel):
     type: LLMPromptType = LLMPromptType.image_url
     image_url: LLMPromptImageURL
-    image_type: LLMPromptImageParamType
     pass
 
 
