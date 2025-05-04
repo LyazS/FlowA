@@ -2,6 +2,9 @@ from typing import List, Dict, Optional, TYPE_CHECKING, Any, Literal, Union, cas
 from pydantic import BaseModel
 from enum import StrEnum
 import os
+import base64
+import io
+from PIL import Image
 import json
 import asyncio
 import traceback
@@ -50,6 +53,7 @@ from app.utils.db4node import loadNodeConfig, setNodeConfig
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from ..UI_Components.UI_InputVars import InputVarModel
+from app.api.file_mgr import WORKFLOW_DATA_DIR
 
 
 class LLMSettingType(StrEnum):
@@ -101,7 +105,7 @@ class LLMPromptImageParamType(StrEnum):
 
 class LLMPromptImageURL(BaseModel):
     # Either a URL of the image or the base64 encoded image data.
-    url: Optional[ReadOnlyPropVar] = None
+    url: Optional[Union[str, ReadOnlyPropVar]] = None
     detail: LLMPromptImageDetail
     urlRef: Optional[RefVarItem] = None
     urlType: LLMPromptImageParamType
@@ -265,6 +269,27 @@ class LLMInference(FATaskNode):
                     f"模型配置变量{model_cfg.ResponseFormat.ContentRef}未定义"
                 )
 
+            D_PROMPTS: VFNodeContentData = node_payloads.ById["D_PROMPTS"]
+            for prompt in D_PROMPTS.Data.value:
+                try:
+                    prompt_obj = LLMPrompt.model_validate(prompt)
+                    for content_item in prompt_obj.content:
+                        if (
+                            isinstance(content_item, LLMPromptImageParam)
+                            and content_item.image_url.urlType
+                            == LLMPromptImageParamType.FromRef
+                        ):
+                            if (
+                                not content_item.image_url.urlRef
+                                or content_item.image_url.urlRef.model_dump_json()
+                                not in selfVars
+                            ):
+                                error_msgs.append(
+                                    f"图片引用变量{content_item.image_url.urlRef}未定义"
+                                )
+                except Exception as e:
+                    error_msgs.append(f"Prompt格式错误: {str(e)}")
+
         except Exception as e:
             errmsg = traceback.format_exc()
             error_msgs.append(f"获取内容失败{str(errmsg)}")
@@ -290,6 +315,117 @@ class LLMInference(FATaskNode):
         elif s_config.Type == LLMSettingType.Null:
             return NotGiven
         return NotGiven
+
+    async def parsePromptItem(
+        self,
+        prompt_item: LLMPrompt,
+        InputArgs: Dict[str, Any],
+    ) -> ChatCompletionMessageParam:
+        """
+        将LLMPrompt对象转换为OpenAI的ChatCompletionMessageParam格式
+
+        Args:
+            prompt_item: LLMPrompt对象
+            InputArgs: 输入变量字典，用于替换模板变量
+
+        Returns:
+            ChatCompletionMessageParam: OpenAI格式的消息
+        """
+        # 处理不同角色的消息
+        role = prompt_item.role
+
+        # 处理内容
+        content_parts: List[ChatCompletionContentPartParam] = []
+
+        for item in prompt_item.content:
+            if isinstance(item, LLMPromptTextParam):
+                # 处理文本内容，替换模板变量
+                text = replace_vars(item.text, InputArgs)
+                content_parts.append(
+                    ChatCompletionContentPartTextParam(type="text", text=text)
+                )
+            elif isinstance(item, LLMPromptImageParam):
+                # 处理图片内容
+                image_url = item.image_url
+                image_detail = image_url.detail
+
+                # 根据图片来源类型获取URL
+                if image_url.urlType == LLMPromptImageParamType.FromUpload:
+                    # 从上传获取图片URL
+                    if image_url.url:
+                        url = image_url.url
+                        try:
+                            file_path = os.path.join(WORKFLOW_DATA_DIR, url)
+
+                            # 检查文件是否存在
+                            if os.path.exists(file_path):
+                                # 读取图片并转换为base64
+                                with open(file_path, "rb") as img_file:
+                                    img_data = img_file.read()
+                                    img = Image.open(io.BytesIO(img_data))
+                                    buffer = io.BytesIO()
+                                    img.save(buffer, format="PNG")
+                                    img_str = base64.b64encode(
+                                        buffer.getvalue()
+                                    ).decode("utf-8")
+                                    url = f"data:image/png;base64,{img_str}"
+                        except Exception as e:
+                            raise Exception(f"图片转换base64失败: {str(e)}")
+
+                        content_parts.append(
+                            ChatCompletionContentPartImageParam(
+                                type="image_url",
+                                image_url={"url": url, "detail": image_detail},
+                            )
+                        )
+                elif image_url.urlType == LLMPromptImageParamType.FromRef:
+                    # 从引用获取图片URL
+                    if image_url.urlRef:
+                        image: Image.Image = await InputVarModel.get_value(
+                            InputVarModel(
+                                Key="",
+                                Type=VarType.Ref,
+                                ValueRef=image_url.urlRef,
+                            ),
+                            self.id,
+                            self.runner().getRefData,
+                        )
+                        if image:
+                            buffer = io.BytesIO()
+                            image.save(buffer, format="PNG")
+                            img_str = base64.b64encode(buffer.getvalue()).decode(
+                                "utf-8"
+                            )
+                            url = f"data:image/png;base64,{img_str}"
+                            content_parts.append(
+                                ChatCompletionContentPartImageParam(
+                                    type="image_url",
+                                    image_url={"url": url, "detail": image_detail},
+                                )
+                            )
+
+        # 确定content内容
+        content_value = content_parts
+        if len(content_parts) == 1 and isinstance(
+            content_parts[0], ChatCompletionContentPartTextParam
+        ):
+            # 如果只有一个文本部分，直接使用文本内容
+            content_value = content_parts[0].text
+
+        # 创建消息对象
+        if role == LLMRole.system:
+            return ChatCompletionSystemMessageParam(
+                role="system", content=content_value
+            )
+        elif role == LLMRole.user:
+            return ChatCompletionUserMessageParam(role="user", content=content_value)
+        elif role == LLMRole.assistant:
+            return ChatCompletionAssistantMessageParam(
+                role="assistant", content=content_value
+            )
+
+        # 默认情况，返回用户消息
+        return ChatCompletionUserMessageParam(role="user", content="")
 
     async def run(self) -> List[FANodeUpdateData]:
         for try_count in range(5):
@@ -341,8 +477,7 @@ class LLMInference(FATaskNode):
                 messages = []
                 for prompt in D_PROMPTS.Data.value:
                     prompt_obj = LLMPrompt.model_validate(prompt)
-                    prompt_obj.content = replace_vars(prompt_obj.content, InputArgs)
-                    messages.append(json.loads(prompt_obj.model_dump_json()))
+                    messages.append(await self.parsePromptItem(prompt_obj, InputArgs))
                     pass
                 completions_params["messages"] = messages
                 completions_params = {
@@ -395,7 +530,6 @@ class LLMInference(FATaskNode):
                     logger.warning(f"正在重试，因为JSON格式错误：{D_ANSWER.Data.value}")
                     await asyncio.sleep(2**try_count)
                     continue
-                pass
             except openai.APIConnectionError as e:
                 errmsg = traceback.format_exc()
                 if try_count >= 5:
@@ -404,7 +538,6 @@ class LLMInference(FATaskNode):
                     logger.warning(f"正在重试，因为API连接错误：{errmsg}")
                     await asyncio.sleep(2**try_count)
                     continue
-                pass
             except openai.RateLimitError as e:
                 errmsg = traceback.format_exc()
                 if try_count >= 5:
@@ -413,7 +546,6 @@ class LLMInference(FATaskNode):
                     logger.warning(f"正在重试，因为API请求频率限制：{errmsg}")
                     await asyncio.sleep(2**try_count)
                     continue
-                pass
             except openai.APIStatusError as e:
                 errmsg = traceback.format_exc()
                 if try_count >= 5:
@@ -422,12 +554,10 @@ class LLMInference(FATaskNode):
                     logger.warning(f"正在重试，因为API状态错误：{errmsg}")
                     await asyncio.sleep(2**try_count)
                     continue
-                pass
             except Exception as e:
                 errmsg = traceback.format_exc()
                 logger.warning(f"LLM节点运行失败：{errmsg}")
                 raise Exception(f"LLM节点运行失败：{errmsg}")
-            pass
 
     @staticmethod
     async def getNodeConfig():

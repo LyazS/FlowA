@@ -340,7 +340,7 @@ class FATaskNode(FABaseNode):
         """
         cache = {
             "outputStatus": self.outputStatus,
-            "Results": self.data.Results.model_dump(),
+            "Results": copy.deepcopy(self.data.Results),
         }
         return cache
 
