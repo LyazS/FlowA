@@ -13,6 +13,7 @@ class UI_CF_Workflow(NFlex):
     def __init__(self):
         super().__init__(
             vertical=True,
+            style={"wiidth": "100%"},
             slots={
                 "default": [
                     Header(
@@ -36,13 +37,18 @@ class UI_CF_Workflow(NFlex):
                         vertical=False,
                         wrap=False,
                         justify="space-between",
-                        style={"align-content": "center", "align-items": "center"},
+                        style={
+                            "align-content": "center",
+                            "align-items": "center",
+                            "width": "100%",
+                        },
                         slots={
                             "default": [
                                 NormalComponent(
                                     Type="NSelect",
                                     Props={
-                                        "size": "medium",
+                                        "size": "small",
+                                        "width": "30%",
                                         "value": VModelProp(
                                             [
                                                 THIS_NODE_DATA,

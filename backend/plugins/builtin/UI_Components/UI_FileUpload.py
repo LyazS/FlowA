@@ -35,7 +35,7 @@ class UI_FileUpload(NFlex):
                     NormalComponent(
                         Type="NEllipsis",
                         Props={
-                            "style": {"width": "70%", "max-width": "70%"},
+                            "style": {"width": "60%", "max-width": "60%"},
                         },
                         Slots={"default": SpanComponent(VBindProp(value + ["Name"]))},
                     ),
@@ -43,7 +43,7 @@ class UI_FileUpload(NFlex):
                         type="warning",
                         size=size,
                         level="tertiary",
-                        style={"width": "30%"},
+                        style={"width": "40%"},
                         onClick=OperateFunctionProp(
                             [
                                 SETITEM_FuncProp(
