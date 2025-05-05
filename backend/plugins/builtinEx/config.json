@@ -1,0 +1,39 @@
+{
+  "Provider": "FlowABuiltinEx",
+  "Label": "扩展节点",
+  "Version": "0.0.1",
+  "Description": "This is a extra built-in provider for FlowA",
+  "Author": "FlowA Team",
+  "Icon": "flowa.png",
+  "ProviderSetting": null,
+  "Plugins": [
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltinEx/ImageRead",
+      "Label": "图片读取",
+      "Description": "使用PIL读取输入路径的图片",
+      "Execute": "ImageRead/ImageRead.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltinEx/ComfyUINetTool",
+      "Label": "运行ComfyUI",
+      "Description": "运行ComfyUI，输出图像数组。\n后续可以使用代码解释器节点来处理图像。",
+      "Execute": "ComfyUINetTool/ComfyUINetTool.py",
+      "Setting": null
+    }
+  ],
+  "UIPlugins": [
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltinEx/UI_IMAGE_READ_PATH",
+      "Component": "ImageRead/UI_Image_Read_Path.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltinEx/UI_COMFYUI_WORKFLOW",
+      "Component": "ComfyUINetTool/UI_Workflow.py"
+    }
+  ]
+}

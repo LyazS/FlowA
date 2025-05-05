@@ -5,7 +5,7 @@
   "Description": "This is a built-in provider for FlowA",
   "Author": "FlowA Team",
   "Icon": "flowa.png",
-  "ProviderSetting": { "Execute": "flowa_provider_setting.py" },
+  "ProviderSetting": null,
   "Plugins": [
     {
       "Type": "FANode",
@@ -41,14 +41,6 @@
     },
     {
       "Type": "FANode",
-      "Name": "@/FlowABuiltin/code_interpreter",
-      "Label": "代码解释器",
-      "Description": "code interpreter",
-      "Execute": "code_interpreter/code_interpreter.py",
-      "Setting": null
-    },
-    {
-      "Type": "FANode",
       "Name": "@/FlowABuiltin/jinja2_template",
       "Label": "Jinja2模板",
       "Description": "jinja2 template",
@@ -57,10 +49,26 @@
     },
     {
       "Type": "FANode",
+      "Name": "@/FlowABuiltin/code_interpreter",
+      "Label": "代码解释器",
+      "Description": "code interpreter",
+      "Execute": "code_interpreter/code_interpreter.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
       "Name": "@/FlowABuiltin/LLM_inference",
       "Label": "LLM推理",
       "Description": "LLM inference",
       "Execute": "LLM_inference/LLM_inference.py",
+      "Setting": null
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltin/HttpRequest",
+      "Label": "网络请求",
+      "Description": "网络请求",
+      "Execute": "http_request/http_request.py",
       "Setting": null
     },
     {
@@ -97,14 +105,6 @@
       "Path": "流程控制/",
       "Description": "分支聚合",
       "Execute": "aggregate_branchs/aggregate_branchs.py",
-      "Setting": null
-    },
-    {
-      "Type": "FANode",
-      "Name": "@/FlowABuiltin/HttpRequest",
-      "Label": "网络请求",
-      "Description": "网络请求",
-      "Execute": "http_request/http_request.py",
       "Setting": null
     }
   ],

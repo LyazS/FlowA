@@ -27,6 +27,7 @@ import type {
   VModelProp,
   ReturnFunctionProp,
   AsyncReturnFunctionProp,
+  UploadFileInfo,
 } from '@/schemas/plugin_schemas'
 import {
   PropVarType,
@@ -52,6 +53,8 @@ import {
   VModelPropSchema,
   VOpFuncPropSchema,
   VRetFuncPropSchema,
+  // =============================
+  UploadFileInfoType,
 } from '@/schemas/plugin_schemas'
 import { VFNode, InsertPos } from '@/components/nodes/VFNodeClass'
 import {
@@ -72,8 +75,10 @@ import {
 import { getUuid } from '@/utils/tools'
 import { WorkflowID } from '@/hooks/useVFlowAttribute'
 
-// 处理图片上传
-const handleSelectImage = async () => {
+const handleUploadFile = async (
+  FileType: UploadFileInfoType,
+  FilterType?: string[],
+): Promise<UploadFileInfo> => {
   try {
     // 获取当前工作流ID
     const workflowId = WorkflowID.value
@@ -81,12 +86,18 @@ const handleSelectImage = async () => {
       throw new Error('未找到当前工作流ID')
     }
 
+    // 构建accept属性值
+    let acceptValue = '*/*'
+    if (FilterType && FilterType.length > 0) {
+      acceptValue = FilterType.join(',')
+    }
+
     // 通过 Promise 封装文件选择逻辑
     const file = await new Promise<File>((resolve, reject) => {
       // 创建隐藏的 input 元素
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = 'image/*' // 限制只允许选择图片
+      input.accept = acceptValue // 使用过滤类型
 
       // 处理文件选择
       input.onchange = (e: Event) => {
@@ -101,32 +112,88 @@ const handleSelectImage = async () => {
       setTimeout(() => input.remove(), 1000) // 清理 DOM
     })
 
-    // 验证文件类型
-    if (!file.type.startsWith('image/')) {
-      throw new Error('非图片文件')
+    // 根据FileType处理文件
+    switch (FileType) {
+      case UploadFileInfoType.BASE64: {
+        // 读取文件内容并转换为base64
+        const base64Content = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              // 获取base64字符串，去掉前缀
+              const base64 = (e.target?.result as string).split(',')[1]
+              resolve(base64)
+            } catch (error) {
+              reject(new Error('文件读取失败'))
+            }
+          }
+          reader.onerror = () => reject(new Error('文件读取失败'))
+          reader.readAsDataURL(file)
+        })
+
+        return {
+          Type: UploadFileInfoType.BASE64,
+          Name: file.name,
+          File: base64Content,
+        }
+      }
+
+      case UploadFileInfoType.URL: {
+        // 上传文件到服务器并获取URL
+        const formData = new FormData()
+        formData.append('file', file)
+
+        // 上传到后端API，带上工作流ID
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/file/upload?wid=${workflowId}`,
+          {
+            method: 'POST',
+            body: formData,
+          },
+        )
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`上传失败: ${errorText}`)
+        }
+
+        // 获取返回的文件URL
+        const result = await response.json()
+        return {
+          Type: UploadFileInfoType.URL,
+          Name: file.name,
+          File: result.url,
+        }
+      }
+
+      case UploadFileInfoType.STRING: {
+        // 读取文件内容作为字符串
+        const textContent = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const content = e.target?.result as string
+              resolve(content)
+            } catch (error) {
+              reject(new Error('文件读取失败'))
+            }
+          }
+          reader.onerror = () => reject(new Error('文件读取失败'))
+          reader.readAsText(file)
+        })
+
+        return {
+          Type: UploadFileInfoType.STRING,
+          Name: file.name,
+          File: textContent,
+        }
+      }
+
+      default:
+        throw new Error(`不支持的文件处理类型: ${FileType}`)
     }
-
-    // 创建FormData对象
-    const formData = new FormData()
-    formData.append('file', file)
-
-    // 上传到后端API，带上工作流ID
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/file/upload?wid=${workflowId}`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`上传失败: ${errorText}`)
-    }
-
-    // 获取返回的图片URL
-    const result = await response.json()
-    // return `${import.meta.env.VITE_API_URL}${result.url}`
-    return result.url
   } catch (error: any) {
-    throw new Error(`图片上传失败: ${error.message}`)
+    throw new Error(`文件上传失败: ${error.message}`)
   }
 }
 
@@ -149,6 +216,11 @@ interface DynamicCompInstance {
   updateValueByPath: (
     dataContext: Record<string, any>,
     vbdata: VBindProp | VModelProp,
+    value: any,
+  ) => void
+  setItemByPath: (
+    dataContext: Record<string, any>,
+    resolvePath: (string | number)[],
     value: any,
   ) => void
   addItemByPath: (
@@ -348,6 +420,23 @@ export const useDynamicComp = () => {
       if (parent) parent[lastKey] = value
     } else {
       console.error(`Unsupported update path: ${resolvePath}`)
+    }
+  }
+
+  // Object类型数据设置项
+  const setItemByPath = (
+    dataContext: Record<string, any>,
+    resolvePath: (string | number)[],
+    value: any,
+  ) => {
+    // 根据路径更新值
+    const firstKey = resolvePath.shift()!
+    if (firstKey === THIS_NODE_DATA) {
+      const lastKey = resolvePath.pop()!
+      const parent = resolvePath.reduce((acc, key) => acc?.[key], dataContext[THIS_NODE_DATA])
+      if (parent) parent[lastKey] = value
+    } else {
+      console.error(`Unsupported set path: ${resolvePath}`)
     }
   }
 
@@ -618,8 +707,11 @@ export const useDynamicComp = () => {
       case PropVarType.AReturnFunc: {
         const prop_Function = (prop as AsyncReturnFunctionProp).FA_Func__
         let func: CallableFunction | null = null
-        if (prop_Function.Func === FunctionPropType.UPLOADIMAGE) {
-          func = handleSelectImage
+        if (prop_Function.Func === FunctionPropType.UPLOADFILE) {
+          const { FileType, FilterType } = prop_Function.Arg
+          func = async () => {
+            return await handleUploadFile(FileType, FilterType)
+          }
         }
         if (func) {
           return await func()
@@ -635,6 +727,7 @@ export const useDynamicComp = () => {
     resolveDataPath,
     getValueByPath,
     updateValueByPath,
+    setItemByPath,
     addItemByPath,
     appendItemByPath,
     removeItemByPath,

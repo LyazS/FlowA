@@ -36,6 +36,7 @@ class NInput(NormalComponent):
         type: ReadOnlyPropVar | Literal["text", "password", "textarea"] = "text",
         value: Optional[str | PropVar] = None,
         style: Optional[Dict] = None,
+        otherProps: Dict = {},
         slots: Optional[Dict] = None,
         IfCondition: Optional[Condition] = None,
     ):
@@ -55,6 +56,7 @@ class NInput(NormalComponent):
                 "type": type,
                 "value": value,
                 "style": style,
+                **otherProps,
             },
             Slots=slots,
             IfCondition=IfCondition,

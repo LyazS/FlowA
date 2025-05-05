@@ -105,10 +105,26 @@ class LLMPromptImageParamType(StrEnum):
 
 class LLMPromptImageURL(BaseModel):
     # Either a URL of the image or the base64 encoded image data.
-    url: Optional[Union[str, ReadOnlyPropVar]] = None
+    url: Optional[Union[UploadFileInfo, AsyncReturnFunctionProp]] = None
     detail: LLMPromptImageDetail
     urlRef: Optional[RefVarItem] = None
     urlType: LLMPromptImageParamType
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_url(cls, data):
+        # 如果数据中有url字段，并且符合UploadFileInfo的格式，确保它被解析为UploadFileInfo
+        if (
+            isinstance(data, dict)
+            and "url" in data
+            and isinstance(data["url"], dict)
+            and "Type" in data["url"]
+            and "Name" in data["url"]
+            and "File" in data["url"]
+        ):
+            data["url"] = UploadFileInfo.model_validate(data["url"])
+        return data
+
     pass
 
 
@@ -274,19 +290,30 @@ class LLMInference(FATaskNode):
                 try:
                     prompt_obj = LLMPrompt.model_validate(prompt)
                     for content_item in prompt_obj.content:
-                        if (
-                            isinstance(content_item, LLMPromptImageParam)
-                            and content_item.image_url.urlType
-                            == LLMPromptImageParamType.FromRef
-                        ):
+                        if isinstance(content_item, LLMPromptImageParam):
                             if (
-                                not content_item.image_url.urlRef
-                                or content_item.image_url.urlRef.model_dump_json()
-                                not in selfVars
+                                content_item.image_url.urlType
+                                == LLMPromptImageParamType.FromRef
                             ):
-                                error_msgs.append(
-                                    f"图片引用变量{content_item.image_url.urlRef}未定义"
-                                )
+                                if (
+                                    not content_item.image_url.urlRef
+                                    or content_item.image_url.urlRef.model_dump_json()
+                                    not in selfVars
+                                ):
+                                    error_msgs.append(
+                                        f"图片引用变量{content_item.image_url.urlRef}未定义"
+                                    )
+                            elif (
+                                content_item.image_url.urlType
+                                == LLMPromptImageParamType.FromUpload
+                            ):
+                                if not content_item.image_url.url:
+                                    error_msgs.append(f"图片上传变量未定义")
+                                imagefile = content_item.image_url.url
+                                if imagefile and not os.path.exists(
+                                    os.path.join(WORKFLOW_DATA_DIR, imagefile.File)
+                                ):
+                                    error_msgs.append(f"图片{imagefile.File}不存在")
                 except Exception as e:
                     error_msgs.append(f"Prompt格式错误: {str(e)}")
 
@@ -353,9 +380,9 @@ class LLMInference(FATaskNode):
                 if image_url.urlType == LLMPromptImageParamType.FromUpload:
                     # 从上传获取图片URL
                     if image_url.url:
-                        url = image_url.url
+                        fileurl = image_url.url.File
                         try:
-                            file_path = os.path.join(WORKFLOW_DATA_DIR, url)
+                            file_path = os.path.join(WORKFLOW_DATA_DIR, fileurl)
 
                             # 检查文件是否存在
                             if os.path.exists(file_path):

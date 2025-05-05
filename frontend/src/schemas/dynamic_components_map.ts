@@ -167,12 +167,13 @@ export const DYNAMIC_FA_COMPONENTS_MAP: Record<string, Component> = {
   RefNodeHandleSelect: RefNodeHandleSelect,
 }
 
-import { Add, Close, CreateOutline, EllipsisVertical } from '@vicons/ionicons5'
+import { Add, Close, CreateOutline, EllipsisVertical, CloudUploadOutline } from '@vicons/ionicons5'
 export const DYNAMIC_ICONS_MAP: Record<string, Component> = {
   Add: Add,
   Close: Close,
   CreateOutline: CreateOutline,
   EllipsisVertical: EllipsisVertical,
+  CloudUploadOutline: CloudUploadOutline,
 }
 
 export const EXTRA_DIV_COMPONENTS = ['NDropdown']

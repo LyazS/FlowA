@@ -14,7 +14,10 @@ _DATA_PATH = os.path.join(_MAIN_DIR, "data")
 class Settings(BaseSettings):
     # 数据路径配置
     DATA_PATH: str = Field(default=_DATA_PATH, description="数据存储路径")
-    FRONTEND_PATH: str = Field(default=os.path.join(_MAIN_DIR, "frontend", "dist"), description="前端静态文件路径")
+    FRONTEND_PATH: str = Field(
+        default=os.path.join(_MAIN_DIR, "..", "frontend", "dist"),
+        description="前端静态文件路径",
+    )
 
     # Loguru日志配置
     LOG_FILE_PATH: str = Field(default="logs/app.log", description="日志文件路径")
@@ -38,7 +41,8 @@ class Settings(BaseSettings):
 
     # 数据库配置
     DATABASE_URL: str = Field(
-        default=f"sqlite+aiosqlite:///{os.path.join(_DATA_PATH, 'data.db')}", description="数据库连接字符串"
+        default=f"sqlite+aiosqlite:///{os.path.join(_DATA_PATH, 'data.db')}",
+        description="数据库连接字符串",
     )
     DATABASE_POOL_SIZE: int = Field(default=20, description="数据库连接池大小")
 

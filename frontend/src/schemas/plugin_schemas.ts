@@ -40,6 +40,7 @@ export const TYPE_CONDITION_VALUE = '@CONDITION_VALUE@' as const
 export enum FunctionPropType {
   // Operate =======================
   SETCONTEXT = '@SETCONTEXT@',
+  SETITEM = '@SETITEM@',
   ADDITEM = '@ADDITEM@',
   REMOVEITEM = '@REMOVEITEM@',
   APPENDITEM = '@APPENDITEM@',
@@ -57,7 +58,7 @@ export enum FunctionPropType {
   OPENEDITOR = '@OPENEDITOR@',
   DELETEIMAGE = '@DELETEIMAGE@',
   // Return =======================
-  UPLOADIMAGE = '@UPLOADIMAGE@',
+  UPLOADFILE = '@UPLOADFILE@',
   GENERATEUUID = '@GENERATEUUID@',
   FORMATSTRING = '@FORMATSTRING@',
   BACKENDURL = '@BACKENDURL@',
@@ -97,6 +98,11 @@ export interface VModelProp extends PropVarBase {
 export interface FuncArg_SETCONTEXT {
   Key: ReadOnlyPropVar
   Value: ReadOnlyPropVar
+}
+
+export interface FuncArg_SETITEM {
+  DstPath: VBindProp
+  ItemValue: any
 }
 
 export interface FuncArg_ADDITEM {
@@ -187,6 +193,11 @@ export interface FuncArg_DELETEIMAGE {
   Filename: ReadOnlyPropVar
 }
 
+export interface FuncArg_UPLOADFILE {
+  FileType: UploadFileInfoType
+  FilterType?: string[]
+}
+
 // 函数属性基类
 export interface _FuncPropBase {
   Func: FunctionPropType
@@ -197,6 +208,11 @@ export interface _FuncPropBase {
 export interface SETCONTEXT_FuncProp extends _FuncPropBase {
   Func: FunctionPropType.SETCONTEXT
   Arg: FuncArg_SETCONTEXT
+}
+
+export interface SETITEM_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.SETITEM
+  Arg: FuncArg_SETITEM
 }
 
 export interface ADDITEM_FuncProp extends _FuncPropBase {
@@ -273,9 +289,9 @@ export interface OPENEDITOR_FuncProp extends _FuncPropBase {
   Arg: FuncArg_OPENEDITOR
 }
 
-export interface UPLOADIMAGE_FuncProp extends _FuncPropBase {
-  Func: FunctionPropType.UPLOADIMAGE
-  Arg: null
+export interface UPLOADFILE_FuncProp extends _FuncPropBase {
+  Func: FunctionPropType.UPLOADFILE
+  Arg: FuncArg_UPLOADFILE
 }
 
 export interface GENERATEUUID_FuncProp extends _FuncPropBase {
@@ -297,6 +313,7 @@ export interface BACKENDURL_FuncProp extends _FuncPropBase {
 // 单个函数属性联合类型
 export type Operate_FuncProps =
   | SETCONTEXT_FuncProp
+  | SETITEM_FuncProp
   | ADDITEM_FuncProp
   | REMOVEITEM_FuncProp
   | APPENDITEM_FuncProp
@@ -314,7 +331,7 @@ export type Operate_FuncProps =
   | OPENEDITOR_FuncProp
   | DELETEIMAGE_FuncProp
 export type Return_FuncProps = GENERATEUUID_FuncProp | FORMATSTRING_FuncProp | BACKENDURL_FuncProp
-export type AsyncReturn_FuncProps = UPLOADIMAGE_FuncProp
+export type AsyncReturn_FuncProps = UPLOADFILE_FuncProp
 // 函数属性接口
 export interface OperateFunctionProp extends PropVarBase {
   FA_Type__: PropVarType.OperateFunc
@@ -461,4 +478,15 @@ export interface VFProvider {
   Icon?: string
   Plugins: VFPlugin[]
   UIPlugins: VFUIPlugin[]
+}
+
+export enum UploadFileInfoType {
+  BASE64 = 'BASE64',
+  URL = 'URL',
+  STRING = 'STRING',
+}
+export interface UploadFileInfo {
+  Type: UploadFileInfoType
+  Name: string
+  File: any
 }

@@ -96,6 +96,7 @@ const {
   resolveDataPath,
   getValueByPath,
   updateValueByPath,
+  setItemByPath,
   addItemByPath,
   appendItemByPath,
   removeItemByPath,
@@ -192,7 +193,17 @@ const processedProps = computed(() => {
                 await getValueFromROPAsync(props.dataContext, Value),
               )
             })
-          } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
+          }else if (prop_Function.Func == FunctionPropType.SETITEM) {
+            const { DstPath, ItemValue } = prop_Function.Arg
+            functions.push(async (getFunc, _) =>
+              setItemByPath(
+                props.dataContext,
+                resolveDataPath(props.dataContext, DstPath),
+                cloneDeep(await parseResult(ItemValue, getFunc)),
+              ),
+            )
+          }
+           else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
             functions.push(async (getFunc, _) =>
               addItemByPath(

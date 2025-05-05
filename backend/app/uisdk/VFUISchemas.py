@@ -10,6 +10,26 @@ from app.schemas.VFNodeInterface import (
 from app.schemas.VFNodeClass import InsertPos
 
 
+# =======================================
+class SelectOptions(BaseModel):
+    label: str
+    value: str
+    pass
+
+
+class UploadFileInfoType(StrEnum):
+    BASE64 = "BASE64"  # base64字符串
+    URL = "URL"  # 网络位置
+    STRING = "STRING"  # 纯字符串
+
+
+class UploadFileInfo(BaseModel):
+    Type: UploadFileInfoType
+    Name: str
+    File: str
+    pass
+
+
 # ================= 基础类型定义 =================
 class PropVarType(StrEnum):
     Value = "@VALUE@"
@@ -93,6 +113,7 @@ class VModelProp(PropVarBase):
 class FunctionPropType(StrEnum):
     # Operate =======================
     SETCONTEXT = "@SETCONTEXT@"
+    SETITEM = "@SETITEM@"
     ADDITEM = "@ADDITEM@"
     REMOVEITEM = "@REMOVEITEM@"
     APPENDITEM = "@APPENDITEM@"
@@ -110,9 +131,10 @@ class FunctionPropType(StrEnum):
     OPENEDITOR = "@OPENEDITOR@"
     DELETEIMAGE = "@DELETEIMAGE@"
     # Return =======================
-    UPLOADIMAGE = "@UPLOADIMAGE@"
+    UPLOADFILE = "@UPLOADFILE@"
     GENERATEUUID = "@GENERATEUUID@"
     FORMATSTRING = "@FORMATSTRING@"
+    REMATCHSTRING = "@REMATCHSTRING@"
     BACKENDURL = "@BACKENDURL@"
     pass
 
@@ -120,6 +142,12 @@ class FunctionPropType(StrEnum):
 class FuncArg_SETCONTEXT(BaseModel):
     Key: "ReadOnlyPropVar" = Field(..., description="上下文键名")
     Value: "ReadOnlyPropVar" = Field(..., description="上下文值")
+    pass
+
+
+class FuncArg_SETITEM(BaseModel):
+    DstPath: VBindProp = Field(..., description="目标路径数组")
+    ItemValue: Any = Field(..., description="item的value数据")
     pass
 
 
@@ -222,8 +250,20 @@ class FuncArg_FORMATSTRING(BaseModel):
     pass
 
 
+class FuncArg_REMATCHSTRING(BaseModel):
+    RString: str = Field(..., description="正则表达式")
+    Args: Dict[str, "ReadOnlyPropVar"] = Field(..., description="格式化参数")
+    pass
+
+
 class FuncArg_DELETEIMAGE(BaseModel):
     Filename: "ReadOnlyPropVar" = Field(..., description="文件名")
+    pass
+
+
+class FuncArg_UPLOADFILE(BaseModel):
+    FilterType: Optional[List[str]] = Field(None, description="文件类型")
+    FileType: UploadFileInfoType = Field(..., description="文件处理方法")
     pass
 
 
@@ -238,6 +278,11 @@ class _FuncPropBase(BaseModel):
 class SETCONTEXT_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.SETCONTEXT] = FunctionPropType.SETCONTEXT
     Arg: FuncArg_SETCONTEXT
+
+
+class SETITEM_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.SETITEM] = FunctionPropType.SETITEM
+    Arg: FuncArg_SETITEM
 
 
 class ADDITEM_FuncProp(_FuncPropBase):
@@ -317,9 +362,9 @@ class OPENEDITOR_FuncProp(_FuncPropBase):
     Arg: FuncArg_OPENEDITOR
 
 
-class UPLOADIMAGE_FuncProp(_FuncPropBase):
-    Func: Literal[FunctionPropType.UPLOADIMAGE] = FunctionPropType.UPLOADIMAGE
-    Arg: Any = None
+class UPLOADFILE_FuncProp(_FuncPropBase):
+    Func: Literal[FunctionPropType.UPLOADFILE] = FunctionPropType.UPLOADFILE
+    Arg: FuncArg_UPLOADFILE
 
 
 class GENERATEUUID_FuncProp(_FuncPropBase):
@@ -336,12 +381,15 @@ class DELETEIMAGE_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.DELETEIMAGE] = FunctionPropType.DELETEIMAGE
     Arg: FuncArg_DELETEIMAGE
 
+
 class BACKENDURL_FuncProp(_FuncPropBase):
     Func: Literal[FunctionPropType.BACKENDURL] = FunctionPropType.BACKENDURL
     Arg: Any = None
 
+
 Operate_FuncProps = Union[
     SETCONTEXT_FuncProp,
+    SETITEM_FuncProp,
     ADDITEM_FuncProp,
     REMOVEITEM_FuncProp,
     APPENDITEM_FuncProp,
@@ -364,7 +412,7 @@ Return_FuncProps = Union[
     FORMATSTRING_FuncProp,
     BACKENDURL_FuncProp,
 ]
-AsyncReturn_FuncProps = Union[UPLOADIMAGE_FuncProp,]
+AsyncReturn_FuncProps = Union[UPLOADFILE_FuncProp]
 
 
 class OperateFunctionProp(PropVarBase):
@@ -540,9 +588,3 @@ for cls in [
     ReturnFunctionProp,
 ]:
     cls.model_rebuild()
-
-
-class SelectOptions(BaseModel):
-    label: str
-    value: str
-    pass

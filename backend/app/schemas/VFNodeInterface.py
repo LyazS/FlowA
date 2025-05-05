@@ -20,6 +20,7 @@ class VarType(StrEnum):
     Dict = "Dict"
     Image = "Image"
     File = "File"
+    WebFile = "WebFile"
     Any = "Any"
     pass
 

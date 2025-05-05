@@ -145,7 +145,14 @@ class UI_PromptOperate(NFlex):
                                                                 detail=LLMPromptImageDetail.auto,
                                                                 urlType=LLMPromptImageParamType.FromUpload,
                                                                 url=AsyncReturnFunctionProp(
-                                                                    UPLOADIMAGE_FuncProp()
+                                                                    UPLOADFILE_FuncProp(
+                                                                        Arg=FuncArg_UPLOADFILE(
+                                                                            FileType=UploadFileInfoType.URL,
+                                                                            FilterType=[
+                                                                                "image/*"
+                                                                            ],
+                                                                        )
+                                                                    )
                                                                 ),
                                                             )
                                                         ),
@@ -453,6 +460,7 @@ class UI_Prompt_Image_Upload(NFlex):
                                                     ),
                                                     "image_url",
                                                     "url",
+                                                    "File",
                                                 ]
                                             ),
                                         },
@@ -543,6 +551,7 @@ class UI_Prompt_Image_Upload(NFlex):
                                                             ),
                                                             "image_url",
                                                             "url",
+                                                            "File",
                                                         ]
                                                     ),
                                                 )
