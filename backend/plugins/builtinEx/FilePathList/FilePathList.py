@@ -3,6 +3,8 @@ import os
 import io
 import base64
 import json
+import glob
+import fnmatch
 import traceback
 from PIL import Image
 from loguru import logger
@@ -68,6 +70,26 @@ class FilePathListData(BaseModel):
     pass
 
 
+FileImagePatterns = [
+    "*.jpg",
+    "*.jpeg",
+    "*.png",
+    "*.gif",
+    "*.bmp",
+    "*.webp",
+    "*.tiff",
+]
+FileVideoPatterns = [
+    "*.mp4",
+    "*.avi",
+    "*.mov",
+    "*.wmv",
+    "*.flv",
+    "*.mkv",
+    "*.webm",
+]
+
+
 class FilePathList(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
@@ -76,7 +98,17 @@ class FilePathList(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
-
+            node_payloads = self.data.Payloads
+            D_FILE_PATH_LIST: VFNodeContentData = node_payloads.ById["D_FILE_PATH_LIST"]
+            D_FILE_PATH_LIST_DATA = FilePathListData.model_validate(
+                D_FILE_PATH_LIST.Data.value
+            )
+            if D_FILE_PATH_LIST_DATA.Type == FilePathListType.DIR:
+                if not D_FILE_PATH_LIST_DATA.Dir:
+                    error_msgs.append(f"目录不能为空")
+                elif not os.path.exists(D_FILE_PATH_LIST_DATA.Dir):
+                    error_msgs.append(f"目录不存在{D_FILE_PATH_LIST_DATA.Dir}")
+                pass
             pass
         except Exception as e:
             errmsg = traceback.format_exc()
@@ -86,8 +118,69 @@ class FilePathList(FATaskNode):
             return ValidationError(nid=self.id, errors=error_msgs)
         return None
 
-    async def run(self) -> List[FANodeUpdateData]:
+    def isMatch(
+        self,
+        file_name: str,
+        pattern: str,
+        quick_select: List[FilePathQuickSelect],
+    ) -> bool:
+        # 当pattern不存在且quick_select为空时，返回True
+        if not pattern and not quick_select:
+            return True
 
+        # 优先检查pattern
+        if pattern:
+            return fnmatch.fnmatch(file_name, pattern)
+
+        # 如果pattern不存在，检查quick_select
+        if FilePathQuickSelect.IMAGE in quick_select:
+            for img_pattern in FileImagePatterns:
+                if fnmatch.fnmatch(file_name.lower(), img_pattern):
+                    return True
+
+        if FilePathQuickSelect.VIDEO in quick_select:
+            for vid_pattern in FileVideoPatterns:
+                if fnmatch.fnmatch(file_name.lower(), vid_pattern):
+                    return True
+
+        return False
+
+    async def run(self) -> List[FANodeUpdateData]:
+        node_payloads = self.data.Payloads
+        D_FILE_PATH_LIST: VFNodeContentData = node_payloads.ById["D_FILE_PATH_LIST"]
+        D_FILE_PATH_LIST_DATA = FilePathListData.model_validate(
+            D_FILE_PATH_LIST.Data.value
+        )
+
+        if D_FILE_PATH_LIST_DATA.Type == FilePathListType.DIR:
+            file_paths = []
+            for root, dirs, files in os.walk(D_FILE_PATH_LIST_DATA.Dir):
+                for file in files:
+                    if self.isMatch(
+                        file,
+                        D_FILE_PATH_LIST_DATA.FileName,
+                        D_FILE_PATH_LIST_DATA.QuickSelect,
+                    ):
+                        file_paths.append(os.path.join(root, file))
+                if not D_FILE_PATH_LIST_DATA.Recursive:
+                    break
+                pass
+            self.data.Results.ById["R_PATHS"].Data.value = [
+                os.path.realpath(p) for p in file_paths
+            ]
+            pass
+        elif D_FILE_PATH_LIST_DATA.Type == FilePathListType.REGEX:
+            # 使用glob
+            file_paths = glob.glob(
+                D_FILE_PATH_LIST_DATA.Regex,
+                recursive=D_FILE_PATH_LIST_DATA.Recursive,
+            )
+            self.data.Results.ById["R_PATHS"].Data.value = [
+                os.path.realpath(p) for p in file_paths
+            ]
+            pass
+        pass
+        self.setAllOutputStatus(FARunStatus.Success)
         return []
 
     @staticmethod
@@ -111,7 +204,7 @@ class FilePathList(FATaskNode):
             ),
             payload_id="D_FILE_PATH_LIST",
         )
-        
+
         thisnode.add_result_into_outputs(
             VFNodeContentData(
                 Label="输出路径数组",

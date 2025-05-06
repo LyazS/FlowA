@@ -70,6 +70,7 @@ import {
   NTab,
   // 反馈组件
   NMarquee,
+  NPopover,
   // 布局组件
   NFlex,
   NGrid,
@@ -147,6 +148,7 @@ export const DYNAMIC_COMPONENTS_MAP: Record<string, Component> = {
   NHighlight: NHighlight,
   NTab: NTab,
   NMarquee: NMarquee,
+  NPopover: NPopover,
   NFlex: NFlex,
   // 存在问题，NGridItem无法二次封装导致失效
   // NGrid: NGrid,
@@ -176,4 +178,4 @@ export const DYNAMIC_ICONS_MAP: Record<string, Component> = {
   CloudUploadOutline: CloudUploadOutline,
 }
 
-export const EXTRA_DIV_COMPONENTS = ['NDropdown']
+export const EXTRA_DIV_COMPONENTS = ['NDropdown', 'NPopover']

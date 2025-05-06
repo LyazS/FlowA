@@ -4,7 +4,12 @@ from plugins.builtin.UI_Components.NFlex import NFlex
 from plugins.builtin.UI_Components.NInput import NInput
 from plugins.builtin.UI_Components.NButton import NButton
 from plugins.builtin.UI_Components.Header import Header
-from .FilePathList import FilePathListType, FilePathQuickSelect
+from .FilePathList import (
+    FilePathListType,
+    FilePathQuickSelect,
+    FileImagePatterns,
+    FileVideoPatterns,
+)
 
 
 class UI_File_Path_List(NFlex):
@@ -266,22 +271,61 @@ class UI_File_Path_List(NFlex):
                                                     ),
                                                 },
                                                 Slots={
-                                                    "default": [
-                                                        NormalComponent(
-                                                            Type="NCheckbox",
-                                                            Props={
-                                                                "label": "图像",
-                                                                "value": FilePathQuickSelect.IMAGE,
-                                                            },
-                                                        ),
-                                                        NormalComponent(
-                                                            Type="NCheckbox",
-                                                            Props={
-                                                                "label": "视频",
-                                                                "value": FilePathQuickSelect.VIDEO,
-                                                            },
-                                                        ),
-                                                    ]
+                                                    "default": NFlex(
+                                                        vertical=False,
+                                                        wrap=False,
+                                                        justify="flex-start",
+                                                        slots={
+                                                            "default": [
+                                                                NormalComponent(
+                                                                    Type="NPopover",
+                                                                    Props={
+                                                                        "trigger": "hover",
+                                                                    },
+                                                                    Slots={
+                                                                        "trigger": NormalComponent(
+                                                                            Type="NCheckbox",
+                                                                            Props={
+                                                                                "label": "图像",
+                                                                                "value": FilePathQuickSelect.IMAGE,
+                                                                            },
+                                                                        ),
+                                                                        "default": SpanComponent(
+                                                                            ValueProp(
+                                                                                "图像后缀: "
+                                                                                + ", ".join(
+                                                                                    FileImagePatterns
+                                                                                )
+                                                                            )
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                NormalComponent(
+                                                                    Type="NPopover",
+                                                                    Props={
+                                                                        "trigger": "hover",
+                                                                    },
+                                                                    Slots={
+                                                                        "trigger": NormalComponent(
+                                                                            Type="NCheckbox",
+                                                                            Props={
+                                                                                "label": "视频",
+                                                                                "value": FilePathQuickSelect.VIDEO,
+                                                                            },
+                                                                        ),
+                                                                        "default": SpanComponent(
+                                                                            ValueProp(
+                                                                                "视频后缀: "
+                                                                                + ", ".join(
+                                                                                    FileVideoPatterns
+                                                                                )
+                                                                            )
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                            ]
+                                                        },
+                                                    )
                                                 },
                                             ),
                                         ]
