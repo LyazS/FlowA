@@ -138,6 +138,13 @@ class FABaseNode(ABC):
         return None
 
     @staticmethod
+    async def refreshNodeConfig():
+        """
+        刷新节点的配置信息
+        """
+        pass
+
+    @staticmethod
     def getNodeCreateInfo() -> VFNode:
         """
         节点的创建信息

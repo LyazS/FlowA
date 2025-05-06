@@ -165,13 +165,19 @@ MODELS_SELECT = None
 AsyncOAIClient = None
 
 
+async def initClient():
+    global AsyncOAIClient
+    if AsyncOAIClient is None:
+        AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
+    pass
+
+
 async def init_node_class():
     global NODE_CONFIG
     global BASE_URL
     global API_KEY
     global MODELS
     global MODELS_SELECT
-    global AsyncOAIClient
     ret, config = await loadNodeConfig(THIS_NODE_NAME)
     if ret:
         NODE_CONFIG = config
@@ -200,8 +206,8 @@ async def init_node_class():
     MODELS_SELECT = [
         SelectOptions(label=m["name"], value=m["name"]) for m in NODE_CONFIG["models"]
     ]
-    AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
-    await LLMInference.getNodeConfig()
+    # AsyncOAIClient = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
+    # await LLMInference.getNodeConfig()
     pass
 
 
@@ -242,6 +248,7 @@ class LLMInference(FATaskNode):
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
         try:
+            await initClient()
             selfVars = await validator.getConnectionByPath(
                 self.id,
                 [
@@ -433,11 +440,9 @@ class LLMInference(FATaskNode):
 
         # 确定content内容
         content_value = content_parts
-        if len(content_parts) == 1 and isinstance(
-            content_parts[0], ChatCompletionContentPartTextParam
-        ):
+        if len(content_parts) == 1 and content_parts[0].get("type") == "text":
             # 如果只有一个文本部分，直接使用文本内容
-            content_value = content_parts[0].text
+            content_value = content_parts[0]['text']
 
         # 创建消息对象
         if role == LLMRole.system:
@@ -457,6 +462,7 @@ class LLMInference(FATaskNode):
     async def run(self) -> List[FANodeUpdateData]:
         for try_count in range(5):
             try:
+                await initClient()
                 node_payloads = self.data.Payloads
                 node_results = self.data.Results
                 D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
@@ -590,6 +596,7 @@ class LLMInference(FATaskNode):
     async def getNodeConfig():
         global MODELS
         global MODELS_SELECT
+        await initClient()
         modellist = (await AsyncOAIClient.models.list()).data
         MODELS_SELECT = [SelectOptions(label=m.id, value=m.id) for m in modellist]
         MODELS_SELECT = sorted(MODELS_SELECT, key=lambda x: x.label.lower())

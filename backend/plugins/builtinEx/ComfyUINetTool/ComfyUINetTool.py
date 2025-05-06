@@ -31,7 +31,9 @@ from app.schemas.VFNodeInterface import (
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
 from app.api.file_mgr import WORKFLOW_DATA_DIR
-from app.utils.tools import reduceGet
+from app.utils.tools import reduceGet, read_yaml
+from app.utils.db4node import loadNodeConfig, setNodeConfig
+from .cfutils import ComfyUISDK
 
 
 class CF_NodeVar(BaseModel):
@@ -50,14 +52,54 @@ class CF_Workflow(BaseModel):
     pass
 
 
+THIS_NODE_NAME = "@FALLMInference"
+SERVER_ADDRESS = None
+NODE_CONFIG = {}
+
+COMFYUI_INSTANCE = None
+
+COMFYUI_INSTANCE = ComfyUISDK()
+
+
+async def initCFInstanceCheck():
+    return await COMFYUI_INSTANCE.check(SERVER_ADDRESS)
+
+
+async def init_node_class():
+    global NODE_CONFIG
+    global SERVER_ADDRESS
+    ret, config = await loadNodeConfig(THIS_NODE_NAME)
+    if ret:
+        NODE_CONFIG = config
+    else:
+        NODE_CONFIG = read_yaml(
+            os.path.join(
+                os.path.dirname(__file__),
+                "ComfyUI.yaml",
+            )
+        )
+        await setNodeConfig(THIS_NODE_NAME, NODE_CONFIG)
+    SERVER_ADDRESS = NODE_CONFIG["server_address"]
+
+    pass
+
+
 class ComfyUINetTool(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
         pass
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
+        """
+        检查cf是否能连通
+        检查json是否唯一存在SaveImageWebsocket
+        """
         error_msgs = []
         try:
+            if not await initCFInstanceCheck():
+                error_msgs.append(f"连接到ComfyUI失败: {COMFYUI_INSTANCE._url}")
+                pass
+
             node_payloads = self.data.Payloads
             selfVars = await validator.getConnectionByPath(
                 self.id,
@@ -114,8 +156,27 @@ class ComfyUINetTool(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
+        if not await initCFInstanceCheck():
+            raise Exception(f"连接到ComfyUI失败: {COMFYUI_INSTANCE._url}")
         node_payloads = self.data.Payloads
-        
+        D_WORKFLOW = node_payloads.ById["D_WORKFLOW"]
+        CF_Workflow_Data = CF_Workflow.model_validate(D_WORKFLOW.Data.value)
+        if CF_Workflow_Data.Type == VarType.File:
+            prompt = json.loads(CF_Workflow_Data.ValueJson.File)
+        elif CF_Workflow_Data.Type == VarType.Ref:
+            prompt = await self.runner().getRefData(self.id, CF_Workflow_Data.ValueRef)
+        D_NODE_VAR = node_payloads.ById["D_NODE_VAR"]
+        for var_item in D_NODE_VAR.Data.value:
+            node_var = CF_NodeVar.model_validate(var_item)
+            if node_var.FieldType == VarType.Ref:
+                prompt[node_var.NodeId]['inputs'][node_var.FieldName] = await self.runner().getRefData(
+                    self.id, node_var.FieldValueRef
+                )
+            else:
+                prompt[node_var.NodeId]['inputs'][node_var.FieldName] = node_var.FieldValueStr
+        images = await COMFYUI_INSTANCE.get_images(prompt)
+        self.data.Results.ById["R_IMAGE"].Data.value = images
+        self.setAllOutputStatus(FARunStatus.Success)
         return []
 
     @staticmethod
@@ -176,3 +237,4 @@ class ComfyUINetTool(FATaskNode):
 
 # 必须存在
 EXPORT_NODE = ComfyUINetTool
+EXPORT_INIT = init_node_class
