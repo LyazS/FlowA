@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import {
   h,
   resolveComponent,
@@ -60,7 +59,6 @@ import {
   DYNAMIC_ICONS_MAP,
   EXTRA_DIV_COMPONENTS,
 } from '@/schemas/dynamic_components_map'
-import { VFNode, InsertPos } from '@/components/nodes/VFNodeClass'
 import {
   selectedNodeId,
   isEditorMode,
@@ -68,16 +66,10 @@ import {
   CodeEditorPath,
   CodeEditorLangType,
 } from '@/hooks/useVFlowAttribute'
-import { type SelectOption } from 'naive-ui'
-import { useNodeUtils, type RefVarItem } from '@/hooks/useNodeUtils'
-import {
-  type CodeEditorLanguage,
-  type VFNodeHandleData,
-  VFNodeConnectionType,
-  type VFNodeContentData,
-} from '@/components/nodes/VFNodeInterface'
 import { cloneDeep } from 'lodash'
 import { useDynamicComp } from '@/hooks/useDynamicComp'
+import { lodashOperators } from '@/utils/tools'
+
 defineOptions({
   name: 'DynamicComponent',
 })
@@ -193,7 +185,7 @@ const processedProps = computed(() => {
                 await getValueFromROPAsync(props.dataContext, Value),
               )
             })
-          }else if (prop_Function.Func == FunctionPropType.SETITEM) {
+          } else if (prop_Function.Func == FunctionPropType.SETITEM) {
             const { DstPath, ItemValue } = prop_Function.Arg
             functions.push(async (getFunc, _) =>
               setItemByPath(
@@ -202,8 +194,7 @@ const processedProps = computed(() => {
                 cloneDeep(await parseResult(ItemValue, getFunc)),
               ),
             )
-          }
-           else if (prop_Function.Func == FunctionPropType.ADDITEM) {
+          } else if (prop_Function.Func == FunctionPropType.ADDITEM) {
             const { ItemKey, ItemValue, DstPath } = prop_Function.Arg
             functions.push(async (getFunc, _) =>
               addItemByPath(
@@ -403,16 +394,7 @@ const handleCompare = (config: CompareCondition): boolean => {
   const left = getValueFromROP(props.dataContext, config.Left)
   const right = getValueFromROP(props.dataContext, config.Right)
 
-  const operators: Record<string, (a: any, b: any) => boolean> = {
-    '==': (a, b) => a == b,
-    '!=': (a, b) => a != b,
-    '>': (a, b) => a > b,
-    '<': (a, b) => a < b,
-    '>=': (a, b) => a >= b,
-    '<=': (a, b) => a <= b,
-  }
-
-  return operators[config.Operator]?.(left, right) ?? false
+  return lodashOperators[config.Operator]?.(left, right) ?? false
 }
 
 const handleLogical = (config: LogicalCondition) => {

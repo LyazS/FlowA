@@ -2,6 +2,16 @@ import { fetchEventSource } from '@microsoft/fetch-event-source'
 import type { EventSourceMessage } from '@microsoft/fetch-event-source'
 import { h } from 'vue'
 import { NIcon } from 'naive-ui'
+// 单独导入所需的 Lodash 方法
+import isEqual from 'lodash/isEqual';
+import isDate from 'lodash/isDate';
+import isArray from 'lodash/isArray';
+import isObject from 'lodash/isObject';
+import isString from 'lodash/isString';
+import isNumber from 'lodash/isNumber';
+import has from 'lodash/has';
+import some from 'lodash/some';
+import every from 'lodash/every';
 
 interface SSEConfig {
   method: string
@@ -216,10 +226,6 @@ export function isPlainObject(value: any): boolean {
   return prototype === Object.prototype || prototype === null
 }
 
-export function isString(value: any): value is string {
-  return typeof value === 'string'
-}
-
 export function isJsonString(value: any): boolean {
   try {
     JSON.parse(value)
@@ -269,4 +275,125 @@ export function getErrorMessage(error: unknown): string {
   return `系统异常: ${JSON.stringify(error)}`
 }
 
-
+export const lodashOperators: Record<string, (a: any, b: any) => boolean> = {
+  // 等于操作符 - 使用深度比较
+  '==': (a, b) => isEqual(a, b),
+  
+  // 不等于操作符 - 使用深度比较的否定
+  '!=': (a, b) => !isEqual(a, b),
+  
+  // 大于操作符 - 支持数字、字符串、日期等可比较类型
+  '>': (a, b) => {
+    // 处理日期比较
+    if (isDate(a) && isDate(b)) {
+      return a.getTime() > b.getTime();
+    }
+    // 处理数组比较 (按长度)
+    if (isArray(a) && isArray(b)) {
+      return a.length > b.length;
+    }
+    // 处理对象比较 (按键数量)
+    if (isObject(a) && isObject(b) && !isArray(a) && !isArray(b)) {
+      return Object.keys(a).length > Object.keys(b).length;
+    }
+    // 默认比较
+    return a > b;
+  },
+  
+  // 小于操作符
+  '<': (a, b) => {
+    if (isDate(a) && isDate(b)) {
+      return a.getTime() < b.getTime();
+    }
+    if (isArray(a) && isArray(b)) {
+      return a.length < b.length;
+    }
+    if (isObject(a) && isObject(b) && !isArray(a) && !isArray(b)) {
+      return Object.keys(a).length < Object.keys(b).length;
+    }
+    return a < b;
+  },
+  
+  // 大于等于操作符
+  '>=': (a, b) => {
+    if (isEqual(a, b)) return true;
+    
+    if (isDate(a) && isDate(b)) {
+      return a.getTime() >= b.getTime();
+    }
+    if (isArray(a) && isArray(b)) {
+      return a.length >= b.length;
+    }
+    if (isObject(a) && isObject(b) && !isArray(a) && !isArray(b)) {
+      return Object.keys(a).length >= Object.keys(b).length;
+    }
+    return a >= b;
+  },
+  
+  // 小于等于操作符
+  '<=': (a, b) => {
+    if (isEqual(a, b)) return true;
+    
+    if (isDate(a) && isDate(b)) {
+      return a.getTime() <= b.getTime();
+    }
+    if (isArray(a) && isArray(b)) {
+      return a.length <= b.length;
+    }
+    if (isObject(a) && isObject(b) && !isArray(a) && !isArray(b)) {
+      return Object.keys(a).length <= Object.keys(b).length;
+    }
+    return a <= b;
+  },
+  
+  // 添加额外的通用比较操作符
+  
+  // 包含操作符 (检查 a 是否包含 b)
+  'contains': (a, b) => {
+    if (isString(a)) {
+      return a.includes(String(b));
+    }
+    if (isArray(a)) {
+      return some(a, item => isEqual(item, b));
+    }
+    if (isObject(a) && !isArray(a)) {
+      return some(Object.values(a), value => isEqual(value, b));
+    }
+    return false;
+  },
+  
+  // 开始于操作符
+  'startsWith': (a, b) => {
+    if (isString(a) && (isString(b) || isNumber(b))) {
+      return a.startsWith(String(b));
+    }
+    if (isArray(a) && isArray(b)) {
+      return b.length <= a.length && isEqual(a.slice(0, b.length), b);
+    }
+    return false;
+  },
+  
+  // 结束于操作符
+  'endsWith': (a, b) => {
+    if (isString(a) && (isString(b) || isNumber(b))) {
+      return a.endsWith(String(b));
+    }
+    if (isArray(a) && isArray(b)) {
+      return b.length <= a.length && isEqual(a.slice(a.length - b.length), b);
+    }
+    return false;
+  },
+  
+  // 子集操作符 (检查 b 是否是 a 的子集)
+  'subset': (a, b) => {
+    if (isArray(a) && isArray(b)) {
+      return every(b, bItem => some(a, aItem => isEqual(aItem, bItem)));
+    }
+    if (isObject(a) && isObject(b) && !isArray(a) && !isArray(b)) {
+      return every(Object.entries(b), ([key, val]) => 
+        has(a, key) && isEqual(a[key], val)
+      );
+    }
+    return false;
+  }
+};

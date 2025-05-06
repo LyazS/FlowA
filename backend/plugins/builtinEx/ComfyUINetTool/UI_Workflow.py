@@ -36,58 +36,56 @@ class UI_CF_Workflow(NFlex):
                         vertical=True,
                         slots={
                             "default": [
-                                NFlex(
-                                    vertical=False,
-                                    wrap=False,
-                                    justify="flex-start",
-                                    style={
-                                        "align-content": "center",
-                                        "align-items": "center",
+                                # 类型选择
+                                NormalComponent(
+                                    Type="NRadioGroup",
+                                    Props={
+                                        "size": "small",
+                                        "name": "FilePathListType",
+                                        "value": VModelProp(
+                                            [
+                                                THIS_NODE_DATA,
+                                                "Payloads",
+                                                "ById",
+                                                VBindProp(
+                                                    [
+                                                        COMPONENT_CONTEXT,
+                                                        PAYLOADS_ID,
+                                                    ]
+                                                ),
+                                                "Data",
+                                                "Type",
+                                            ]
+                                        ),
                                     },
-                                    slots={
+                                    Slots={
                                         "default": [
                                             NormalComponent(
-                                                Type="NTag",
+                                                Type="NRadio",
                                                 Props={
-                                                    "type": "warning",
-                                                    "size": "medium",
-                                                    "bordered": False,
+                                                    "label": "引用变量",
+                                                    "value": VarType.Ref,
+                                                    "style": {"margin-right": "10px"},
                                                 },
                                                 Slots={
                                                     "default": SpanComponent(
-                                                        ValueProp("文件类型")
-                                                    )
+                                                        ValueProp("引用变量")
+                                                    ),
                                                 },
                                             ),
                                             NormalComponent(
-                                                Type="NSelect",
+                                                Type="NRadio",
                                                 Props={
-                                                    "size": "small",
-                                                    "value": VModelProp(
-                                                        [
-                                                            THIS_NODE_DATA,
-                                                            "Payloads",
-                                                            "ById",
-                                                            VBindProp(
-                                                                [
-                                                                    COMPONENT_CONTEXT,
-                                                                    PAYLOADS_ID,
-                                                                ]
-                                                            ),
-                                                            "Data",
-                                                            "Type",
-                                                        ]
+                                                    "label": "上传工作流文件 <*.json>",
+                                                    "value": VarType.File,
+                                                    "style": {"margin-right": "10px"},
+                                                },
+                                                Slots={
+                                                    "default": SpanComponent(
+                                                        ValueProp(
+                                                            "工作流文件 <*.json>"
+                                                        )
                                                     ),
-                                                    "options": [
-                                                        {
-                                                            "label": "上传工作流文件 <*.json>",
-                                                            "value": VarType.File,
-                                                        },
-                                                        {
-                                                            "label": "引用变量",
-                                                            "value": VarType.Ref,
-                                                        },
-                                                    ],
                                                 },
                                             ),
                                         ]

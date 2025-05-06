@@ -115,7 +115,7 @@ class ComfyUINetTool(FATaskNode):
 
     async def run(self) -> List[FANodeUpdateData]:
         node_payloads = self.data.Payloads
-
+        
         return []
 
     @staticmethod

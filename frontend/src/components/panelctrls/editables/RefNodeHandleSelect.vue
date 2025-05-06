@@ -19,7 +19,7 @@ import { NSelect, NText } from 'naive-ui'
 import type { SelectOption } from 'naive-ui'
 import { useVueFlow } from '@vue-flow/core'
 import { isEditorMode } from '@/hooks/useVFlowAttribute'
-import { isString } from '@/utils/tools'
+import isString from 'lodash/isString';
 import { type RefNodeHandleItem } from '@/hooks/useNodeUtils'
 import { VFNodeConnectionType } from '@/components/nodes/VFNodeInterface'
 import type { NodeWithVFData } from '@/schemas/schemas'
