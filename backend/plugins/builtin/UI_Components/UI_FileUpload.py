@@ -22,7 +22,7 @@ class UI_FileUpload(NFlex):
         super().__init__(
             vertical=False,
             wrap=False,
-            justify="space-between",
+            justify="flex-start",
             style={
                 "align-content": "center",
                 "align-items": "center",
@@ -32,13 +32,6 @@ class UI_FileUpload(NFlex):
             IfCondition=IfCondition,
             slots={
                 "default": [
-                    NormalComponent(
-                        Type="NEllipsis",
-                        Props={
-                            "style": {"width": "60%", "max-width": "60%"},
-                        },
-                        Slots={"default": SpanComponent(VBindProp(value + ["Name"]))},
-                    ),
                     NButton(
                         type="warning",
                         size=size,
@@ -65,6 +58,13 @@ class UI_FileUpload(NFlex):
                             "default": SpanComponent(ValueProp("上传")),
                             "icon": NormalComponent(Type="CloudUploadOutline"),
                         },
+                    ),
+                    NormalComponent(
+                        Type="NEllipsis",
+                        Props={
+                            "style": {"width": "60%", "max-width": "60%"},
+                        },
+                        Slots={"default": SpanComponent(VBindProp(value + ["Name"]))},
                     ),
                 ]
             },

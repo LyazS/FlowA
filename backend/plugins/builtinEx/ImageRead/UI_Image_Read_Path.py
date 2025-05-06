@@ -71,7 +71,7 @@ class UI_Image_Read_Path(NFlex):
                                 NInput(
                                     style={"width": "70%"},
                                     size="small",
-                                    otherProps={"placeholder": "输入图片绝对路径"},
+                                    placeholder="输入图片绝对路径",
                                     value=VModelProp(
                                         [
                                             THIS_NODE_DATA,

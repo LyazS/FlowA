@@ -13,7 +13,6 @@ class UI_CF_Workflow(NFlex):
     def __init__(self):
         super().__init__(
             vertical=True,
-            style={"wiidth": "100%"},
             slots={
                 "default": [
                     Header(
@@ -34,40 +33,64 @@ class UI_CF_Workflow(NFlex):
                         ),
                     ),
                     NFlex(
-                        vertical=False,
-                        wrap=False,
-                        justify="space-between",
-                        style={
-                            "align-content": "center",
-                            "align-items": "center",
-                            "width": "100%",
-                        },
+                        vertical=True,
                         slots={
                             "default": [
-                                NormalComponent(
-                                    Type="NSelect",
-                                    Props={
-                                        "size": "small",
-                                        "width": "30%",
-                                        "value": VModelProp(
-                                            [
-                                                THIS_NODE_DATA,
-                                                "Payloads",
-                                                "ById",
-                                                VBindProp(
-                                                    [
-                                                        COMPONENT_CONTEXT,
-                                                        PAYLOADS_ID,
-                                                    ]
-                                                ),
-                                                "Data",
-                                                "Type",
-                                            ]
-                                        ),
-                                        "options": [
-                                            {"label": "工作流", "value": VarType.File},
-                                            {"label": "引用", "value": VarType.Ref},
-                                        ],
+                                NFlex(
+                                    vertical=False,
+                                    wrap=False,
+                                    justify="flex-start",
+                                    style={
+                                        "align-content": "center",
+                                        "align-items": "center",
+                                    },
+                                    slots={
+                                        "default": [
+                                            NormalComponent(
+                                                Type="NTag",
+                                                Props={
+                                                    "type": "warning",
+                                                    "size": "medium",
+                                                    "bordered": False,
+                                                },
+                                                Slots={
+                                                    "default": SpanComponent(
+                                                        ValueProp("文件类型")
+                                                    )
+                                                },
+                                            ),
+                                            NormalComponent(
+                                                Type="NSelect",
+                                                Props={
+                                                    "size": "small",
+                                                    "value": VModelProp(
+                                                        [
+                                                            THIS_NODE_DATA,
+                                                            "Payloads",
+                                                            "ById",
+                                                            VBindProp(
+                                                                [
+                                                                    COMPONENT_CONTEXT,
+                                                                    PAYLOADS_ID,
+                                                                ]
+                                                            ),
+                                                            "Data",
+                                                            "Type",
+                                                        ]
+                                                    ),
+                                                    "options": [
+                                                        {
+                                                            "label": "上传工作流文件 <*.json>",
+                                                            "value": VarType.File,
+                                                        },
+                                                        {
+                                                            "label": "引用变量",
+                                                            "value": VarType.Ref,
+                                                        },
+                                                    ],
+                                                },
+                                            ),
+                                        ]
                                     },
                                 ),
                                 UI_FileUpload(
@@ -85,6 +108,7 @@ class UI_CF_Workflow(NFlex):
                                         "ValueJson",
                                     ],
                                     width="70%",
+                                    size="small",
                                     fileType=UploadFileInfoType.STRING,
                                     filterType=[".json"],
                                     IfCondition=CompareCondition(
@@ -107,40 +131,14 @@ class UI_CF_Workflow(NFlex):
                                         Right=ValueProp(VarType.File),
                                     ),
                                 ),
-                                UI_RefVarSelect(
-                                    style={"width": "70%"},
-                                    value=VModelProp(
-                                        [
-                                            THIS_NODE_DATA,
-                                            "Payloads",
-                                            "ById",
-                                            VBindProp(
-                                                [
-                                                    COMPONENT_CONTEXT,
-                                                    PAYLOADS_ID,
-                                                ]
-                                            ),
-                                            "Data",
-                                            "ValueRef",
-                                        ]
-                                    ),
-                                    options=VBindProp(
-                                        [
-                                            CONNECT_DATA,
-                                            "--node",
-                                            CONNECT_CUR_NODE,
-                                            "--handle",
-                                            VFNodeConnectionType.Self,
-                                            "--hid",
-                                            "self",
-                                            "--outfmt",
-                                            CONNECT_DATA_TO_SELECT,
-                                            "--level",
-                                            CONNECT_VAR_LEVEL,
-                                            "--filtertypes",
-                                            VarType.String,
-                                        ]
-                                    ),
+                                NFlex(
+                                    vertical=False,
+                                    wrap=False,
+                                    justify="flex-start",
+                                    style={
+                                        "align-content": "center",
+                                        "align-items": "center",
+                                    },
                                     IfCondition=CompareCondition(
                                         Left=VBindProp(
                                             [
@@ -160,8 +158,60 @@ class UI_CF_Workflow(NFlex):
                                         Operator="==",
                                         Right=ValueProp(VarType.Ref),
                                     ),
+                                    slots={
+                                        "default": [
+                                            NormalComponent(
+                                                Type="NTag",
+                                                Props={
+                                                    "type": "warning",
+                                                    "size": "medium",
+                                                    "bordered": False,
+                                                },
+                                                Slots={
+                                                    "default": SpanComponent(
+                                                        ValueProp("引用变量")
+                                                    )
+                                                },
+                                            ),
+                                            UI_RefVarSelect(
+                                                style={"width": "70%"},
+                                                value=VModelProp(
+                                                    [
+                                                        THIS_NODE_DATA,
+                                                        "Payloads",
+                                                        "ById",
+                                                        VBindProp(
+                                                            [
+                                                                COMPONENT_CONTEXT,
+                                                                PAYLOADS_ID,
+                                                            ]
+                                                        ),
+                                                        "Data",
+                                                        "ValueRef",
+                                                    ]
+                                                ),
+                                                options=VBindProp(
+                                                    [
+                                                        CONNECT_DATA,
+                                                        "--node",
+                                                        CONNECT_CUR_NODE,
+                                                        "--handle",
+                                                        VFNodeConnectionType.Self,
+                                                        "--hid",
+                                                        "self",
+                                                        "--outfmt",
+                                                        CONNECT_DATA_TO_SELECT,
+                                                        "--level",
+                                                        CONNECT_VAR_LEVEL,
+                                                        "--filtertypes",
+                                                        VarType.String,
+                                                    ]
+                                                ),
+                                            ),
+                                        ]
+                                    },
                                 ),
-                            ]
+                            ],
                         },
                     ),
                 ]

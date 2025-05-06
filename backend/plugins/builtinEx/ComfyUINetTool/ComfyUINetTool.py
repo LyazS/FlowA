@@ -116,7 +116,7 @@ class ComfyUINetTool(FATaskNode):
         thisnode.add_payload(
             VFNodeContentData(
                 Label="节点变量",
-                Type=VarType.Any,
+                Type=VarType.List,
                 Data=[],
                 UiType="@/FlowABuiltinEx/UI_COMFYUI_NODE_VAR",
             ),

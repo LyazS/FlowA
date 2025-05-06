@@ -34,6 +34,11 @@
       "Type": "FANode",
       "Name": "@/FlowABuiltinEx/UI_COMFYUI_WORKFLOW",
       "Component": "ComfyUINetTool/UI_Workflow.py"
+    },
+    {
+      "Type": "FANode",
+      "Name": "@/FlowABuiltinEx/UI_COMFYUI_NODE_VAR",
+      "Component": "ComfyUINetTool/UI_ComfyUI_Node_Var.py"
     }
   ]
 }
