@@ -2,6 +2,7 @@ from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union
 import os
 import io
 import base64
+import json
 import traceback
 from PIL import Image
 from loguru import logger
@@ -66,6 +67,43 @@ class ComfyUINetTool(FATaskNode):
                     "self",
                 ],
             )
+
+            D_WORKFLOW = node_payloads.ById["D_WORKFLOW"]
+            CF_Workflow_Data = CF_Workflow.model_validate(D_WORKFLOW.Data.value)
+            if CF_Workflow_Data.Type == VarType.File:
+                if not CF_Workflow_Data.ValueJson:
+                    error_msgs.append("请上传工作流文件")
+                else:
+                    try:
+                        json.loads(CF_Workflow_Data.ValueJson.File)
+                        pass
+                    except Exception as e:
+                        error_msgs.append(f"工作流文件不是JSON格式: {str(e)}")
+                        pass
+            elif CF_Workflow_Data.Type == VarType.Ref:
+                if (
+                    not CF_Workflow_Data.ValueRef
+                    or CF_Workflow_Data.ValueRef.model_dump_json() not in selfVars
+                ):
+                    error_msgs.append(f"引用变量{CF_Workflow_Data.ValueRef}不存在")
+                    pass
+
+            D_NODE_VAR = node_payloads.ById["D_NODE_VAR"]
+            for var_item in D_NODE_VAR.Data.value:
+                node_var = CF_NodeVar.model_validate(var_item)
+                if node_var.NodeId == "":
+                    error_msgs.append(f"节点变量缺少节点ID")
+                    pass
+                if node_var.FieldName == "":
+                    error_msgs.append(f"节点变量缺少字段名")
+                if node_var.FieldType == VarType.Ref:
+                    if (
+                        not node_var.FieldValueRef
+                        or node_var.FieldValueRef.model_dump_json() not in selfVars
+                    ):
+                        error_msgs.append(
+                            f"节点变量的引用变量{node_var.FieldValueRef}不存在"
+                        )
             pass
         except Exception as e:
             errmsg = traceback.format_exc()

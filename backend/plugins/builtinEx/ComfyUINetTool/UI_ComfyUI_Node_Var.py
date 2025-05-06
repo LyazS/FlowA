@@ -238,7 +238,7 @@ class UI_CF_Node_Var(NFlex):
                         slots={
                             "default": [
                                 Header(
-                                    type="success",
+                                    type="warning",
                                     text=VBindProp(
                                         [
                                             THIS_NODE_DATA,
