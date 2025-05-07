@@ -1,15 +1,11 @@
 from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union, Literal
 import asyncio
 import os
-import re
 import ast
 import copy
 import sys
-import json
 import traceback
-import base64
-import io
-from PIL import Image
+import dill  # 使用dill代替pickle
 from loguru import logger
 from enum import StrEnum
 from pydantic import BaseModel
@@ -18,10 +14,8 @@ from app.schemas.VFlowData import VFNodeInfo
 from app.schemas.VFlowRunData import FARunStatus
 from app.schemas.farequest import (
     ValidationError,
-    FANodeUpdateType,
     FANodeUpdateData,
 )
-from app.nodes.BaseNode import FABaseNode
 from app.nodes.TaskNode import FATaskNode
 from app.uisdk import *
 from app.schemas.VFNodeClass import VFNode
@@ -32,12 +26,12 @@ from app.schemas.VFNodeInterface import (
     VFNodeHandleData,
     VFNodeConnectionDataType,
     VFNodeContentDataConfig,
-    FromInnerPath,
 )
-from app.utils.tools import read_yaml, reduceGet
+from app.utils.tools import read_yaml
 from app.utils.db4node import loadNodeConfig, setNodeConfig
 from app.services.FARunner import FARunner
 from app.services.FAValidator import FAValidator
+from app.utils.vueRef import pickle_ref
 from ..UI_Components.UI_InputVars import InputVarModel, VarType
 
 
@@ -57,21 +51,29 @@ class CodeOutput(BaseModel):
 THIS_NODE_NAME = "@FACodeInterpreter"
 NODE_CONFIG = {}
 CODE_TEMPLATE_FUNCTION = None
-CODE_TEMPLATE_INPUT = None
-CODE_TEMPLATE_OUTPUT_RE = None
 CODE_TEMPLATE = None
 EVALTYPE = None
-SNEKBOXURL = None
 
 
 async def init_node_class():
     global NODE_CONFIG
     global CODE_TEMPLATE_FUNCTION
-    global CODE_TEMPLATE_INPUT
-    global CODE_TEMPLATE_OUTPUT_RE
     global CODE_TEMPLATE
     global EVALTYPE
-    global SNEKBOXURL
+
+    # 检查并安装dill模块
+    try:
+        import dill
+    except ImportError:
+        logger.info("正在安装dill模块...")
+        import subprocess
+
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "dill"])
+            logger.info("dill模块安装成功")
+        except Exception as e:
+            logger.error(f"安装dill模块失败: {str(e)}")
+
     ret, config = await loadNodeConfig(THIS_NODE_NAME)
     if ret:
         NODE_CONFIG = config
@@ -84,74 +86,149 @@ async def init_node_class():
         )
         await setNodeConfig(THIS_NODE_NAME, NODE_CONFIG)
     CODE_TEMPLATE_FUNCTION = NODE_CONFIG["codetemplate_func"]
-    CODE_TEMPLATE_INPUT = NODE_CONFIG["codetemplate_input"]
-    CODE_TEMPLATE_OUTPUT_RE = NODE_CONFIG["codetemplate_output_re"]
     CODE_TEMPLATE = NODE_CONFIG["codetemplate"]
 
     EVALTYPE = EvalType(NODE_CONFIG["evaltype"])
-    SNEKBOXURL = NODE_CONFIG.get("snekboxUrl", "")
 
     pass
 
 
-async def SimplePythonRun(code, evaltype: EvalType, snekboxUrl: str = ""):
+async def SimplePythonRun(code, evaltype: EvalType, input_data=None, cancel_event=None):
     if evaltype == EvalType.Python:
-        python_executable = sys.executable
+        import tempfile
+        import uuid
 
-        # Use asyncio.create_subprocess_exec for async subprocess handling
-        process = await asyncio.create_subprocess_exec(
-            python_executable,
-            "-Xfrozen_modules=off",
-            "-c",
-            code,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        # 创建临时目录用于数据交换
+        temp_dir = tempfile.gettempdir()
+        session_id = str(uuid.uuid4())
+        input_file = os.path.join(temp_dir, f"code_input_{session_id}.dill")
+        output_file = os.path.join(temp_dir, f"code_output_{session_id}.dill")
 
-        # Wait for the process to complete and capture output
-        stdout_b, stderr_b = await process.communicate()
-        stdout = stdout_b.decode("utf-8").replace("\r", "")
-        stderr = stderr_b.decode("utf-8").replace("\r", "")
-        if len(stdout) <= 0:
-            raise Exception("代码格式问题:\n", stderr)
+        process = None
 
-        output_result = re.findall(CODE_TEMPLATE_OUTPUT_RE, stdout, re.S)
+        try:
+            # 将输入数据保存到临时文件，使用dill代替pickle
+            if input_data:
+                with open(input_file, "wb") as f:
+                    dill.dump(input_data, f)
 
-        if len(output_result) > 0:
-            output_type, res = output_result[-1].strip().split("\n", 1)
-            if "@CODEOUTPUT-BASE64" in output_type:
-                json_string = base64.b64decode(res).decode("utf-8")
-                res_json = json.loads(json_string)
+            # 修改代码，添加临时文件路径和dill导入
+            code_with_paths = f"""
+# 添加临时文件路径
+import dill  # 使用dill代替pickle
+_CI_INPUT_FILE = "{input_file.replace('\\', '\\\\')}"
+_CI_OUTPUT_FILE = "{output_file.replace('\\', '\\\\')}"
 
-                # 处理特殊类型的数据（二进制数据和图片）
-                def process_special_types(obj):
-                    if isinstance(obj, dict):
-                        if "__type__" in obj and "data" in obj:
-                            if obj["__type__"] == "binary":
-                                # 将base64编码的字符串转换回二进制数据
-                                return base64.b64decode(obj["data"])
-                            elif obj["__type__"] == "image":
-                                # 将base64编码的字符串转换回PIL图像
-                                binary_data = base64.b64decode(obj["data"])
-                                res_image = Image.open(io.BytesIO(binary_data))
-                                return res_image
+{code}
+"""
 
-                        # 递归处理嵌套的字典
-                        return {k: process_special_types(v) for k, v in obj.items()}
-                    elif isinstance(obj, list):
-                        # 递归处理列表中的元素
-                        return [process_special_types(item) for item in obj]
-                    else:
-                        return obj
+            python_executable = sys.executable
 
-                # 处理特殊类型的数据
-                processed_json = process_special_types(res_json)
+            # Use asyncio.create_subprocess_exec for async subprocess handling
+            process = await asyncio.create_subprocess_exec(
+                python_executable,
+                "-Xfrozen_modules=off",
+                "-c",
+                code_with_paths,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
 
-                return CodeOutput(success=True, output=processed_json)
-            elif "@CODEOUTPUT-ERROR" in output_type:
-                return CodeOutput(success=False, error=res)
+            # 创建一个任务来等待进程完成
+            process_task = asyncio.create_task(process.communicate())
+
+            # 如果提供了取消事件，则同时等待取消事件
+            if cancel_event:
+                cancel_task = asyncio.create_task(cancel_event.wait())
+                done, pending = await asyncio.wait(
+                    [process_task, cancel_task], return_when=asyncio.FIRST_COMPLETED
+                )
+
+                # 如果取消事件先完成，则终止进程
+                if cancel_task in done:
+                    logger.info("代码执行被取消")
+                    if process.returncode is None:
+                        try:
+                            process.terminate()  # 尝试优雅终止
+                            await asyncio.sleep(0.5)
+                            if process.returncode is None:
+                                process.kill()  # 如果还没结束，强制终止
+                        except Exception as e:
+                            logger.warning(f"终止进程失败: {str(e)}")
+
+                    # 取消未完成的任务
+                    for task in pending:
+                        task.cancel()
+                        try:
+                            await task
+                        except asyncio.CancelledError:
+                            pass
+
+                    raise asyncio.CancelledError("代码执行被取消")
+
+                # 取消未完成的任务
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+
+                stdout_b, stderr_b = process_task.result()
             else:
-                return CodeOutput(success=False, error="代码执行失败，请检查代码输出")
+                # 如果没有取消事件，直接等待进程完成
+                stdout_b, stderr_b = await process_task
+
+            stdout = stdout_b.decode("utf-8").replace("\r", "")
+            stderr = stderr_b.decode("utf-8").replace("\r", "")
+
+            # 检查是否有错误输出
+            if stderr and not stdout:
+                raise Exception(f"代码执行错误:\n{stderr}")
+
+            # 检查输出文件是否存在
+            if os.path.exists(output_file):
+                try:
+                    # 从输出文件读取结果，使用dill代替pickle
+                    with open(output_file, "rb") as f:
+                        result = dill.load(f)
+
+                    # 检查结果是否包含错误信息
+                    if (
+                        isinstance(result, dict)
+                        and "error" in result
+                        and result.get("success") is False
+                    ):
+                        return CodeOutput(success=False, error=result["error"])
+
+                    return CodeOutput(success=True, output=result)
+                except Exception as e:
+                    return CodeOutput(success=False, error=f"读取结果失败: {str(e)}")
+
+            # 如果没有输出文件，可能是代码执行出错
+            return CodeOutput(
+                success=False, error=f"代码执行失败，无法获取结果: {stdout}\n{stderr}"
+            )
+
+        finally:
+            # 无论如何都要清理临时文件
+            try:
+                if os.path.exists(input_file):
+                    os.remove(input_file)
+                if os.path.exists(output_file):
+                    os.remove(output_file)
+            except Exception as e:
+                logger.warning(f"清理临时文件失败: {str(e)}")
+
+            # 确保进程被终止
+            if process and process.returncode is None:
+                try:
+                    process.terminate()
+                    await asyncio.sleep(0.1)
+                    if process.returncode is None:
+                        process.kill()
+                except Exception as e:
+                    logger.warning(f"终止进程失败: {str(e)}")
 
     elif evaltype == EvalType.SnekBox:
         raise Exception(f"不支持的执行类型{evaltype}")
@@ -162,7 +239,8 @@ async def SimplePythonRun(code, evaltype: EvalType, snekboxUrl: str = ""):
 class CodeInterpreter(FATaskNode):
     def __init__(self, wid: str, nodeinfo: VFNodeInfo, runner: "FARunner"):
         super().__init__(wid, nodeinfo, runner)
-        pass
+        # 用于取消代码执行的事件
+        self.code_cancel_event = asyncio.Event()
 
     async def validate(self, validator: "FAValidator") -> Optional[ValidationError]:
         error_msgs = []
@@ -247,45 +325,66 @@ class CodeInterpreter(FATaskNode):
         return None
 
     async def run(self) -> List[FANodeUpdateData]:
-        CodeInputArgs = {}
-        node_payloads = self.data.Payloads
-        node_results = self.data.Results
+        """
+        重写run方法，添加取消事件的处理
+        """
+        try:
+            # 重置取消事件
+            self.code_cancel_event.clear()
 
-        D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
-        for var_dict in D_INPUT_VARS.Data.value:
-            var = InputVarModel.model_validate(var_dict)
-            CodeInputArgs[var.Key] = await InputVarModel.get_value(
-                var,
-                self.id,
-                self.runner().getRefData,
+            # 执行原来的run逻辑
+            CodeInputArgs = {}
+            node_payloads = self.data.Payloads
+            node_results = self.data.Results
+
+            D_INPUT_VARS: VFNodeContentData = node_payloads.ById["D_INPUT_VARS"]
+            for var_dict in D_INPUT_VARS.Data.value:
+                var = InputVarModel.model_validate(var_dict)
+                CodeInputArgs[var.Key] = await InputVarModel.get_value(
+                    var,
+                    self.id,
+                    self.runner().getRefData,
+                )
+            D_CODE: VFNodeContentData = node_payloads.ById["D_CODE"]
+
+            # 开始执行代码
+            code_run: str = copy.deepcopy(CODE_TEMPLATE)
+            code_run = code_run.replace(CODE_TEMPLATE_FUNCTION, D_CODE.Data.value)
+
+            # 使用临时文件方式传递数据，并传递取消事件
+            codeResult = await SimplePythonRun(
+                code_run,
+                EVALTYPE,
+                input_data=CodeInputArgs,
+                cancel_event=self.code_cancel_event,
             )
-        D_CODE: VFNodeContentData = node_payloads.ById["D_CODE"]
 
-        # 开始执行代码
-        code_in_args = json.dumps(CodeInputArgs, ensure_ascii=False)
-        code_in_args_b64 = base64.b64encode(code_in_args.encode("utf-8")).decode(
-            "utf-8"
-        )
-        code_run: str = copy.deepcopy(CODE_TEMPLATE)
-        code_run = code_run.replace(CODE_TEMPLATE_FUNCTION, D_CODE.Data.value).replace(
-            CODE_TEMPLATE_INPUT, code_in_args_b64
-        )
-        # 需要返回输出结果
-        codeResult = await SimplePythonRun(code_run, EVALTYPE, SNEKBOXURL)
-        if codeResult.success:
-            for rid in node_results.Order:
-                item: VFNodeContentData = node_results.ById[rid]
-                if item.Label not in codeResult.output:
-                    raise Exception(f"实际返回结果缺少输出参数【{rid}】")
+            if codeResult.success:
+                for rid in node_results.Order:
+                    item: VFNodeContentData = node_results.ById[rid]
+                    if item.Label not in codeResult.output:
+                        raise Exception(f"实际返回结果缺少输出参数【{item.Label}】")
 
-                # 更新内部数据
-                self.data.Results.ById[rid].Data.value = codeResult.output[item.Label]
+                    # 更新内部数据
+                    self.data.Results.ById[rid].Data.value = codeResult.output[
+                        item.Label
+                    ]
 
-            # 返回之前要设置好输出handle状态
-            self.setAllOutputStatus(FARunStatus.Success)
-            return []
-        else:
-            raise Exception(f"执行代码失败：{codeResult.error}")
+                # 返回之前要设置好输出handle状态
+                self.setAllOutputStatus(FARunStatus.Success)
+                return []
+            else:
+                raise Exception(f"执行代码失败：{codeResult.error}")
+        except asyncio.CancelledError:
+            # 节点被取消时，设置代码取消事件
+            self.code_cancel_event.set()
+            # 重新抛出异常，让父类处理
+            raise
+        except Exception as e:
+            # 其他异常也设置取消事件，确保资源被释放
+            self.code_cancel_event.set()
+            # 重新抛出异常，让父类处理
+            raise
 
     @staticmethod
     async def getNodeConfig():

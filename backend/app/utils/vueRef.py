@@ -311,6 +311,26 @@ def serialize_ref(value):
         logger.error(f"{value} Unsupported type: {type(value)}")
         return str(value)  # 默认转换为字符串
 
+def pickle_ref(value):
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    elif isinstance(value, list):
+        return [pickle_ref(item) for item in value]
+    elif isinstance(value, dict):
+        return {key: pickle_ref(val) for key, val in value.items()}
+    elif isinstance(value, Ref):
+        return pickle_ref(value.value)
+    elif isinstance(value, BaseModel):
+        return pickle_ref(value.model_dump())
+    elif isinstance(value, (Image.Image, bytes)):
+        return value
+    elif value is None:
+        return None
+    else:
+        logger.error(f"pickle {value} Unsupported type: {type(value)}")
+        return str(value)  # 默认转换为字符串
+
+
 
 class _RefTypePydanticAnnotation:
     @classmethod

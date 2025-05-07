@@ -2,80 +2,42 @@
 evaltype: Python
 snekboxUrl: http://localhost:8080
 codetemplate_func: '@{CODEPYTHON}-FUNCTION-main'
-codetemplate_input: '@{CODEINPUT}-BASE64-string'
-codetemplate_output_re: '@CODEOUTPUT-START(.*?)@CODEOUTPUT-END'
 codetemplate: |
   @{CODEPYTHON}-FUNCTION-main
-  _CODEINPUT_b64 = "@{CODEINPUT}-BASE64-string"
   import sys
+  import os
+  import traceback
+  import dill  # 使用dill代替pickle
+
   print("Python path:", sys.executable)
-  class _CI_FUNC_WRAPPER:
-      @staticmethod
-      def _CI_B64TOJSON(base64_string):
-          import base64
-          import json
-          json_string = base64.b64decode(base64_string).decode("utf-8")
-          return json.loads(json_string)
-
-      @staticmethod
-      def _CI_JSONTOB64(json_obj):
-          import base64
-          import json
-          import io
-          from PIL import Image
-
-          # 处理字典中的二进制数据
-          def process_binary_data(obj):
-              if isinstance(obj, dict):
-                  result = {}
-                  for k, v in obj.items():
-                      if isinstance(v, bytes):
-                          # 将二进制数据转换为base64编码的字符串，并添加类型标记
-                          result[k] = {
-                              "__type__": "binary",
-                              "data": base64.b64encode(v).decode("utf-8")
-                          }
-                      elif isinstance(v, Image.Image):
-                          # 将PIL图像转换为base64编码的字符串，并添加类型标记
-                          buffer = io.BytesIO()
-                          v.save(buffer, format="PNG")
-                          result[k] = {
-                              "__type__": "image",
-                              "data": base64.b64encode(buffer.getvalue()).decode("utf-8")
-                          }
-                      elif isinstance(v, dict):
-                          result[k] = process_binary_data(v)
-                      elif isinstance(v, list):
-                          result[k] = [process_binary_data(item) if isinstance(item, (dict, list)) else item for item in v]
-                      else:
-                          result[k] = v
-                  return result
-              elif isinstance(obj, list):
-                  return [process_binary_data(item) if isinstance(item, (dict, list)) else item for item in obj]
-              else:
-                  return obj
-
-          # 处理二进制数据
-          processed_obj = process_binary_data(json_obj)
-
-          # 序列化为JSON字符串
-          json_string = json.dumps(processed_obj)
-          base64_string = base64.b64encode(json_string.encode("utf-8")).decode("utf-8")
-          return base64_string
 
   if __name__ == "__main__":
-      import traceback
       try:
-          _CI_CODEINPUT_DICT = _CI_FUNC_WRAPPER._CI_B64TOJSON(_CODEINPUT_b64)
+          # 从临时文件读取输入数据
+          if '_CI_INPUT_FILE' in globals() and os.path.exists(_CI_INPUT_FILE):
+              with open(_CI_INPUT_FILE, 'rb') as f:
+                  _CI_CODEINPUT_DICT = dill.load(f)
+          else:
+              _CI_CODEINPUT_DICT = {}
+
+          # 执行用户代码
           _CI_result = main(**_CI_CODEINPUT_DICT)
-          _CI_result_b64 = _CI_FUNC_WRAPPER._CI_JSONTOB64(_CI_result)
-          print("@CODEOUTPUT-START")
-          print("@CODEOUTPUT-BASE64")
-          print(_CI_result_b64)
-          print("@CODEOUTPUT-END")
+
+          # 将结果保存到临时文件
+          if '_CI_OUTPUT_FILE' in globals():
+              with open(_CI_OUTPUT_FILE, 'wb') as f:
+                  dill.dump(_CI_result, f)
+
       except Exception as e:
           error_message = traceback.format_exc()
-          print("@CODEOUTPUT-START")
-          print("@CODEOUTPUT-ERROR")
+
+          # 将错误信息写入文件
+          if '_CI_OUTPUT_FILE' in globals():
+              error_result = {"success": False, "error": error_message}
+              try:
+                  with open(_CI_OUTPUT_FILE, 'wb') as f:
+                      dill.dump(error_result, f)
+              except:
+                  pass
+
           print(error_message)
-          print("@CODEOUTPUT-END")
