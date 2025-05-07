@@ -31,3 +31,4 @@ python-multipart
 tzdata
 uuid7
 websockets
+dill
