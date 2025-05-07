@@ -102,12 +102,22 @@ class ComfyUISDK:
         ) as ws:
             while True:
                 out = await ws.recv()
-                logger.debug(f"Received: {out}")
                 if isinstance(out, str):
+                    logger.debug(f"Received: {out}")
                     message = json.loads(out)
                     if message["type"] == "executing":
                         data = message["data"]
-                        # if "prompt_id" in data and data["prompt_id"] == prompt_id:
+                        if "prompt_id" not in data:
+                            logger.warning(
+                                f"Received executing message without prompt_id: {data}"
+                            )
+                            pass
+                        elif data["prompt_id"] != prompt_id:
+                            logger.warning(
+                                f"Received {data['prompt_id']}, but expected {prompt_id}"
+                            )
+                            pass
+
                         if data["node"] is None:
                             break  # 执行完成
                         else:

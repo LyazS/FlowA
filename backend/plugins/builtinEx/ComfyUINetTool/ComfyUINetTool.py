@@ -1,6 +1,8 @@
 from typing import List, Dict, Optional, TYPE_CHECKING, Any, Union
 import os
+import sys
 import io
+import random
 import base64
 import json
 import traceback
@@ -8,7 +10,7 @@ from PIL import Image
 from loguru import logger
 from app.schemas.VFNodeClass import VFNode
 from app.schemas.VFlowData import VFNodeInfo
-from app.schemas.VFlowRunData import FARunStatus
+from app.schemas.VFlowRunData import FARunStatus, VFNodeCacheKey, VFNodeCacheKeyBefore
 from app.schemas.farequest import (
     ValidationError,
     FANodeUpdateType,
@@ -41,6 +43,7 @@ class CF_NodeVar(BaseModel):
     FieldName: str = ""
     FieldType: VarType = VarType.String
     FieldValueStr: str = ""
+    FieldValueNum: int | float = 0
     FieldValueRef: Optional[RefVarItem] = None
     pass
 
@@ -169,15 +172,34 @@ class ComfyUINetTool(FATaskNode):
         for var_item in D_NODE_VAR.Data.value:
             node_var = CF_NodeVar.model_validate(var_item)
             if node_var.FieldType == VarType.Ref:
-                prompt[node_var.NodeId]['inputs'][node_var.FieldName] = await self.runner().getRefData(
-                    self.id, node_var.FieldValueRef
+                prompt[node_var.NodeId]["inputs"][
+                    node_var.FieldName
+                ] = await self.runner().getRefData(self.id, node_var.FieldValueRef)
+            elif node_var.FieldType == VarType.Number:
+                prompt[node_var.NodeId]["inputs"][
+                    node_var.FieldName
+                ] = node_var.FieldValueNum
+            elif node_var.FieldType == VarType.RandomInteger:
+                prompt[node_var.NodeId]["inputs"][node_var.FieldName] = random.randint(
+                    0, sys.maxsize
                 )
             else:
-                prompt[node_var.NodeId]['inputs'][node_var.FieldName] = node_var.FieldValueStr
+                prompt[node_var.NodeId]["inputs"][
+                    node_var.FieldName
+                ] = node_var.FieldValueStr
         images = await COMFYUI_INSTANCE.get_images(prompt)
         self.data.Results.ById["R_IMAGE"].Data.value = images
         self.setAllOutputStatus(FARunStatus.Success)
         return []
+
+    def getCacheKey(self, request_nid: str) -> VFNodeCacheKey:
+        node_payloads = self.data.Payloads
+        D_NODE_VAR = node_payloads.ById["D_NODE_VAR"]
+        for var_item in D_NODE_VAR.Data.value:
+            node_var = CF_NodeVar.model_validate(var_item)
+            if node_var.FieldType == VarType.RandomInteger:
+                return VFNodeCacheKey(Before=VFNodeCacheKeyBefore.Skip)
+        return super().getCacheKey(request_nid)
 
     @staticmethod
     async def getNodeConfig():

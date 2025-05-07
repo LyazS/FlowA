@@ -21,6 +21,7 @@ class VarType(StrEnum):
     Image = "Image"
     File = "File"
     WebFile = "WebFile"
+    RandomInteger = "RandomInteger"
     Any = "Any"
     pass
 

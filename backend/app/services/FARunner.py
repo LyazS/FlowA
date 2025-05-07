@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from loguru import logger
+from app.utils.vueRef import pickle_ref
 from app.schemas.VFlowData import VFlowData, VFNodeInfo, VFEdgeInfo
 from app.schemas.VFlowRunData import FARunStatus
 from app.services.messageMgr import ALL_MESSAGES_MGR
@@ -174,7 +175,7 @@ class FARunner:
             request_nid,
             refdata.Path,
         )
-        return ref_data.Data.value
+        return pickle_ref(ref_data.Data.value)
 
     def buildNodes(self):
         from app.nodes import createRegisteredNode

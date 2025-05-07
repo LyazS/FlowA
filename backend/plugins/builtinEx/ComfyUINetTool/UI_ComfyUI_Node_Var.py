@@ -108,8 +108,16 @@ class UI_Card_Node_Var(NormalComponent):
                                                         "value": VarType.String,
                                                     },
                                                     {
+                                                        "label": "数字",
+                                                        "value": VarType.Number,
+                                                    },
+                                                    {
                                                         "label": "引用",
                                                         "value": VarType.Ref,
+                                                    },
+                                                    {
+                                                        "label": "随机整数",
+                                                        "value": VarType.RandomInteger,
                                                     },
                                                 ],
                                             },
@@ -157,6 +165,48 @@ class UI_Card_Node_Var(NormalComponent):
                                     ),
                                     Operator="==",
                                     Right=ValueProp(VarType.String),
+                                ),
+                            ),
+                            NormalComponent(
+                                Type="NInputNumber",
+                                Props={
+                                    "size": "small",
+                                    "value": VModelProp(
+                                        [
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            VBindProp(
+                                                [
+                                                    COMPONENT_CONTEXT,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
+                                            "Data",
+                                            VBindProp([VFOR_DATA, "@Index"]),
+                                            "FieldValueNum",
+                                        ]
+                                    ),
+                                },
+                                IfCondition=CompareCondition(
+                                    Left=VBindProp(
+                                        [
+                                            THIS_NODE_DATA,
+                                            "Payloads",
+                                            "ById",
+                                            VBindProp(
+                                                [
+                                                    COMPONENT_CONTEXT,
+                                                    PAYLOADS_ID,
+                                                ]
+                                            ),
+                                            "Data",
+                                            VBindProp([VFOR_DATA, "@Index"]),
+                                            "FieldType",
+                                        ]
+                                    ),
+                                    Operator="==",
+                                    Right=ValueProp(VarType.Number),
                                 ),
                             ),
                             UI_RefVarSelect(
