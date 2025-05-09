@@ -141,7 +141,7 @@ class ImageRead(FATaskNode):
             handle_id="output",
             result_id="R_IMAGE",
         )
-
+        thisnode.set_outputs_ui_type("@/FlowABuiltin/UI_TAG_OUTPUTS")
         return thisnode
 
 
