@@ -543,7 +543,7 @@ onUnmounted(() => {})
         <n-divider />
         <pre>节点id: {{ nodeId }}</pre>
         <!-- <pre>{{ inputNodes }}</pre> -->
-        <pre>{{ nodedatatext }}</pre>
+        <!-- <pre>{{ nodedatatext }}</pre> -->
       </n-flex>
     </n-card>
   </n-scrollbar>

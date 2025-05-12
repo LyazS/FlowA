@@ -135,8 +135,8 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
 
     const pastedNodes: GraphNode[] = []
     for (const { layout, node } of layoutNodes) {
-      // 如果父节点在copy数据里，则说明是子节点
-      // 否则，就是根节点
+      // 如果父节点也在copy数据里，则说明该节点会是子节点
+      // 否则，该节点将作为根节点
       const curPNodeId = node.parentNode
       if (curPNodeId && curPNodeId in pastedDatas.nodes) {
         // 如果父节点是嵌套节点，则需要拼接父节点id
@@ -155,11 +155,20 @@ export const useCopyPasteNode = (): CopyPasteInstance => {
         }
       } else {
         // 如果父节点是null，说明是根节点，可以去掉嵌套
-        nodeMapOld2New.set(node.id, generateNodeId())
+        const newnodeid = generateNodeId()
         if (pNode) {
+          // 如果是粘贴到嵌套节点里边，则需要拼接父节点层级
           node.parentNode = pNode.id
+          const { id: pid, nested: pNested } = regexMatchNodeId(pNode.id)
+          const new_nested = [...pNested]
+          if (pNode.data.isNestedNode() && pNode.data.Nesting.Tag) {
+            new_nested.push(pNode.data.Nesting.Tag)
+          }
+          const newid = concatNestedNodeId(newnodeid, new_nested)
+          nodeMapOld2New.set(node.id, newid)
         } else {
           node.parentNode = undefined
+          nodeMapOld2New.set(node.id, newnodeid)
         }
         node.position.x += offsetX - pNodeOffset.x
         node.position.y += offsetY - pNodeOffset.y
